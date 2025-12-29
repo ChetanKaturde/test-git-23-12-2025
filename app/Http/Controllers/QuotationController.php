@@ -73,6 +73,7 @@ class QuotationController extends Controller
                 'business_id' => auth()->user()->business_id,
                 'customer_id' => $validated['customer_id'],
                 'number' => $this->generateBusinessScopedNumber('QUO'),
+                'status' => 'draft',
                 'valid_until' => $validated['valid_until'],
                 'notes' => $validated['notes'],
                 'subtotal' => $subtotal,
@@ -216,14 +217,21 @@ class QuotationController extends Controller
                 $totalTax += $itemTax;
             }
 
-            $quotation->update([
+            $updateData = [
                 'customer_id' => $validated['customer_id'],
                 'valid_until' => $validated['valid_until'],
                 'notes' => $validated['notes'],
                 'subtotal' => $subtotal,
                 'tax_amount' => $totalTax,
                 'total' => $subtotal + $totalTax,
-            ]);
+            ];
+
+            if ($quotation->isSent()) {
+                $updateData['sent_at'] = null;
+                $updateData['status'] = 'draft';
+            }
+
+            $quotation->update($updateData);
 
             $quotation->items()->delete();
 
@@ -311,10 +319,32 @@ class QuotationController extends Controller
 
 
 
+    public function getItems(Quotation $quotation)
+    {
+        if ($quotation->business_id !== auth()->user()->business_id) {
+            abort(404);
+        }
+
+        $items = $quotation->items()->with('material')->get()->map(function ($item) {
+            return [
+                'id' => $item->id,
+                'description' => $item->description,
+                'quantity' => $item->quantity,
+                'unit_price' => $item->unit_price,
+                'tax_rate' => $item->tax_rate,
+                'tax_amount' => $item->tax_amount,
+                'total_amount' => $item->total,
+                'material' => $item->material,
+            ];
+        });
+
+        return response()->json(['items' => $items]);
+    }
+
     private function generateBusinessScopedNumber($prefix)
     {
         $business = auth()->user()->business;
-        
+
         if ($prefix === 'INV') {
             return Invoice::generateFinancialYearNumber($business, 'INV');
         } else {

@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Customer;
+use App\Models\State;
+use App\Models\City;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -195,10 +197,32 @@ class CustomerController extends Controller
         if ($customer->business_id !== auth()->user()->business_id) {
             abort(404);
         }
-        
+
         $contact = $customer->contacts()->findOrFail($contactId);
         $contact->delete();
-        
+
         return redirect()->back()->with('success', 'Contact deleted successfully!');
+    }
+
+    public function getStates()
+    {
+        $states = State::orderBy('name')->get(['id', 'name']);
+        return response()->json($states);
+    }
+
+    public function getCitiesByState($stateName)
+    {
+        $state = State::where('name', $stateName)->first();
+
+        if (!$state) {
+            return response()->json([]);
+        }
+
+        $cities = City::where('state_id', $state->id)
+            ->orderBy('name')
+            ->pluck('name')
+            ->toArray();
+
+        return response()->json($cities);
     }
 }

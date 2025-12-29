@@ -73,13 +73,13 @@
                         Create Quote
                     </a>
                 @endif
-                @if(auth()->user()->canViewModule('invoices') && auth()->user()->isAdmin())
-                    <a href="{{ route('invoices.create', ['customer' => $customer->id]) }}" 
+                {{-- @if(auth()->user()->canViewModule('invoices') && auth()->user()->isAdmin())
+                    <a href="{{ route('invoices.create', ['customer' => $customer->id]) }}"
                        class="inline-flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">
                         <i class="fas fa-file-invoice mr-2"></i>
                         Create Invoice
                     </a>
-                @endif
+                @endif --}}
             </div>
         </div>
     </div>
@@ -407,11 +407,11 @@
                         <i class="fas fa-file-alt mr-2"></i>
                         Create Quotation
                     </a>
-                    <a href="{{ route('invoices.create') }}?customer_id={{ $customer->id }}" 
+                    {{-- <a href="{{ route('invoices.create') }}?customer_id={{ $customer->id }}"
                        class="w-full inline-flex items-center justify-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
                         <i class="fas fa-file-invoice mr-2"></i>
                         Create Invoice
-                    </a>
+                    </a> --}}
                     @if(auth()->user()->business->subscription_tier === 'full_erp')
                     <a href="{{ route('work-orders.create') }}?customer_id={{ $customer->id }}" 
                        class="w-full inline-flex items-center justify-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">

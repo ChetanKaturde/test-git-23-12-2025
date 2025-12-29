@@ -33,4 +33,11 @@ Route::middleware('auth:sanctum')->group(function () {
     
     // Commodities API for quotations
     Route::get('/commodities', [\App\Http\Controllers\MaterialController::class, 'getAllMaterials']);
+
+    // State-City API
+    Route::middleware('web')->get('/states', [\App\Http\Controllers\CustomerController::class, 'getStates']);
+    Route::middleware('web')->get('/cities/{stateName}', [\App\Http\Controllers\CustomerController::class, 'getCitiesByState']);
+
+    // Quotation API
+    Route::middleware('web')->get('/quotations/{quotation}/items', [\App\Http\Controllers\QuotationController::class, 'getItems']);
 });

@@ -19,6 +19,7 @@ class Quotation extends Model
         'valid_until',
         'notes',
         'sent_at',
+        'converted_at',
         'subtotal',
         'tax_amount',
         'total',
@@ -30,6 +31,7 @@ class Quotation extends Model
         'tax_amount' => 'decimal:2',
         'total' => 'decimal:2',
         'sent_at' => 'datetime',
+        'converted_at' => 'datetime',
     ];
 
     public function customer()
@@ -45,6 +47,11 @@ class Quotation extends Model
     public function items()
     {
         return $this->hasMany(QuotationItem::class);
+    }
+
+    public function invoice()
+    {
+        return $this->hasOne(Invoice::class);
     }
 
     public function markAsSent()

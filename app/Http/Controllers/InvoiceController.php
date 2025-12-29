@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Invoice;
 use App\Models\ActivityLog;
+use App\Models\Quotation;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf as PDF;
 use App\Services\PdfService;
@@ -25,66 +26,106 @@ class InvoiceController extends Controller
 
     public function create()
     {
-        // Only business owner can create invoices manually
-        if (!auth()->user()->isAdmin()) {
-            return redirect()->route('invoices.index')
-                ->with('error', 'Only business owners can create invoices directly. Convert a quotation to an invoice instead.');
-        }
-        
         $business = auth()->user()->business;
-        
+
         // Check Free Plan limits
         if (!$business->canCreateInvoice()) {
             \Log::info('Free user hit invoice limit', ['business_id' => $business->id]);
             return redirect()->route('invoices.index')
                 ->with('error', 'You\'ve reached your Free Plan limit of 50 invoices per month. Please upgrade to create more invoices.');
         }
-        
-        $workOrders = \App\Models\WorkOrder::where('business_id', auth()->user()->business_id)
-            ->where('status', 'completed')
+
+        // Get quotations that can be converted to invoices (draft and sent status)
+        $quotations = Quotation::where('business_id', auth()->user()->business_id)
+            ->whereIn('status', ['draft', 'sent'])
+            ->whereNull('converted_at')
+            ->with('customer')
             ->orderBy('created_at', 'desc')
             ->get();
-            
-        return view('invoices.create', compact('workOrders'));
+
+        return view('invoices.create', compact('quotations'));
     }
 
     public function store(Request $request)
     {
         try {
             $business = auth()->user()->business;
-            
+
             // Check Free Plan limits
             if (!$business->canCreateInvoice()) {
                 \Log::info('Free user hit invoice limit', ['business_id' => $business->id]);
                 return back()->withInput()
                     ->with('error', 'You\'ve reached your Free Plan limit of 50 invoices per month. Please upgrade to create more invoices.');
             }
-            
+
             $validated = $request->validate([
-                'customer_name' => 'required|string|max:255',
-                'customer_email' => 'nullable|email',
-                'amount' => 'required|numeric|min:0',
-                'due_date' => 'required|date',
+                'quotation_id' => 'required|exists:quotations,id',
+                'due_date' => 'required|date|after:today',
             ]);
 
-            $validated['business_id'] = auth()->user()->business_id;
-            $validated['status'] = 'draft';
-            $validated['issue_date'] = now();
-            $validated['invoice_number'] = $this->generateInvoiceNumber();
-            $validated['subtotal'] = $validated['amount'];
-            $validated['total_amount'] = $validated['amount'];
-            $validated['tax_amount'] = 0;
-            unset($validated['amount']);
+            // Get the quotation
+            $quotation = Quotation::where('business_id', auth()->user()->business_id)
+                ->where('id', $validated['quotation_id'])
+                ->whereIn('status', ['draft', 'sent'])
+                ->whereNull('converted_at')
+                ->with('items', 'customer')
+                ->first();
 
-            $invoice = Invoice::create($validated);
-            
+            if (!$quotation) {
+                return back()->withInput()
+                    ->with('error', 'Selected quotation is not available for conversion to invoice.');
+            }
+
+            // Check if quotation already has an invoice
+            if ($quotation->invoice) {
+                return back()->withInput()
+                    ->with('error', 'This quotation has already been converted to an invoice.');
+            }
+
+            // Create invoice data from quotation
+            $invoiceData = [
+                'business_id' => auth()->user()->business_id,
+                'quotation_id' => $quotation->id,
+                'customer_name' => $quotation->customer->name,
+                'customer_email' => $quotation->customer->email,
+                'customer_phone' => $quotation->customer->phone,
+                'customer_address' => $quotation->customer->address,
+                'customer_gstin' => $quotation->customer->gstin,
+                'status' => 'draft',
+                'issue_date' => now(),
+                'due_date' => $validated['due_date'],
+                'invoice_number' => $this->generateInvoiceNumber(),
+                'subtotal' => $quotation->subtotal,
+                'tax_amount' => $quotation->tax_amount,
+                'total_amount' => $quotation->total,
+            ];
+
+            $invoice = Invoice::create($invoiceData);
+
+            // Create invoice items from quotation items
+            foreach ($quotation->items as $quotationItem) {
+                $invoice->items()->create([
+                    'description' => $quotationItem->description,
+                    'quantity' => $quotationItem->quantity,
+                    'unit_price' => $quotationItem->unit_price,
+                    'tax_rate' => $quotationItem->tax_rate,
+                    'tax_amount' => $quotationItem->tax_amount,
+                    'total_amount' => $quotationItem->total,
+                ]);
+            }
+
+            // Update quotation status to converted
+            $quotation->status = 'converted';
+            $quotation->converted_at = now();
+            $quotation->save();
+
             // Clear cache after creating invoice
             \Cache::forget("business_{$business->id}_invoice_count");
 
             // Log activity
-            $this->logActivity('Invoice created', "Invoice {$invoice->invoice_number} created for {$invoice->customer_name}", $invoice);
+            $this->logActivity('Invoice created', "Invoice {$invoice->invoice_number} created from quotation {$quotation->number}", $invoice);
 
-            return redirect()->route('invoices.index')->with('success', 'Invoice created successfully!');
+            return redirect()->route('invoices.show', $invoice)->with('success', 'Invoice created successfully from quotation!');
         } catch (\Exception $e) {
             \Log::error('Invoice creation error: ' . $e->getMessage());
             return back()->withInput()->with('error', 'Failed to create invoice.');
@@ -98,7 +139,7 @@ class InvoiceController extends Controller
             abort(404);
         }
         
-        $invoice->load(['payments.createdBy']);
+        $invoice->load(['payments.createdBy', 'quotation']);
         
         return view('invoices.show', compact('invoice'));
     }

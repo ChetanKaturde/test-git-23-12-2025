@@ -211,21 +211,19 @@ document.addEventListener('DOMContentLoaded', function() {
     typeBusiness.addEventListener('change', toggleGstinField);
     typeIndividual.addEventListener('change', toggleGstinField);
     
-    // Indian states list
-    const states = [
-        'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
-        'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand',
-        'Karnataka', 'Kerala', 'Madhya Pradesh', 'Maharashtra', 'Manipur',
-        'Meghalaya', 'Mizoram', 'Nagaland', 'Odisha', 'Punjab',
-        'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura',
-        'Uttar Pradesh', 'Uttarakhand', 'West Bengal', 'Delhi'
-    ];
-    
-    // Populate state dropdown
-    states.forEach(stateName => {
-        const option = new Option(stateName, stateName);
-        stateSelect.appendChild(option);
-    });
+    // Fetch states from database
+    fetch('/api/states')
+        .then(res => res.json())
+        .then(states => {
+            states.forEach(state => {
+                const option = new Option(state.name, state.name);
+                stateSelect.appendChild(option);
+            });
+        })
+        .catch(error => {
+            console.error('Error fetching states:', error);
+            stateSelect.innerHTML = '<option value="">Error loading states</option>';
+        });
     
     // Handle state change
     stateSelect.addEventListener('change', function() {

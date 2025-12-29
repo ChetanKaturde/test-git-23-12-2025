@@ -46,22 +46,6 @@
                     <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
                     <span>{{ $invoices->count() }} Total</span>
                 </div>
-                @if($canCreateInvoice && auth()->user()->isAdmin())
-                    <a href="{{ route('invoices.create') }}" class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
-                        <i class="fas fa-plus w-4 h-4 mr-2"></i>
-                        New Invoice
-                    </a>
-                @elseif(!$canCreateInvoice)
-                    <button disabled class="inline-flex items-center px-4 py-2 bg-gray-300 text-gray-500 rounded-lg cursor-not-allowed" title="Upgrade to create more invoices">
-                        <i class="fas fa-plus w-4 h-4 mr-2"></i>
-                        New Invoice
-                    </button>
-                @else
-                    <button disabled class="inline-flex items-center px-4 py-2 bg-gray-300 text-gray-500 rounded-lg cursor-not-allowed" title="Only business owners can create invoices directly">
-                        <i class="fas fa-plus w-4 h-4 mr-2"></i>
-                        New Invoice
-                    </button>
-                @endif
             </div>
         </div>
     </div>
@@ -311,19 +295,7 @@
                     Start billing your customers by creating your first invoice. Track payments and manage your revenue efficiently.
                 </p>
                 <div class="flex flex-col sm:flex-row gap-3 justify-center">
-                    @if($canCreateInvoice)
-                        <a href="{{ route('invoices.create') }}" 
-                           class="inline-flex items-center px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
-                            <i class="fas fa-plus mr-2"></i>
-                            Create Invoice
-                        </a>
-                    @else
-                        <button disabled class="inline-flex items-center px-6 py-3 bg-gray-300 text-gray-500 rounded-lg cursor-not-allowed" title="Upgrade to create more invoices">
-                            <i class="fas fa-plus mr-2"></i>
-                            Create Invoice
-                        </button>
-                    @endif
-                    <a href="{{ route('quotations.index') }}" 
+                    <a href="{{ route('quotations.index') }}"
                        class="inline-flex items-center px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
                         <i class="fas fa-file-alt mr-2"></i>
                         View Quotations

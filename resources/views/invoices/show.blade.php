@@ -236,6 +236,37 @@
                 </div>
             </div>
 
+            @if($invoice->quotation)
+            <div class="bg-white rounded-lg shadow-sm border">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h3 class="text-lg font-semibold text-gray-900">Source Quotation</h3>
+                </div>
+                <div class="px-6 py-4">
+                    <dl class="space-y-3">
+                        <div>
+                            <dt class="text-sm font-medium text-gray-600">Quotation Number</dt>
+                            <dd class="text-sm text-gray-900">{{ $invoice->quotation->number }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-medium text-gray-600">Date</dt>
+                            <dd class="text-sm text-gray-900">{{ $invoice->quotation->created_at->format('M d, Y') }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-medium text-gray-600">Status</dt>
+                            <dd class="text-sm text-gray-900">{{ ucfirst($invoice->quotation->status) }}</dd>
+                        </div>
+                    </dl>
+                    <div class="mt-4 pt-4 border-t border-gray-200">
+                        <a href="{{ route('quotations.show', $invoice->quotation) }}"
+                           class="inline-flex items-center text-blue-600 hover:text-blue-800 font-medium">
+                            <i class="fas fa-external-link-alt mr-2"></i>
+                            View Quotation
+                        </a>
+                    </div>
+                </div>
+            </div>
+            @endif
+
             <!-- Payment History -->
             <div class="bg-white rounded-lg shadow-sm border">
                 <div class="px-6 py-4 border-b border-gray-200">

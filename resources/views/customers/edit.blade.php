@@ -207,24 +207,22 @@ document.addEventListener('DOMContentLoaded', function() {
     const currentState = '{{ old("state", $customer->state) }}';
     const currentCity = '{{ old("city", $customer->city) }}';
     
-    // Indian states list
-    const states = [
-        'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
-        'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand',
-        'Karnataka', 'Kerala', 'Madhya Pradesh', 'Maharashtra', 'Manipur',
-        'Meghalaya', 'Mizoram', 'Nagaland', 'Odisha', 'Punjab',
-        'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura',
-        'Uttar Pradesh', 'Uttarakhand', 'West Bengal', 'Delhi'
-    ];
-    
-    // Populate state dropdown
-    states.forEach(stateName => {
-        const option = new Option(stateName, stateName);
-        if (stateName === currentState) {
-            option.selected = true;
-        }
-        stateSelect.appendChild(option);
-    });
+    // Fetch states from database
+    fetch('/api/states')
+        .then(res => res.json())
+        .then(states => {
+            states.forEach(state => {
+                const option = new Option(state.name, state.name);
+                if (state.name === currentState) {
+                    option.selected = true;
+                }
+                stateSelect.appendChild(option);
+            });
+        })
+        .catch(error => {
+            console.error('Error fetching states:', error);
+            stateSelect.innerHTML = '<option value="">Error loading states</option>';
+        });
     
     // Load cities for current state if exists
     if (currentState) {
