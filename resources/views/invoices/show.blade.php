@@ -37,9 +37,11 @@
                 </a>
                 
                 @if($invoice->status === 'draft')
+                    @canEditInModule('invoices')
                     <a href="{{ route('invoices.edit', $invoice) }}" class="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-colors">
                         <i class="fas fa-edit mr-2"></i>Edit
                     </a>
+                    @endcanEditInModule
                 @endif
                 
                 @if($invoice->isFullyPaid())

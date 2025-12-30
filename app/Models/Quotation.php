@@ -18,6 +18,7 @@ class Quotation extends Model
         'status',
         'valid_until',
         'notes',
+        'pdf_options',
         'sent_at',
         'converted_at',
         'subtotal',
@@ -30,6 +31,7 @@ class Quotation extends Model
         'subtotal' => 'decimal:2',
         'tax_amount' => 'decimal:2',
         'total' => 'decimal:2',
+        'pdf_options' => 'array',
         'sent_at' => 'datetime',
         'converted_at' => 'datetime',
     ];

@@ -180,10 +180,12 @@
                     <a href="{{ route('customers.index') }}" class="px-6 py-2.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium">
                         Cancel
                     </a>
+                    @canCreateInModule('customers')
                     <button type="submit" class="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium inline-flex items-center">
                         <i class="fas fa-plus mr-2"></i>
                         Create Customer
                     </button>
+                    @endcanCreateInModule
                 </div>
             </form>
         </div>

@@ -433,9 +433,11 @@ $(document).ready(function () {
                 <a href="{{ route('vendors.index') }}" class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
                     Cancel
                 </a>
+                @canEditInModule('vendors')
                 <button type="submit" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md text-sm font-medium">
                     Update Vendor
                 </button>
+                @endcanEditInModule
             </div>
         </form>
     </div>

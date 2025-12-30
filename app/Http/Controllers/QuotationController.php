@@ -43,29 +43,47 @@ class QuotationController extends Controller
             'customer_id' => 'required|exists:customers,id',
             'valid_until' => 'required|date|after:today',
             'notes' => 'nullable|string',
+            'pdf_options' => 'nullable|array',
+            'pdf_options.show_discount' => 'nullable|boolean',
+            'pdf_options.show_list_price' => 'nullable|boolean',
+            'pdf_options.show_hsn' => 'nullable|boolean',
+            'pdf_options.show_tax_breakdown' => 'nullable|boolean',
             'items' => 'required|array|min:1',
             'items.*.material_id' => 'required|exists:materials,id',
             'items.*.description' => 'required|string',
             'items.*.quantity' => 'required|numeric|min:0.01',
             'items.*.unit' => 'required|string',
-            'items.*.unit_price' => 'required|numeric|min:0',
-            'items.*.discount_percentage' => 'required|numeric|min:0|max:100',
-            'items.*.tax_rate' => 'required|numeric|min:0|max:100',
+            'items.*.list_price' => 'required|numeric|min:0',
+            'items.*.discount_percentage' => 'required|numeric|min:0|max=100',
+            'items.*.tax_rate' => 'required|numeric|min:0|max=100',
         ]);
 
         DB::transaction(function () use ($validated) {
+            $business = auth()->user()->business;
+            $customer = Customer::find($validated['customer_id']);
+            $isIntraState = $business->state === $customer->state;
+
             $subtotal = 0;
-            $totalDiscount = 0;
             $totalTax = 0;
 
             foreach ($validated['items'] as $item) {
-                $itemSubtotal = $item['quantity'] * $item['unit_price'];
-                $itemDiscount = ($itemSubtotal * $item['discount_percentage']) / 100;
-                $taxableAmount = $itemSubtotal - $itemDiscount;
-                $itemTax = ($taxableAmount * $item['tax_rate']) / 100;
-                
-                $subtotal += $itemSubtotal;
-                $totalDiscount += $itemDiscount;
+                $netPrice = $item['list_price'] * (1 - $item['discount_percentage'] / 100);
+                $taxableValue = $netPrice * $item['quantity'];
+
+                if ($isIntraState) {
+                    $cgstAmount = $taxableValue * ($item['tax_rate'] / 2) / 100;
+                    $sgstAmount = $cgstAmount;
+                    $igstAmount = 0;
+                } else {
+                    $cgstAmount = 0;
+                    $sgstAmount = 0;
+                    $igstAmount = $taxableValue * $item['tax_rate'] / 100;
+                }
+
+                $itemTax = $cgstAmount + $sgstAmount + $igstAmount;
+                $itemTotal = $taxableValue + $itemTax;
+
+                $subtotal += $taxableValue;
                 $totalTax += $itemTax;
             }
 
@@ -76,29 +94,46 @@ class QuotationController extends Controller
                 'status' => 'draft',
                 'valid_until' => $validated['valid_until'],
                 'notes' => $validated['notes'],
+                'pdf_options' => $validated['pdf_options'] ?? [],
                 'subtotal' => $subtotal,
-                'discount_amount' => $totalDiscount,
                 'tax_amount' => $totalTax,
-                'total' => $subtotal - $totalDiscount + $totalTax,
+                'total' => $subtotal + $totalTax,
             ]);
 
             foreach ($validated['items'] as $item) {
-                $itemSubtotal = $item['quantity'] * $item['unit_price'];
-                $itemDiscount = ($itemSubtotal * $item['discount_percentage']) / 100;
-                $taxableAmount = $itemSubtotal - $itemDiscount;
-                $itemTax = ($taxableAmount * $item['tax_rate']) / 100;
-                
+                $netPrice = $item['list_price'] * (1 - $item['discount_percentage'] / 100);
+                $taxableValue = $netPrice * $item['quantity'];
+
+                if ($isIntraState) {
+                    $cgstAmount = $taxableValue * ($item['tax_rate'] / 2) / 100;
+                    $sgstAmount = $cgstAmount;
+                    $igstAmount = 0;
+                } else {
+                    $cgstAmount = 0;
+                    $sgstAmount = 0;
+                    $igstAmount = $taxableValue * $item['tax_rate'] / 100;
+                }
+
+                $itemTax = $cgstAmount + $sgstAmount + $igstAmount;
+                $itemTotal = $taxableValue + $itemTax;
+
                 $quotation->items()->create([
                     'material_id' => $item['material_id'],
                     'description' => $item['description'],
                     'quantity' => $item['quantity'],
                     'unit' => $item['unit'],
-                    'unit_price' => $item['unit_price'],
+                    'unit_price' => $netPrice, // For backward compatibility
+                    'list_price' => $item['list_price'],
                     'discount_percentage' => $item['discount_percentage'],
-                    'discount_amount' => $itemDiscount,
+                    'net_price' => $netPrice,
+                    'hsn_code' => $item['hsn_code'] ?? null,
+                    'taxable_value' => $taxableValue,
+                    'cgst_amount' => $cgstAmount,
+                    'sgst_amount' => $sgstAmount,
+                    'igst_amount' => $igstAmount,
                     'tax_rate' => $item['tax_rate'],
                     'tax_amount' => $itemTax,
-                    'total' => $taxableAmount + $itemTax,
+                    'total' => $itemTotal,
                 ]);
             }
         });
@@ -147,12 +182,13 @@ class QuotationController extends Controller
             ];
             
             $pdf = (new PdfService())->generateDocumentPdf(
-                $business, 
-                $quotation->items, 
-                $quotation->customer, 
-                false, 
-                'quotation', 
-                $documentData
+                $business,
+                $quotation->items,
+                $quotation->customer,
+                false,
+                'quotation',
+                $documentData,
+                $quotation
             );
             
             $filename = 'quotation-' . $quotation->number . '.pdf';
@@ -198,22 +234,47 @@ class QuotationController extends Controller
             'customer_id' => 'required|exists:customers,id',
             'valid_until' => 'required|date',
             'notes' => 'nullable|string',
+            'pdf_options' => 'nullable|array',
+            'pdf_options.show_discount' => 'nullable|boolean',
+            'pdf_options.show_list_price' => 'nullable|boolean',
+            'pdf_options.show_hsn' => 'nullable|boolean',
+            'pdf_options.show_tax_breakdown' => 'nullable|boolean',
             'items' => 'required|array|min:1',
             'items.*.material_id' => 'required|exists:materials,id',
             'items.*.description' => 'required|string',
             'items.*.quantity' => 'required|numeric|min:0.01',
-            'items.*.unit_price' => 'required|numeric|min:0',
-            'items.*.tax_rate' => 'required|numeric|min:0|max:100',
+            'items.*.unit' => 'required|string',
+            'items.*.list_price' => 'required|numeric|min:0',
+            'items.*.discount_percentage' => 'required|numeric|min:0|max=100',
+            'items.*.tax_rate' => 'required|numeric|min:0|max=100',
         ]);
 
         DB::transaction(function () use ($validated, $quotation) {
+            $business = auth()->user()->business;
+            $customer = Customer::find($validated['customer_id']);
+            $isIntraState = $business->state === $customer->state;
+
             $subtotal = 0;
             $totalTax = 0;
 
             foreach ($validated['items'] as $item) {
-                $itemSubtotal = $item['quantity'] * $item['unit_price'];
-                $itemTax = ($itemSubtotal * $item['tax_rate']) / 100;
-                $subtotal += $itemSubtotal;
+                $netPrice = $item['list_price'] * (1 - $item['discount_percentage'] / 100);
+                $taxableValue = $netPrice * $item['quantity'];
+
+                if ($isIntraState) {
+                    $cgstAmount = $taxableValue * ($item['tax_rate'] / 2) / 100;
+                    $sgstAmount = $cgstAmount;
+                    $igstAmount = 0;
+                } else {
+                    $cgstAmount = 0;
+                    $sgstAmount = 0;
+                    $igstAmount = $taxableValue * $item['tax_rate'] / 100;
+                }
+
+                $itemTax = $cgstAmount + $sgstAmount + $igstAmount;
+                $itemTotal = $taxableValue + $itemTax;
+
+                $subtotal += $taxableValue;
                 $totalTax += $itemTax;
             }
 
@@ -221,6 +282,7 @@ class QuotationController extends Controller
                 'customer_id' => $validated['customer_id'],
                 'valid_until' => $validated['valid_until'],
                 'notes' => $validated['notes'],
+                'pdf_options' => $validated['pdf_options'] ?? [],
                 'subtotal' => $subtotal,
                 'tax_amount' => $totalTax,
                 'total' => $subtotal + $totalTax,
@@ -236,17 +298,39 @@ class QuotationController extends Controller
             $quotation->items()->delete();
 
             foreach ($validated['items'] as $item) {
-                $itemSubtotal = $item['quantity'] * $item['unit_price'];
-                $itemTax = ($itemSubtotal * $item['tax_rate']) / 100;
-                
+                $netPrice = $item['list_price'] * (1 - $item['discount_percentage'] / 100);
+                $taxableValue = $netPrice * $item['quantity'];
+
+                if ($isIntraState) {
+                    $cgstAmount = $taxableValue * ($item['tax_rate'] / 2) / 100;
+                    $sgstAmount = $cgstAmount;
+                    $igstAmount = 0;
+                } else {
+                    $cgstAmount = 0;
+                    $sgstAmount = 0;
+                    $igstAmount = $taxableValue * $item['tax_rate'] / 100;
+                }
+
+                $itemTax = $cgstAmount + $sgstAmount + $igstAmount;
+                $itemTotal = $taxableValue + $itemTax;
+
                 $quotation->items()->create([
                     'material_id' => $item['material_id'],
                     'description' => $item['description'],
                     'quantity' => $item['quantity'],
-                    'unit_price' => $item['unit_price'],
+                    'unit' => $item['unit'],
+                    'unit_price' => $netPrice, // For backward compatibility
+                    'list_price' => $item['list_price'],
+                    'discount_percentage' => $item['discount_percentage'],
+                    'net_price' => $netPrice,
+                    'hsn_code' => $item['hsn_code'] ?? null,
+                    'taxable_value' => $taxableValue,
+                    'cgst_amount' => $cgstAmount,
+                    'sgst_amount' => $sgstAmount,
+                    'igst_amount' => $igstAmount,
                     'tax_rate' => $item['tax_rate'],
                     'tax_amount' => $itemTax,
-                    'total' => $itemSubtotal + $itemTax,
+                    'total' => $itemTotal,
                 ]);
             }
         });
@@ -289,6 +373,7 @@ class QuotationController extends Controller
                     'status' => 'draft',
                     'issue_date' => now(),
                     'due_date' => now()->addDays(30),
+                    'pdf_options' => $quotation->pdf_options,
                 ]);
 
                 foreach ($quotation->items as $item) {
@@ -296,7 +381,16 @@ class QuotationController extends Controller
                         'invoice_id' => $invoice->id,
                         'description' => $item->description,
                         'quantity' => $item->quantity,
+                        'unit' => $item->unit,
                         'unit_price' => $item->unit_price,
+                        'list_price' => $item->list_price,
+                        'discount_percentage' => $item->discount_percentage,
+                        'net_price' => $item->net_price,
+                        'hsn_code' => $item->hsn_code,
+                        'taxable_value' => $item->taxable_value,
+                        'cgst_amount' => $item->cgst_amount,
+                        'sgst_amount' => $item->sgst_amount,
+                        'igst_amount' => $item->igst_amount,
                         'tax_rate' => $item->tax_rate,
                         'tax_amount' => $item->tax_amount,
                         'total_price' => $item->total,

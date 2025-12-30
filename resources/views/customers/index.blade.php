@@ -24,10 +24,12 @@
                     <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
                     <span>{{ $customers->total() }} Total</span>
                 </div>
+                @canCreateInModule('customers')
                 <a href="{{ route('customers.create') }}" class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
                     <i class="fas fa-plus w-5 h-5 mr-2"></i>
                     New Customer
                 </a>
+                @endcanCreateInModule
             </div>
         </div>
     </div>
@@ -212,16 +214,20 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-right">
                                     <div class="flex items-center justify-end space-x-2">
-                                        <a href="{{ route('customers.show', $customer) }}" 
+                                        @canViewModule('customers')
+                                        <a href="{{ route('customers.show', $customer) }}"
                                            class="inline-flex items-center px-2 py-1 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 focus:ring-2 focus:ring-offset-2 focus:ring-gray-300 transition-colors">
                                             <i class="fas fa-eye w-4 h-4 mr-1"></i>
                                             View
                                         </a>
-                                        <a href="{{ route('customers.edit', $customer) }}" 
+                                        @endcanViewModule
+                                        @canEditInModule('customers')
+                                        <a href="{{ route('customers.edit', $customer) }}"
                                            class="inline-flex items-center px-2 py-1 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 focus:ring-2 focus:ring-offset-2 focus:ring-gray-300 transition-colors">
                                             <i class="fas fa-edit w-4 h-4 mr-1"></i>
                                             Edit
                                         </a>
+                                        @endcanEditInModule
                                     </div>
                                 </td>
                             </tr>

@@ -35,7 +35,12 @@ class AppServiceProvider extends ServiceProvider
 
         // 2. Share all warehouses globally to views
         View::composer('*', function ($view) {
-            $view->with('allWarehouses', Warehouse::all());
+            try {
+                $view->with('allWarehouses', Warehouse::all());
+            } catch (\Exception $e) {
+                // Database not ready or table doesn't exist, provide empty collection
+                $view->with('allWarehouses', collect());
+            }
         });
 
         // 3. Share navigation items dynamically based on permissions
@@ -90,42 +95,59 @@ class AppServiceProvider extends ServiceProvider
         });
 
         // 5. Share permission checking function globally
-      \Illuminate\Support\Facades\Blade::if('canAccess', function ($action, $module) {
-    $user = auth()->user();
-
-    if (!$user) return false;
-
-    if (in_array($user->role, ['admin', 'super_admin'])) {
-        return true;
-    }
-
-    $moduleIds = [
-        'materials' => 4,
-        'vendors' => 5,
-        'warehouses' => 2,
-        'users' => 1,
-        'blocks' => 3,
-        'quality-analysis' => 6,
-        'purchase-orders' => 7,
-        'inventory' => 8,
-        'barcode' => 9,
-        'reports' => 10,
-    ];
-
-    $validActions = ['view', 'edit', 'create', 'delete', 'assign'];
-    if (!in_array($action, $validActions)) return false;
-
-    $moduleId = $moduleIds[$module] ?? null;
-    if (!$moduleId) return false;
-
-    $permissionColumn = 'can_' . $action;
-
-    return \DB::table('permissions')
-        ->where('user_id', $user->id)
-        ->where('module_id', $moduleId)
-        ->where($permissionColumn, 1)
-        ->exists();
-});
+          \Illuminate\Support\Facades\Blade::if('canAccess', function ($action, $module) {
+        $user = auth()->user();
+    
+        if (!$user) return false;
+    
+        if (in_array($user->role, ['admin', 'super_admin'])) {
+            return true;
+        }
+    
+        $moduleIds = [
+            'materials' => 4,
+            'vendors' => 5,
+            'warehouses' => 2,
+            'users' => 1,
+            'blocks' => 3,
+            'quality-analysis' => 6,
+            'purchase-orders' => 7,
+            'inventory' => 8,
+            'barcode' => 9,
+            'reports' => 10,
+        ];
+    
+        $validActions = ['view', 'edit', 'create', 'delete', 'assign'];
+        if (!in_array($action, $validActions)) return false;
+    
+        $moduleId = $moduleIds[$module] ?? null;
+        if (!$moduleId) return false;
+    
+        $permissionColumn = 'can_' . $action;
+    
+        return \DB::table('permissions')
+            ->where('user_id', $user->id)
+            ->where('module_id', $moduleId)
+            ->where($permissionColumn, 1)
+            ->exists();
+    });
+    
+            // 6. Add standardized permission directives using User model methods
+            \Illuminate\Support\Facades\Blade::if('canViewModule', function ($module) {
+                return auth()->user() && auth()->user()->canViewModule($module);
+            });
+    
+            \Illuminate\Support\Facades\Blade::if('canCreateInModule', function ($module) {
+                return auth()->user() && auth()->user()->canCreateInModule($module);
+            });
+    
+            \Illuminate\Support\Facades\Blade::if('canEditInModule', function ($module) {
+                return auth()->user() && auth()->user()->canEditInModule($module);
+            });
+    
+            \Illuminate\Support\Facades\Blade::if('canDeleteInModule', function ($module) {
+                return auth()->user() && auth()->user()->canDeleteInModule($module);
+            });
 
     }
 

@@ -21,9 +21,11 @@
                         <a href="{{ route('vendors.index') }}" class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
                             <i class="fas fa-arrow-left mr-2"></i>Back to List
                         </a>
+                        @canEditInModule('vendors')
                         <a href="{{ route('vendors.edit', $vendor->id) }}" class="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700">
                             <i class="fas fa-edit mr-2"></i>Edit Vendor
                         </a>
+                        @endcanEditInModule
                     </div>
                 </div>
             </div>

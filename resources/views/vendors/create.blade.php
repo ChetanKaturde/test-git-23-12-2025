@@ -317,19 +317,21 @@
 
             <!-- Form Actions -->
             <div class="flex justify-end space-x-3 pt-6 border-t border-gray-200">
-                <a href="{{ route('vendors.index') }}" 
+                <a href="{{ route('vendors.index') }}"
                    class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
                     Cancel
                 </a>
-                <button type="button" id="continue-btn" 
+                @canCreateInModule('vendors')
+                <button type="button" id="continue-btn"
                         class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors">
                     Continue
                 </button>
-                <button type="button" id="submit-btn" 
-                        class="px-6 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 transition-colors" 
+                <button type="button" id="submit-btn"
+                        class="px-6 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 transition-colors"
                         style="display: none;">
                     Save Vendor
                 </button>
+                @endcanCreateInModule
             </div>
         </form>
     </div>

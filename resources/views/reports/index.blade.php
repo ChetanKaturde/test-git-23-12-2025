@@ -29,10 +29,12 @@
                     <h3 class="text-2xl font-bold text-gray-900 mb-2">Who owes me money?</h3>
                     <p class="text-lg text-gray-600">See overdue invoices by customer</p>
                 </div>
+                @canViewInModule('reports')
                 <a href="{{ route('reports.aging') }}" class="inline-flex items-center px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-lg font-medium">
                     View Aging Report
                     <i class="fas fa-arrow-right ml-2"></i>
                 </a>
+                @endcanViewInModule
             </div>
         </div>
 
@@ -46,10 +48,12 @@
                     <h3 class="text-2xl font-bold text-gray-900 mb-2">Business Expenses</h3>
                     <p class="text-lg text-gray-600">Track and analyze your business expenses</p>
                 </div>
+                @canViewInModule('reports')
                 <a href="{{ route('reports.expenses') }}" class="inline-flex items-center px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors text-lg font-medium">
                     View Expense Report
                     <i class="fas fa-arrow-right ml-2"></i>
                 </a>
+                @endcanViewInModule
             </div>
         </div>
 
@@ -63,10 +67,12 @@
                     <h3 class="text-2xl font-bold text-gray-900 mb-2">Profit & Loss</h3>
                     <p class="text-lg text-gray-600">Revenue vs expenses analysis</p>
                 </div>
+                @canViewInModule('reports')
                 <a href="{{ route('reports.profit-loss') }}" class="inline-flex items-center px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-lg font-medium">
                     View P&L Report
                     <i class="fas fa-arrow-right ml-2"></i>
                 </a>
+                @endcanViewInModule
             </div>
         </div>
 

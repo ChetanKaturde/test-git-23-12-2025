@@ -58,11 +58,35 @@ Designed for businesses that make things, not just sell them.
 
 ---
 
-## Installation (For Developers)
+## Installation
+
+### Option 1: Docker (Recommended)
+
+**Production Setup:**
+```bash
+git clone <repository-url>
+cd monitorbizz
+cp .env.prod .env
+# Edit .env with your production values
+docker-compose up -d
+docker-compose exec app php artisan migrate --seed
+```
+
+**Development Setup:**
+```bash
+git clone <repository-url>
+cd monitorbizz
+cp .env.dev .env
+docker-compose -f docker-compose.dev.yml up -d
+```
+
+Access at: http://localhost:8000 (dev) or http://localhost (prod)
+
+### Option 2: Traditional Setup (For Developers)
 
 ```bash
 git clone <repository-url>
-cd Motorbizzzzz
+cd monitorbizz
 composer install
 npm install
 cp .env.example .env
@@ -72,7 +96,7 @@ npm run build
 php artisan serve
 ```
 
-**Tech Stack:** Laravel 10.x, MySQL, Bootstrap
+**Tech Stack:** Laravel 10.x, MySQL, Bootstrap, Docker
 
 ---
 

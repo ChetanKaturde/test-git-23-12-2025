@@ -209,7 +209,8 @@ class InvoiceController extends Controller
                 $customer,
                 false,
                 'invoice',
-                $documentData
+                $documentData,
+                $invoice
             );
             
             $filename = 'invoice-' . $invoice->invoice_number . '.pdf';

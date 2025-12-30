@@ -29,6 +29,7 @@ class Invoice extends Model
         'due_date',
         'paid_date',
         'notes',
+        'pdf_options',
         'quotation_id',
         'sent_at',
     ];
@@ -40,6 +41,7 @@ class Invoice extends Model
         'subtotal' => 'decimal:2',
         'tax_amount' => 'decimal:2',
         'total_amount' => 'decimal:2',
+        'pdf_options' => 'array',
         'sent_at' => 'datetime',
     ];
 

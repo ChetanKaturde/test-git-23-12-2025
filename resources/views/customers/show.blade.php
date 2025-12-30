@@ -56,23 +56,25 @@
             
             <!-- Action Buttons -->
             <div class="flex flex-wrap gap-3">
-                <a href="{{ route('customers.index') }}" 
+                <a href="{{ route('customers.index') }}"
                    class="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
                     <i class="fas fa-arrow-left mr-2"></i>
                     Back to Customers
                 </a>
-                <a href="{{ route('customers.edit', $customer) }}" 
+                @canEditInModule('customers')
+                <a href="{{ route('customers.edit', $customer) }}"
                    class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
                     <i class="fas fa-edit mr-2"></i>
                     Edit Customer
                 </a>
-                @if(auth()->user()->canViewModule('quotations'))
-                    <a href="{{ route('quotations.create', ['customer' => $customer->id]) }}" 
+                @endcanEditInModule
+                @canViewModule('quotations')
+                    <a href="{{ route('quotations.create', ['customer' => $customer->id]) }}"
                        class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
                         <i class="fas fa-plus mr-2"></i>
                         Create Quote
                     </a>
-                @endif
+                @endcanViewModule
                 {{-- @if(auth()->user()->canViewModule('invoices') && auth()->user()->isAdmin())
                     <a href="{{ route('invoices.create', ['customer' => $customer->id]) }}"
                        class="inline-flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">
