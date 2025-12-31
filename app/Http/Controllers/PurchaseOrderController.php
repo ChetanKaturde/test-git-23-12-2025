@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StorePurchaseOrderRequest;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\{PurchaseOrder, PurchaseOrderItem, Vendor, Material, InventoryBatch, Warehouse};
 use Illuminate\Http\Request;
@@ -82,12 +83,9 @@ public function approve(Request $request, PurchaseOrder $purchaseOrder)
         return view('purchase_orders.create', compact('vendors', 'materials'));
     }
 
-public function store(Request $request)
+public function store(StorePurchaseOrderRequest $request)
 {
-    $validated = $request->validate(self::BASE_RULES);
-
-    // Custom validation for available quantities
-    $this->validateMaterialQuantities($validated['items']);
+    $validated = $request->validated();
 
     $order = null;
 
@@ -100,22 +98,20 @@ public function store(Request $request)
 
         foreach ($validated['items'] as $item) {
             $itemTotal = $item['quantity'] * $item['unit_price'];
-            $itemGst = ($itemTotal * $item['gst_rate']) / 100;
+            $itemGst = ($itemTotal * ($item['gst_rate'] ?? 0)) / 100;
             $totalAmount += $itemTotal;
             $totalGst += $itemGst;
         }
 
-        $finalAmount = $totalAmount + $totalGst;
-
-        // Create the PO (status is hardcoded to 'pending')
+        // Create the PO
         $order = PurchaseOrder::create([
             'vendor_id' => $validated['vendor_id'],
             'po_date' => $validated['po_date'] ?? now()->format('Y-m-d'),
-            'status' => 'pending', // force status to pending
+            'status' => 'pending',
             'notes' => $validated['notes'] ?? null,
             'po_number' => $poNumber,
             'total_amount' => $totalAmount,
-            'business_id' => auth()->user()->business_id,
+            'business_id' => $validated['business_id'],
         ]);
 
         // Save PO items
@@ -124,7 +120,7 @@ public function store(Request $request)
         }
     });
 
-    // Notify Admins AFTER transaction
+    // Notify Admins
     $creator = Auth::user();
     $admins = User::where('role', 'admin')->get();
 

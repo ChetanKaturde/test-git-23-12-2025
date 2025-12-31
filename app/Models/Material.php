@@ -28,12 +28,44 @@ use Spatie\Activitylog\LogOptions;
 class Material extends Model
 {
     use BelongsToBusiness;
-    
+
+    /**
+     * Validation rules for the Material model.
+     */
+    public static $rules = [
+        'name' => 'required|string|max:100',
+        'item_type' => 'required|in:good,service',
+        'hsn_code' => 'nullable|string|max:20',
+        'code' => 'nullable|string|max:50|alpha_num',
+        'description' => 'nullable|string|max:500',
+        'unit' => 'required|string|max:20',
+        'unit_price' => 'required|numeric|min:0',
+        'gst_rate' => 'nullable|numeric|between:0,100',
+        'category' => 'nullable|string|max:100',
+        'material_type' => 'nullable|string|max:50',
+        'material_form' => 'nullable|string|max:50',
+        'grade' => 'nullable|string|max:100',
+        'unit_of_order' => 'nullable|string|max:20',
+        'estimated_weight_per_piece' => 'nullable|numeric|min:0',
+        'is_active' => 'nullable|boolean',
+        'business_id' => 'required|integer|exists:businesses,id',
+        'dimensions' => 'nullable|array',
+        'dimensions.length' => 'nullable|numeric|min:0',
+        'dimensions.width' => 'nullable|numeric|min:0',
+        'dimensions.height' => 'nullable|numeric|min:0',
+        'dimensions.diameter' => 'nullable|numeric|min:0',
+    ];
+
     protected static function boot()
     {
         parent::boot();
         
         static::creating(function ($material) {
+            // Auto-assign business_id if not set
+            if (!$material->business_id && auth()->check()) {
+                $material->business_id = auth()->user()->business_id;
+            }
+            
             if (!$material->code) {
                 $material->code = static::generateCode($material);
             }

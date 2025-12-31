@@ -19,6 +19,7 @@ class Business extends Model
         'is_active',
         'subscription_plan',
         'subscription_tier',
+        'template',
         'subscription_expires_at',
         'logo_path',
         'city',
@@ -93,30 +94,50 @@ class Business extends Model
         return $this->is_active && ($this->subscription_expires_at === null || $this->subscription_expires_at->isFuture());
     }
 
-    // Free Plan Limits
+    // Subscription methods
     public function canCreateInvoice()
     {
-        if ($this->subscription_plan !== 'free') {
-            return true;
-        }
-
-        return \Cache::remember("business_{$this->id}_invoice_count", 3600, function () {
-            return $this->invoices()
-                ->whereYear('created_at', now()->year)
-                ->whereMonth('created_at', now()->month)
-                ->count();
-        }) < 50;
+        return \App\Services\SubscriptionService::isWithinLimit(
+            $this, 
+            'invoices_per_month', 
+            $this->getInvoiceCount()
+        );
     }
 
     public function canInviteUser()
     {
-        if ($this->subscription_plan !== 'free') {
-            return true;
-        }
+        return \App\Services\SubscriptionService::isWithinLimit(
+            $this, 
+            'users', 
+            $this->getActiveUserCount()
+        );
+    }
 
-        return \Cache::remember("business_{$this->id}_user_count", 3600, function () {
-            return $this->users()->where('is_active', true)->count();
-        }) < 2;
+    public function canAccessFeature(string $feature): bool
+    {
+        return \App\Services\SubscriptionService::canAccessFeature($this, $feature);
+    }
+
+    public function getAllowedModules(): array
+    {
+        $template = \App\Services\SubscriptionService::getTemplate($this->template ?? 'service');
+        return \App\Services\SubscriptionService::getModulesForTier($template['tier'] ?? 'billing_sales');
+    }
+
+    public function getCurrentPrice(): int
+    {
+        return \App\Services\SubscriptionService::calculatePrice(
+            $this->subscription_plan ?? 'free',
+            $this->template ?? 'service'
+        );
+    }
+
+    public function getAvailableFeatures(): array
+    {
+        return \App\Services\SubscriptionService::getAvailableFeatures(
+            $this->subscription_plan ?? 'free',
+            $this->template ?? 'service'
+        );
     }
 
     public function getInvoiceCount()

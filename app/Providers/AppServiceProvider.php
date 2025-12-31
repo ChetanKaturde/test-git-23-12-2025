@@ -84,11 +84,7 @@ class AppServiceProvider extends ServiceProvider
             $allowedModules = [];
             
             if ($user && $user->business) {
-                $tier = $user->business->subscription_tier;
-                $allowedModules = match ($tier) {
-                    'billing_sales' => ['customers', 'quotations', 'invoices', 'team', 'reports'],
-                    default => ['materials', 'machines', 'work_orders', 'inventory', 'vendors', 'purchase_orders', 'customers', 'quotations', 'invoices', 'team', 'reports'],
-                };
+                $allowedModules = $user->business->getAllowedModules();
             }
             
             $view->with('allowedModules', $allowedModules);

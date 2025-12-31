@@ -914,6 +914,87 @@
                 }
             }
         }
+        
+        // Simple tooltip system
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize tooltips
+            document.querySelectorAll('[data-tooltip]').forEach(element => {
+                let tooltip = null;
+                
+                element.addEventListener('mouseenter', function(e) {
+                    const text = this.getAttribute('data-tooltip');
+                    const position = this.getAttribute('data-tooltip-position') || 'top';
+                    
+                    tooltip = document.createElement('div');
+                    tooltip.className = 'fixed z-50 bg-gray-900 text-white text-xs px-3 py-2 rounded-lg shadow-lg pointer-events-none max-w-xs';
+                    tooltip.textContent = text;
+                    document.body.appendChild(tooltip);
+                    
+                    const rect = this.getBoundingClientRect();
+                    const tooltipRect = tooltip.getBoundingClientRect();
+                    
+                    let top, left;
+                    
+                    switch(position) {
+                        case 'bottom':
+                            top = rect.bottom + 8;
+                            left = rect.left + (rect.width - tooltipRect.width) / 2;
+                            break;
+                        case 'left':
+                            top = rect.top + (rect.height - tooltipRect.height) / 2;
+                            left = rect.left - tooltipRect.width - 8;
+                            break;
+                        case 'right':
+                            top = rect.top + (rect.height - tooltipRect.height) / 2;
+                            left = rect.right + 8;
+                            break;
+                        default: // top
+                            top = rect.top - tooltipRect.height - 8;
+                            left = rect.left + (rect.width - tooltipRect.width) / 2;
+                    }
+                    
+                    // Keep tooltip within viewport
+                    top = Math.max(8, Math.min(top, window.innerHeight - tooltipRect.height - 8));
+                    left = Math.max(8, Math.min(left, window.innerWidth - tooltipRect.width - 8));
+                    
+                    tooltip.style.top = `${top}px`;
+                    tooltip.style.left = `${left}px`;
+                    
+                    // Animate in
+                    tooltip.style.opacity = '0';
+                    tooltip.style.transform = 'scale(0.8)';
+                    requestAnimationFrame(() => {
+                        tooltip.style.transition = 'opacity 0.2s, transform 0.2s';
+                        tooltip.style.opacity = '1';
+                        tooltip.style.transform = 'scale(1)';
+                    });
+                });
+                
+                element.addEventListener('mouseleave', function() {
+                    if (tooltip) {
+                        tooltip.style.opacity = '0';
+                        tooltip.style.transform = 'scale(0.8)';
+                        setTimeout(() => tooltip.remove(), 200);
+                        tooltip = null;
+                    }
+                });
+            });
+            
+            // Show tour button for new users
+            if (!localStorage.getItem('monitorbizz-tour-completed')) {
+                setTimeout(() => {
+                    const tourBtn = document.createElement('button');
+                    tourBtn.className = 'fixed bottom-4 right-4 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow-lg z-30 flex items-center space-x-2 transition-colors';
+                    tourBtn.innerHTML = '<i class="fas fa-question-circle"></i><span>Take Tour</span>';
+                    tourBtn.onclick = () => {
+                        showToast('Welcome to Monitorbizz! Explore the navigation menu to get started.', 'success');
+                        localStorage.setItem('monitorbizz-tour-completed', 'true');
+                        tourBtn.remove();
+                    };
+                    document.body.appendChild(tourBtn);
+                }, 2000);
+            }
+        });
     </script>
 </body>
 </html>

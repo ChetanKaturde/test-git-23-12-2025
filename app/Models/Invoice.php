@@ -25,6 +25,7 @@ class Invoice extends Model
         'tax_amount',
         'total_amount',
         'status',
+        'invoice_date',
         'issue_date',
         'due_date',
         'paid_date',
@@ -35,6 +36,7 @@ class Invoice extends Model
     ];
 
     protected $casts = [
+        'invoice_date' => 'date',
         'issue_date' => 'date',
         'due_date' => 'date',
         'paid_date' => 'date',

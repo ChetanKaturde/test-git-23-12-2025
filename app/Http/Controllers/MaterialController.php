@@ -2,6 +2,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Material;
+use App\Http\Requests\StoreMaterialRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -126,17 +127,10 @@ class MaterialController extends Controller
     /**
      * Store a newly created material in storage.
      */
-    public function store(Request $request)
+    public function store(StoreMaterialRequest $request)
     {
         try {
-            $validatedData = $this->validateMaterial($request);
-            
-            // Add business_id
-            $validatedData['business_id'] = auth()->user()->business_id;
-            
-            // Generate SKU and Barcode
-            $validatedData['sku'] = $this->generateSKU($validatedData);
-            $validatedData['barcode'] = $this->generateBarcode();
+            $validatedData = $request->validated();
             
             // Process dimensions data
             $validatedData = $this->processDimensions($validatedData, $request);
@@ -439,6 +433,156 @@ private function processDimensions(array $validatedData, Request $request): arra
             ]);
             return response()->json([
                 'error' => 'Failed to fetch materials'
+            ], 500);
+        }
+    }
+
+    /**
+     * Load sample materials data for demonstration
+     */
+    public function loadSampleData()
+    {
+        try {
+            $businessId = auth()->user()->business_id;
+            
+            // Check if materials already exist
+            $existingCount = Material::where('business_id', $businessId)->count();
+            if ($existingCount > 0) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Sample data can only be loaded for empty inventory'
+                ]);
+            }
+            
+            $sampleMaterials = [
+                [
+                    'name' => 'Mild Steel Sheet',
+                    'item_type' => 'good',
+                    'code' => 'MS001',
+                    'sku' => 'METMIL001',
+                    'description' => 'High quality mild steel sheet for fabrication',
+                    'unit' => 'kg',
+                    'unit_price' => 65.00,
+                    'gst_rate' => 18.00,
+                    'category' => 'Metal',
+                    'material_type' => 'Raw Material',
+                    'material_form' => 'Sheet',
+                    'grade' => 'IS 2062',
+                    'hsn_code' => '72085100',
+                    'is_active' => true,
+                    'business_id' => $businessId,
+                    'barcode' => $this->generateBarcode(),
+                    'dimensions' => ['length' => 2000, 'width' => 1000, 'height' => 3]
+                ],
+                [
+                    'name' => 'Aluminum Rod',
+                    'item_type' => 'good',
+                    'code' => 'AL001',
+                    'sku' => 'METALU001',
+                    'description' => 'Aluminum round rod for machining',
+                    'unit' => 'meter',
+                    'unit_price' => 180.00,
+                    'gst_rate' => 18.00,
+                    'category' => 'Metal',
+                    'material_type' => 'Raw Material',
+                    'material_form' => 'Rod',
+                    'grade' => '6061-T6',
+                    'hsn_code' => '76042100',
+                    'is_active' => true,
+                    'business_id' => $businessId,
+                    'barcode' => $this->generateBarcode(),
+                    'dimensions' => ['diameter' => 25, 'length' => 6000]
+                ],
+                [
+                    'name' => 'Welding Service',
+                    'item_type' => 'service',
+                    'code' => 'WS001',
+                    'sku' => 'SERWEL001',
+                    'description' => 'Professional welding service per hour',
+                    'unit' => 'hour',
+                    'unit_price' => 500.00,
+                    'gst_rate' => 18.00,
+                    'category' => 'Service',
+                    'material_type' => 'Service',
+                    'hsn_code' => '99890001',
+                    'is_active' => true,
+                    'business_id' => $businessId,
+                    'barcode' => $this->generateBarcode()
+                ],
+                [
+                    'name' => 'Stainless Steel Pipe',
+                    'item_type' => 'good',
+                    'code' => 'SS001',
+                    'sku' => 'METSTA001',
+                    'description' => 'Stainless steel seamless pipe',
+                    'unit' => 'meter',
+                    'unit_price' => 450.00,
+                    'gst_rate' => 18.00,
+                    'category' => 'Metal',
+                    'material_type' => 'Raw Material',
+                    'material_form' => 'Pipe',
+                    'grade' => '316L',
+                    'hsn_code' => '73063000',
+                    'is_active' => true,
+                    'business_id' => $businessId,
+                    'barcode' => $this->generateBarcode(),
+                    'dimensions' => ['diameter' => 50, 'length' => 6000]
+                ],
+                [
+                    'name' => 'Industrial Paint',
+                    'item_type' => 'good',
+                    'code' => 'PT001',
+                    'sku' => 'CHEIND001',
+                    'description' => 'High-quality industrial paint for metal surfaces',
+                    'unit' => 'liter',
+                    'unit_price' => 320.00,
+                    'gst_rate' => 18.00,
+                    'category' => 'Chemical',
+                    'material_type' => 'Consumable',
+                    'material_form' => 'Liquid',
+                    'grade' => 'Premium',
+                    'hsn_code' => '32081000',
+                    'is_active' => true,
+                    'business_id' => $businessId,
+                    'barcode' => $this->generateBarcode()
+                ],
+                [
+                    'name' => 'Machining Service',
+                    'item_type' => 'service',
+                    'code' => 'MS002',
+                    'sku' => 'SERMAC001',
+                    'description' => 'CNC machining service per hour',
+                    'unit' => 'hour',
+                    'unit_price' => 800.00,
+                    'gst_rate' => 18.00,
+                    'category' => 'Service',
+                    'material_type' => 'Service',
+                    'hsn_code' => '99890002',
+                    'is_active' => true,
+                    'business_id' => $businessId,
+                    'barcode' => $this->generateBarcode()
+                ]
+            ];
+            
+            foreach ($sampleMaterials as $materialData) {
+                Material::create($materialData);
+            }
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Sample materials loaded successfully!',
+                'count' => count($sampleMaterials)
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Error loading sample materials', [
+                'error' => $e->getMessage(),
+                'user_id' => auth()->id()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to load sample data'
             ], 500);
         }
     }

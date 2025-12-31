@@ -50,13 +50,13 @@ class BusinessObserver
         Customer::create([
             'business_id' => $business->id,
             'name' => 'Sample Client',
-            'type' => 'business',
+            'customer_type' => 'business',
             'phone' => '9876543210',
             'email' => 'client@example.com',
             'address' => '123 Business Street',
             'city' => 'Mumbai',
             'state' => 'Maharashtra',
-            'pin_code' => '400001',
+            'pincode' => '400001',
             'is_active' => true,
         ]);
     }
@@ -110,12 +110,12 @@ class BusinessObserver
         Customer::create([
             'business_id' => $business->id,
             'name' => 'Walk-in Customer',
-            'type' => 'individual',
+            'customer_type' => 'individual',
             'phone' => '9876543211',
             'address' => '789 Customer Road',
             'city' => 'Delhi',
             'state' => 'Delhi',
-            'pin_code' => '110001',
+            'pincode' => '110001',
             'is_active' => true,
         ]);
     }

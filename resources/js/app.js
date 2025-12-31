@@ -1,4 +1,5 @@
 import './bootstrap';
+import './tooltips-tour';
 
 import Alpine from 'alpinejs';
 

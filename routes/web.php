@@ -20,42 +20,6 @@ Route::get('/', function () {
 // Contact form
 Route::post('/contact', [\App\Http\Controllers\ContactController::class, 'store'])->name('contact.store');
 
-Route::get('/test', function () {
-    return 'Laravel is working! Time: ' . now();
-});
-
-Route::get('/test-state-city', function () {
-    return view('test-state-city');
-});
-
-Route::get('/test-materials-create', function () {
-    return 'Materials create route test - ' . now();
-});
-
-// Test materials create without auth
-Route::get('/materials/create-test', [MaterialController::class, 'create']);
-
-// Direct view test
-Route::get('/materials/create-direct', function() {
-    return view('materials.create');
-});
-
-// Simple test without layout
-Route::get('/materials/create-simple', function() {
-    return '<h1>Materials Create Form</h1><p>This should work if routing is OK</p>';
-});
-
-// Debug route
-Route::get('/debug-session', function() {
-    return [
-        'authenticated' => auth()->check(),
-        'user' => auth()->user() ? auth()->user()->only(['id', 'email', 'role', 'business_id']) : null,
-        'session_id' => session()->getId(),
-        'csrf_token' => csrf_token(),
-        'session_data' => session()->all()
-    ];
-});
-
 // Authentication routes
 Route::middleware('guest')->group(function () {
     Route::get('login', [AuthenticatedSessionController::class, 'create'])->name('login');
@@ -69,15 +33,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/api/dashboard/realtime', [DashboardController::class, 'getRealtimeData'])->name('dashboard.realtime');
     
-    // Materials - temporarily without middleware for testing
+    // Materials
     Route::get('materials', [MaterialController::class, 'index'])->name('materials.index');
-    Route::get('materials/create', function() {
-        if (!auth()->check()) {
-            return redirect()->route('login');
-        }
-        return view('materials.create');
-    })->name('materials.create');
+    Route::get('materials/create', [MaterialController::class, 'create'])->name('materials.create');
     Route::post('materials', [MaterialController::class, 'store'])->name('materials.store');
+    Route::post('materials/load-sample', [MaterialController::class, 'loadSampleData'])->name('materials.load-sample');
     Route::get('materials/{material}', [MaterialController::class, 'show'])->name('materials.show');
     Route::middleware('module.permission:materials,edit')->group(function () {
         Route::get('materials/{material}/edit', [MaterialController::class, 'edit'])->name('materials.edit');
@@ -326,48 +286,10 @@ Route::middleware('auth')->get('/materials/all', [MaterialController::class, 'ge
 // Global search API
 Route::middleware('auth')->get('/api/search', [\App\Http\Controllers\SearchController::class, 'search'])->name('api.search');
 
-// Debug routes
-Route::post('/debug-login', function(\Illuminate\Http\Request $request) {
-    $credentials = $request->only('email', 'password');
-    if (\Auth::attempt($credentials)) {
-        return response()->json(['success' => true, 'user' => \Auth::user()->email]);
-    }
-    return response()->json(['success' => false, 'message' => 'Invalid credentials']);
-});
-
-Route::get('/debug-auth', function() {
-    return response()->json([
-        'authenticated' => \Auth::check(),
-        'user' => \Auth::user() ? \Auth::user()->email : null
-    ]);
-});
-
-// Test route without middleware
-Route::get('/test-materials-create-simple', function() {
-    return 'Materials create test - authenticated: ' . (\Auth::check() ? 'YES' : 'NO') . ' - User: ' . (\Auth::user() ? \Auth::user()->email : 'none');
-});
-
-// Test invoice route
-Route::get('/test-invoices', function() {
-    try {
-        if (!\Auth::check()) {
-            return 'Not authenticated';
-        }
-        
-        $user = \Auth::user();
-        $businessId = $user->business_id;
-        
-        if (!$businessId) {
-            return 'No business ID for user: ' . $user->email;
-        }
-        
-        $invoiceCount = \App\Models\Invoice::where('business_id', $businessId)->count();
-        
-        return 'User: ' . $user->email . ', Business ID: ' . $businessId . ', Invoice count: ' . $invoiceCount;
-    } catch (Exception $e) {
-        return 'Error: ' . $e->getMessage();
-    }
-});
+// Pricing page
+Route::middleware('auth')->get('/pricing', function () {
+    return view('pricing');
+})->name('pricing');
 
 
 

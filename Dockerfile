@@ -1,8 +1,8 @@
 # Multi-stage Dockerfile for Monitorbizz Laravel Application
 # ========================================================
 
-# Base stage: PHP 8.1 with essential extensions
-FROM php:8.1-fpm-alpine AS base
+# Base stage: PHP 8.4 with essential extensions
+FROM php:8.4-fpm-alpine AS base
 
 # Install system dependencies
 RUN apk add --no-cache \
@@ -41,7 +41,7 @@ WORKDIR /var/www/html
 COPY composer.json composer.lock ./
 
 # Install PHP dependencies (without dev dependencies for production)
-RUN composer install --no-dev --optimize-autoloader --no-interaction --no-progress
+RUN composer install --no-dev --optimize-autoloader --no-interaction --no-progress --no-scripts
 
 # Copy application code
 COPY . .
@@ -60,7 +60,7 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 
 # Install Node.js dependencies
-RUN npm ci --only=production
+RUN npm ci
 
 # Copy resources
 COPY resources/ ./resources/
