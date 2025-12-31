@@ -76,7 +76,9 @@ class RegisteredUserController extends Controller
             event(new Registered($user));
             Auth::login($user);
             
-            return redirect()->route('dashboard')->with('success', 'Welcome to the team!');
+            // Force redirect to correct URL for Codespace
+            $dashboardUrl = str_replace('localhost:8000', $request->getHost(), route('dashboard'));
+            return redirect($dashboardUrl)->with('success', 'Welcome to the team!');
         } else {
             // Regular business owner registration
             $request->validate([
@@ -115,8 +117,9 @@ class RegisteredUserController extends Controller
             event(new Registered($user));
             Auth::login($user);
 
-            // Redirect to dashboard (no subdomain)
-            return redirect()->route('dashboard')->with('success', 'Welcome to Monitorbizz! Your workshop is ready.');
+            // Force redirect to correct URL for Codespace
+            $dashboardUrl = str_replace('localhost:8000', $request->getHost(), route('dashboard'));
+            return redirect($dashboardUrl)->with('success', 'Welcome to Monitorbizz! Your workshop is ready.');
         }
     }
 }

@@ -13,7 +13,7 @@
         .logo-text { font-family: 'Inter', system-ui, sans-serif; }
     </style>
 </head>
-<body class="bg-gray-50 min-h-screen" x-data="{ showContact: false }">
+<body class="bg-gray-50 min-h-screen">
     <!-- Hero Section -->
     <div class="gradient-bg py-20">
         <div class="max-w-6xl mx-auto px-4 text-center text-white">
@@ -213,67 +213,16 @@
                    class="bg-white text-indigo-600 font-semibold py-3 px-8 rounded-lg hover:bg-gray-100 transition-all duration-200 transform hover:scale-105">
                     Start Free Trial
                 </a>
-                <button @click="showContact = true" 
+                <a href="{{ route('login') }}" 
                         class="bg-indigo-800 text-white font-semibold py-3 px-8 rounded-lg hover:bg-indigo-900 transition-all duration-200">
-                    Contact Sales
-                </button>
+                    Login
+                </a>
             </div>
         </div>
     </div>
 
     <!-- Contact Modal -->
-    <div x-show="showContact" x-cloak class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-        <div class="bg-white rounded-lg max-w-md w-full p-6" @click.away="showContact = false">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-xl font-semibold">Contact Us</h3>
-                <button @click="showContact = false" class="text-gray-400 hover:text-gray-600">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                </button>
-            </div>
-            
-            <form @submit.prevent="submitContact" class="space-y-4" x-data="{ submitting: false, message: '', messageType: '' }">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
-                    <input type="text" name="name" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                    <input type="email" name="email" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
-                    <input type="tel" name="phone" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Business Type</label>
-                    <select name="business_type" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option value="">Select your business type</option>
-                        <option value="metal_workshop">Metal Workshop</option>
-                        <option value="furniture">Furniture Manufacturing</option>
-                        <option value="auto_garage">Auto Garage</option>
-                        <option value="textile">Textile Manufacturing</option>
-                        <option value="other">Other Manufacturing</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Message</label>
-                    <textarea name="message" rows="3" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Tell us about your manufacturing needs..."></textarea>
-                </div>
-                <div x-show="message" class="p-3 rounded-md text-sm" :class="messageType === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'" x-text="message"></div>
-                <div class="flex gap-3">
-                    <button type="submit" :disabled="submitting" class="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50">
-                        <span x-show="!submitting">Send Message</span>
-                        <span x-show="submitting">Sending...</span>
-                    </button>
-                    <button type="button" @click="showContact = false" class="px-4 py-2 text-gray-600 hover:text-gray-800">
-                        Cancel
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
+    <!-- REMOVED - Contact popup disabled -->
 
     <!-- Footer -->
     <footer class="bg-gray-900 text-white py-12">
@@ -289,45 +238,7 @@
     </style>
     
     <script>
-        function submitContact(event) {
-            const form = event.target;
-            const formData = new FormData(form);
-            const submitButton = form.querySelector('button[type="submit"]');
-            
-            // Get Alpine.js data
-            const alpineData = Alpine.$data(form);
-            alpineData.submitting = true;
-            alpineData.message = '';
-            
-            fetch('/contact', {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}',
-                    'Accept': 'application/json'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                alpineData.submitting = false;
-                if (data.success) {
-                    alpineData.message = data.message;
-                    alpineData.messageType = 'success';
-                    form.reset();
-                    setTimeout(() => {
-                        Alpine.$data(document.body).showContact = false;
-                    }, 2000);
-                } else {
-                    alpineData.message = data.message || 'An error occurred. Please try again.';
-                    alpineData.messageType = 'error';
-                }
-            })
-            .catch(error => {
-                alpineData.submitting = false;
-                alpineData.message = 'Network error. Please check your connection and try again.';
-                alpineData.messageType = 'error';
-            });
-        }
+        // Contact form removed - no scripts needed
     </script>
 </body>
 </html>

@@ -21,7 +21,9 @@ class RedirectIfAuthenticated
 
         foreach ($guards as $guard) {
             if (Auth::guard($guard)->check()) {
-                return redirect(RouteServiceProvider::HOME);
+                // Force correct URL for Codespace
+                $homeUrl = str_replace('localhost:8000', $request->getHost(), url(RouteServiceProvider::HOME));
+                return redirect($homeUrl);
             }
         }
 

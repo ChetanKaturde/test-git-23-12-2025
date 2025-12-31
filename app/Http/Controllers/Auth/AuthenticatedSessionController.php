@@ -32,7 +32,9 @@ class AuthenticatedSessionController extends Controller
         // Update last login time
         auth()->user()->update(['last_login_at' => now()]);
 
-        return redirect()->intended(RouteServiceProvider::HOME);
+        // Force redirect to correct URL for Codespace
+        $dashboardUrl = str_replace('localhost:8000', $request->getHost(), route('dashboard'));
+        return redirect($dashboardUrl);
     }
 
     /**
