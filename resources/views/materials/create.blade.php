@@ -38,10 +38,20 @@
 
             <div id="hsn_code_field">
                 <label for="hsn_code" class="block text-sm font-medium text-gray-700 mb-2" title="Mandatory for B2B invoices over ₹50,000. Find at gst.gov.in">HSN Code</label>
-                <input type="text" name="hsn_code" id="hsn_code" value="{{ old('hsn_code') }}" 
+                <input type="text" name="hsn_code" id="hsn_code" value="{{ old('hsn_code') }}"
                        placeholder="e.g., 7208, 3920, 8471"
                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                 @error('hsn_code')
+                    <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                @enderror
+            </div>
+
+            <div id="sac_code_field">
+                <label for="sac_code" class="block text-sm font-medium text-gray-700 mb-2" title="Service Accounting Code for services">SAC Code</label>
+                <input type="text" name="sac_code" id="sac_code" value="{{ old('sac_code') }}"
+                       placeholder="e.g., 9983, 9992"
+                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                @error('sac_code')
                     <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                 @enderror
             </div>
@@ -67,23 +77,9 @@
             </div>
 
             @if(auth()->user()->business->subscription_tier !== 'billing_sales')
-            <div id="material_type_field">
-                <label for="material_type" class="block text-sm font-medium text-gray-700 mb-2">Product Type</label>
-                <select name="material_type" id="material_type" 
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <option value="raw_material" {{ old('material_type') == 'raw_material' ? 'selected' : '' }}>Raw Material</option>
-                    <option value="component" {{ old('material_type') == 'component' ? 'selected' : '' }}>Component</option>
-                    <option value="finished_good" {{ old('material_type') == 'finished_good' ? 'selected' : '' }}>Finished Good</option>
-                    <option value="consumable" {{ old('material_type') == 'consumable' ? 'selected' : '' }}>Consumable</option>
-                </select>
-                @error('material_type')
-                    <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
-                @enderror
-            </div>
-
             <div id="material_form_field">
                 <label for="material_form" class="block text-sm font-medium text-gray-700 mb-2">Product Form</label>
-                <select name="material_form" id="material_form" 
+                <select name="material_form" id="material_form"
                         class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                     <option value="">Select Form</option>
                     <option value="bar" {{ old('material_form') == 'bar' ? 'selected' : '' }}>Bar</option>
@@ -100,23 +96,10 @@
 
             <div id="grade_field">
                 <label for="grade" class="block text-sm font-medium text-gray-700 mb-2">Grade/Specification</label>
-                <input type="text" name="grade" id="grade" value="{{ old('grade') }}" 
+                <input type="text" name="grade" id="grade" value="{{ old('grade') }}"
                        placeholder="e.g., 6061-T6, SS316, C36000"
                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                 @error('grade')
-                    <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
-                @enderror
-            </div>
-            @else
-            <div id="simple_type_field">
-                <label for="material_type" class="block text-sm font-medium text-gray-700 mb-2">Product Type</label>
-                <select name="material_type" id="material_type" 
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <option value="product" {{ old('material_type') == 'product' ? 'selected' : '' }}>Product</option>
-                    <option value="service" {{ old('material_type') == 'service' ? 'selected' : '' }}>Service</option>
-                    <option value="bundle" {{ old('material_type') == 'bundle' ? 'selected' : '' }}>Bundle</option>
-                </select>
-                @error('material_type')
                     <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                 @enderror
             </div>
@@ -125,8 +108,9 @@
             <!-- Unit System -->
             <div>
                 <label for="unit" class="block text-sm font-medium text-gray-700 mb-2">Unit *</label>
-                <select name="unit" id="unit" 
+                <select name="unit" id="unit"
                         class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                    <option value="" selected disabled>Select Unit</option>
                     <!-- Good units -->
                     <optgroup label="For Goods" id="good_units">
                         <option value="kg" {{ old('unit') == 'kg' ? 'selected' : '' }}>Kilogram (kg)</option>
@@ -149,20 +133,6 @@
                     </optgroup>
                 </select>
                 @error('unit')
-                    <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
-                @enderror
-            </div>
-
-            <div id="dual_unit_fields" style="display: none;">
-                <label for="unit_of_order" class="block text-sm font-medium text-gray-700 mb-2">Order Unit (if different)</label>
-                <select name="unit_of_order" id="unit_of_order" 
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <option value="">Same as stock unit</option>
-                    <option value="piece" {{ old('unit_of_order') == 'piece' ? 'selected' : '' }}>Piece</option>
-                    <option value="meter" {{ old('unit_of_order') == 'meter' ? 'selected' : '' }}>Meter</option>
-                    <option value="kg" {{ old('unit_of_order') == 'kg' ? 'selected' : '' }}>Kilogram (kg)</option>
-                </select>
-                @error('unit_of_order')
                     <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                 @enderror
             </div>
@@ -234,48 +204,48 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const itemType = document.getElementById('item_type');
-    const materialTypeField = document.getElementById('material_type_field');
     const materialFormField = document.getElementById('material_form_field');
     const gradeField = document.getElementById('grade_field');
     const skuField = document.getElementById('sku_field');
     const barcodeField = document.getElementById('barcode_field');
-    const dualUnitFields = document.getElementById('dual_unit_fields');
     const unitSelect = document.getElementById('unit');
     const goodUnits = document.getElementById('good_units');
     const serviceUnits = document.getElementById('service_units');
     const isBillingSales = {{ auth()->user()->business->subscription_tier === 'billing_sales' ? 'true' : 'false' }};
-    
+
     function toggleFields() {
         const isService = itemType.value === 'service';
-        
+
         // Hide SKU/barcode for services
         skuField.style.display = isService ? 'none' : 'block';
         barcodeField.style.display = isService ? 'none' : 'block';
-        
-        // Hide HSN code for services (only for goods)
+
+        // Toggle HSN and SAC codes based on item_type
         const hsnField = document.getElementById('hsn_code_field');
         hsnField.style.display = isService ? 'none' : 'block';
-        
+        const sacField = document.getElementById('sac_code_field');
+        sacField.style.display = isService ? 'block' : 'none';
+
         // For billing_sales tier, hide advanced fields
         if (!isBillingSales) {
-            materialTypeField.style.display = isService ? 'none' : 'block';
             materialFormField.style.display = isService ? 'none' : 'block';
             gradeField.style.display = isService ? 'none' : 'block';
-            dualUnitFields.style.display = isService ? 'none' : 'block';
         }
-        
-        // Set default unit for services
-        if (isService && !unitSelect.value) {
-            unitSelect.value = 'hour';
+
+        // Reset unit for services, set default for goods
+        if (isService) {
+            unitSelect.value = '';
+        } else if (!unitSelect.value) {
+            unitSelect.value = 'kg';
         }
-        
+
         // Show/hide unit groups
         goodUnits.style.display = isService ? 'none' : 'block';
         serviceUnits.style.display = isService ? 'block' : 'none';
     }
-    
+
     itemType.addEventListener('change', toggleFields);
-    
+
     // Initial check
     toggleFields();
 });

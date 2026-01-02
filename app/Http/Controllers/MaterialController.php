@@ -130,7 +130,7 @@ class MaterialController extends Controller
     {
         try {
             $validatedData = $this->validateMaterial($request);
-            
+
             // Add business_id
             $validatedData['business_id'] = auth()->user()->business_id;
             
@@ -149,8 +149,12 @@ class MaterialController extends Controller
                 'user_id' => auth()->id()
             ]);
             
+            $message = $material->item_type === 'service'
+                ? 'Commodity created successfully.'
+                : 'Commodity created successfully with SKU: ' . $material->sku;
+
             return redirect()->route('materials.index')
-                ->with('success', 'Commodity created successfully with SKU: ' . $material->sku);
+                ->with('success', $message);
         } catch (\Exception $e) {
             \Log::error('Error creating material', [
                 'error' => $e->getMessage(),
@@ -351,8 +355,8 @@ private function processDimensions(array $validatedData, Request $request): arra
         
         return $request->validate([
             'name' => [
-                'required', 
-                'string', 
+                'required',
+                'string',
                 'max:100',
                 function ($attribute, $value, $fail) use ($businessId, $materialId) {
                     $query = Material::where('name', $value)->where('business_id', $businessId);
@@ -364,9 +368,9 @@ private function processDimensions(array $validatedData, Request $request): arra
             ],
             'item_type' => ['required', 'in:good,service'],
             'code' => [
-                'nullable', 
-                'string', 
-                'max:50', 
+                'nullable',
+                'string',
+                'max:50',
                 'alpha_num',
                 function ($attribute, $value, $fail) use ($businessId, $materialId) {
                     if ($value) {
@@ -383,12 +387,12 @@ private function processDimensions(array $validatedData, Request $request): arra
             'unit_price' => ['required', 'numeric', 'min:0'],
             'gst_rate' => ['nullable', 'numeric', 'between:0,100'],
             'category' => ['nullable', 'string', 'max:100'],
-            'material_type' => ['nullable', 'string', 'max:50'],
+            'hsn_code' => ['nullable', 'string', 'max:50'],
+            'sac_code' => ['nullable', 'string', 'max:50'],
             'material_form' => ['nullable', 'string', 'max:50'],
             'grade' => ['nullable', 'string', 'max:100'],
-            'unit_of_order' => ['nullable', 'string', 'max:20'],
             'is_active' => ['nullable', 'boolean'],
-          
+
             // Validate dimensions as nested array
             'dimensions' => ['nullable', 'array'],
             'dimensions.length' => ['nullable', 'numeric', 'min:0'],

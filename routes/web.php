@@ -190,6 +190,7 @@ Route::middleware('auth')->group(function () {
     Route::get('invoices/{invoice}/pdf', [InvoiceController::class, 'pdf'])->name('invoices.pdf');
     Route::post('invoices/{invoice}/mark-paid', [InvoiceController::class, 'markAsPaid'])->name('invoices.mark-paid');
     Route::post('invoices/{invoice}/mark-as-sent', [InvoiceController::class, 'markAsSent'])->name('invoices.mark-sent');
+    Route::get('invoices/payments/{payment}/receipt', [InvoiceController::class, 'paymentReceipt'])->name('invoices.payments.receipt');
     
     // Payments
     Route::post('payments', [\App\Http\Controllers\PaymentController::class, 'store'])->name('payments.store');

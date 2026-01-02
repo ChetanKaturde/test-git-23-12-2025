@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Invoice;
 use App\Models\ActivityLog;
 use App\Models\Quotation;
+use App\Models\Payment;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf as PDF;
 use App\Services\PdfService;
@@ -216,9 +217,36 @@ class InvoiceController extends Controller
             
             return $pdf->stream($filename);
         } catch (\Exception $e) {
-            \Log::error('Invoice PDF Generation Error: ' . $e->getMessage());
-            return back()->with('error', 'Unable to generate PDF. Please try again.');
+            dd($e->getMessage());
         }
+    }
+
+    public function paymentReceipt(Payment $payment)
+    {
+        if ($payment->business_id !== auth()->user()->business_id) {
+            abort(404);
+        }
+
+        $invoice = $payment->invoice;
+        $business = auth()->user()->business;
+
+        $data = [
+            'business' => $business,
+            'invoice' => $invoice,
+            'payment' => $payment,
+            'customer' => (object) [
+                'name' => $invoice->customer_name,
+                'email' => $invoice->customer_email,
+                'phone' => $invoice->customer_phone,
+                'address' => $invoice->customer_address,
+                'gstin' => $invoice->customer_gstin,
+            ],
+        ];
+
+        $pdf = PDF::loadView('pdfs.receipt', $data);
+        $filename = 'receipt-' . $invoice->invoice_number . '-' . $payment->id . '.pdf';
+
+        return $pdf->stream($filename);
     }
 
     /**

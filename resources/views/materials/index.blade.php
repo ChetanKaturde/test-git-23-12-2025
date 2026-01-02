@@ -28,7 +28,7 @@
                 </div>
             </div>
         </div>
-        <div class="bg-white rounded-lg shadow p-6">
+        <div class="bg-white rounded-lg shadow p-6" style="display: none;">
             <div class="flex items-center">
                 <div class="p-2 bg-yellow-100 rounded-lg">
                     <i class="fas fa-exclamation-triangle text-yellow-600"></i>
@@ -39,7 +39,7 @@
                 </div>
             </div>
         </div>
-        <div class="bg-white rounded-lg shadow p-6">
+        <div class="bg-white rounded-lg shadow p-6" style="display: none;">
             <div class="flex items-center">
                 <div class="p-2 bg-purple-100 rounded-lg">
                     <i class="fas fa-truck text-purple-600"></i>
@@ -80,9 +80,9 @@
                     <thead class="bg-gray-50">
                         <tr>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Commodity</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Supplier</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="display: none;">Supplier</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="display: none;">Stock</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="display: none;">
                                 <div class="flex items-center space-x-1">
                                     <span>Reorder Point</span>
                                     <div x-data="{ open: false }" class="relative inline-block">
@@ -120,8 +120,8 @@
                                     @endif
                                 </div>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Primary Supplier</td>
-                            <td class="px-6 py-4 whitespace-nowrap">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900" style="display: none;">Primary Supplier</td>
+                            <td class="px-6 py-4 whitespace-nowrap" style="display: none;">
                                 @if($material->item_type === 'service')
                                     <span class="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">Service</span>
                                     <div class="text-sm text-gray-500 mt-1">N/A</div>
@@ -138,7 +138,7 @@
                                     @endif
                                 @endif
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">50 {{ $material->unit }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900" style="display: none;">50 {{ $material->unit }}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">₹{{ number_format($material->unit_price, 2) }}</td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ $material->is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800' }}">

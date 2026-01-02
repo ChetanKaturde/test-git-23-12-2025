@@ -31,4 +31,16 @@ class PdfService
 
         return PDF::loadView('pdfs.document', $data);
     }
+
+    public function generateReceiptPdf($payment, $invoice, $business, $customer)
+    {
+        $data = [
+            'payment' => $payment,
+            'invoice' => $invoice,
+            'business' => $business,
+            'customer' => $customer,
+        ];
+
+        return PDF::loadView('pdfs.receipt', $data);
+    }
 }

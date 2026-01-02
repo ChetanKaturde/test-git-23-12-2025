@@ -269,8 +269,8 @@
                                             Edit
                                         </a>
                                     @endif
-                                    <a href="#" 
-                                       class="inline-flex items-center px-3 py-1.5 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors text-xs font-medium" 
+                                    <a href="{{ route('invoices.pdf', $invoice) }}" target="_blank"
+                                       class="inline-flex items-center px-3 py-1.5 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors text-xs font-medium"
                                        title="Download PDF">
                                         <i class="fas fa-download mr-1"></i>
                                         PDF

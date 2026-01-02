@@ -1,9 +1,8 @@
 @extends('layouts.app')
 @section('title', 'Edit Commodity')
 @section('content')
-<div class="container">
+<div class="container mt-8">
     <div class="card">
-        <div class="card-header"><h3>Edit Commodity</h3></div>
         <div class="card-body">
            <form id="materialForm" action="{{ route('materials.update', $material) }}" method="POST">
     @csrf 
@@ -18,7 +17,7 @@
         <h4>Vendor Pricing & MOQ</h4>
         <p class="text-muted mb-0">Link this commodity to vendors with pricing and minimum order quantities</p>
     </div>
-    <div class="card-body">
+    <div class="card-body pt-6">
         <div id="vendor-links">
             <!-- Existing vendor links will be loaded here -->
         </div>

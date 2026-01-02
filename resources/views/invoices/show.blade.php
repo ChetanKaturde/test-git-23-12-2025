@@ -281,9 +281,17 @@
                                         <div class="text-sm font-medium text-gray-900">₹{{ number_format($payment->amount, 2) }}</div>
                                         <div class="text-xs text-gray-500">{{ $payment->payment_date->format('M d, Y') }} • {{ ucfirst(str_replace('_', ' ', $payment->payment_method)) }}</div>
                                     </div>
-                                    @if($payment->reference_no)
-                                        <div class="text-xs text-gray-400">{{ $payment->reference_no }}</div>
-                                    @endif
+                                    <div class="flex items-center space-x-2">
+                                        {{-- @if($payment->reference_no)
+                                            <div class="text-xs text-gray-400">{{ $payment->reference_no }}</div>
+                                        @endif --}}
+                                        <a href="{{ route('invoices.payments.receipt', $payment) }}"
+                                           class="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 transition-colors text-xs font-medium"
+                                           title="Download Receipt">
+                                           <i class="fas fa-download mr-1"></i>
+                                           Receipt
+                                        </a>
+                                    </div>
                                 </div>
                             @endforeach
                         </div>
