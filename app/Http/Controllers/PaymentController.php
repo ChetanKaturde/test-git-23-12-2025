@@ -8,6 +8,34 @@ use Illuminate\Http\Request;
 
 class PaymentController extends Controller
 {
+    public function index()
+    {
+        $businessId = auth()->user()->business_id;
+        $query = Payment::where('business_id', $businessId)->with(['invoice', 'createdBy']);
+
+        if ($invoice = request('invoice')) {
+            $query->whereHas('invoice', function($q) use ($invoice) {
+                $q->where('invoice_number', 'like', '%' . $invoice . '%');
+            });
+        }
+
+        $payments = $query->orderBy('payment_date', 'desc')->paginate(15);
+
+        return view('payments.index', compact('payments'));
+    }
+
+    public function record()
+    {
+        $businessId = auth()->user()->business_id;
+        $invoices = Invoice::where('business_id', $businessId)
+            ->where('status', '!=', 'paid')
+            ->whereRaw('(total_amount - (SELECT COALESCE(SUM(amount), 0) FROM payments WHERE payments.invoice_id = invoices.id)) > 0')
+            ->orderBy('issue_date', 'desc')
+            ->paginate(15);
+
+        return view('payments.record', compact('invoices'));
+    }
+
     public function store(Request $request)
     {
         $request->validate([

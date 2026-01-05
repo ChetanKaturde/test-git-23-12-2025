@@ -193,7 +193,9 @@ Route::middleware('auth')->group(function () {
     Route::get('invoices/payments/{payment}/receipt', [InvoiceController::class, 'paymentReceipt'])->name('invoices.payments.receipt');
     
     // Payments
+    Route::get('payments/record', [\App\Http\Controllers\PaymentController::class, 'record'])->name('payments.record');
     Route::post('payments', [\App\Http\Controllers\PaymentController::class, 'store'])->name('payments.store');
+    Route::get('payments', [\App\Http\Controllers\PaymentController::class, 'index'])->name('payments.index');
 
     // Expenses - business owners only
     Route::resource('expenses', \App\Http\Controllers\ExpenseController::class);

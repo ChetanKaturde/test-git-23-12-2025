@@ -63,8 +63,8 @@ class DashboardController extends Controller
                 // For billing_sales tier, add customer/invoice stats instead
                 $stats['customers'] = \App\Models\Customer::where('business_id', $businessId)->count();
                 $stats['invoices'] = \App\Models\Invoice::where('business_id', $businessId)->count();
-                $stats['quotations'] = \App\Models\Quotation::where('business_id', $businessId)->count();
-                $stats['quotations_this_month'] = \App\Models\Quotation::where('business_id', $businessId)->whereMonth('created_at', now())->count();
+                $stats['quotations'] = \App\Models\Quotation::where('business_id', $businessId)->whereNull('converted_at')->count();
+                $stats['quotations_this_month'] = \App\Models\Quotation::where('business_id', $businessId)->whereMonth('created_at', now())->whereNull('converted_at')->count();
             }
             
             // Use the main dashboard view for all users

@@ -272,7 +272,7 @@
     </div>
     @endif
 
-    <!-- System Overview Stats -->
+    {{-- <!-- System Overview Stats -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow">
             <div class="flex items-center justify-between">
@@ -389,7 +389,7 @@
             </div>
         </div>
         @endif
-    </div>
+    </div> --}}
 
     <!-- Sales Summary Dashboard -->
     <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
