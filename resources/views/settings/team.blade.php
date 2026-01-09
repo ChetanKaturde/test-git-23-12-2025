@@ -76,60 +76,59 @@
                             </button>
                             
                             <!-- Permission Modal -->
-                            <div x-show="showPermissions" @click.away="showPermissions = false" 
-                                 class="absolute z-50 mt-8 w-80 bg-white rounded-lg shadow-lg border border-gray-200 p-4">
-                                <h4 class="font-medium text-gray-900 mb-3">{{ $member->name }} - Permissions</h4>
+                            <div x-show="showPermissions" @click.away="showPermissions = false"
+                                 class="absolute z-50 mt-8 w-96 bg-white rounded-lg shadow-lg border border-gray-200 p-4">
+                                <h4 class="font-medium text-gray-900 mb-3">{{ $member->name }} - Permissions & Team</h4>
                                 <form method="POST" action="{{ route('team.update-permissions', $member) }}">
                                     @csrf
                                     @method('PATCH')
                                     <div class="space-y-3">
-                                        <div class="flex items-center justify-between">
-                                            <label class="text-sm text-gray-700">Materials</label>
-                                            <input type="checkbox" name="can_manage_materials" value="1" 
-                                                   {{ $member->can_manage_materials ? 'checked' : '' }}
-                                                   class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                                        <!-- Team Selection -->
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">Team</label>
+                                            <select name="team_id" class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500">
+                                                <option value="">No Team</option>
+                                                @foreach(\App\Models\Team::where('business_id', auth()->user()->business_id)->get() as $team)
+                                                    <option value="{{ $team->id }}" {{ $member->team_id == $team->id ? 'selected' : '' }}>
+                                                        {{ $team->team_name }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
                                         </div>
-                                        <div class="flex items-center justify-between">
-                                            <label class="text-sm text-gray-700">Purchase Orders</label>
-                                            <input type="checkbox" name="can_create_purchase_orders" value="1" 
-                                                   {{ $member->can_create_purchase_orders ? 'checked' : '' }}
-                                                   class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                                        </div>
-                                        <div class="flex items-center justify-between">
-                                            <label class="text-sm text-gray-700">Machines</label>
-                                            <input type="checkbox" name="can_manage_machines" value="1" 
-                                                   {{ $member->can_manage_machines ? 'checked' : '' }}
-                                                   class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                                        </div>
-                                        <div class="flex items-center justify-between">
-                                            <label class="text-sm text-gray-700">Work Orders</label>
-                                            <input type="checkbox" name="can_create_work_orders" value="1" 
-                                                   {{ $member->can_create_work_orders ? 'checked' : '' }}
-                                                   class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                                        </div>
-                                        <div class="flex items-center justify-between">
-                                            <label class="text-sm text-gray-700">Invoices</label>
-                                            <input type="checkbox" name="can_manage_invoices" value="1" 
-                                                   {{ $member->can_manage_invoices ? 'checked' : '' }}
-                                                   class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                                        </div>
-                                        <div class="flex items-center justify-between">
-                                            <label class="text-sm text-gray-700">Vendors</label>
-                                            <input type="checkbox" name="can_manage_vendors" value="1" 
-                                                   {{ $member->can_manage_vendors ? 'checked' : '' }}
-                                                   class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                                        </div>
-                                        <div class="flex items-center justify-between">
-                                            <label class="text-sm text-gray-700">Team Management</label>
-                                            <input type="checkbox" name="can_manage_team" value="1" 
-                                                   {{ $member->can_manage_team ? 'checked' : '' }}
-                                                   class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+
+                                        <!-- Permissions Checkboxes -->
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">Permissions</label>
+                                            <div class="grid grid-cols-2 gap-2">
+                                                @php
+                                                    $availablePermissions = [
+                                                        'add_customer' => 'Add Customer',
+                                                        'create_quote' => 'Create Quote',
+                                                        'edit_quote' => 'Edit Quote',
+                                                        'convert_quote_to_invoice' => 'Convert Quote to Invoice',
+                                                        'add_expense' => 'Add Expense',
+                                                        'view_reports' => 'View Reports',
+                                                        'manage_commodity' => 'Manage Commodity',
+                                                        'manage_invoices' => 'Manage Invoices',
+                                                        'manage_team' => 'Manage Team'
+                                                    ];
+                                                    $userPermissions = $member->permissions ?? [];
+                                                @endphp
+                                                @foreach($availablePermissions as $key => $label)
+                                                    <div class="flex items-center">
+                                                        <input type="checkbox" name="permissions[]" value="{{ $key }}"
+                                                               {{ in_array($key, $userPermissions) ? 'checked' : '' }}
+                                                               class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                                                        <label class="ml-2 text-xs text-gray-700">{{ $label }}</label>
+                                                    </div>
+                                                @endforeach
+                                            </div>
                                         </div>
                                     </div>
                                     <div class="flex justify-end space-x-2 mt-4">
-                                        <button type="button" @click="showPermissions = false" 
+                                        <button type="button" @click="showPermissions = false"
                                                 class="px-3 py-1 text-xs text-gray-600 hover:text-gray-800">Cancel</button>
-                                        <button type="submit" 
+                                        <button type="submit"
                                                 class="px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700">Save</button>
                                     </div>
                                 </form>
@@ -210,7 +209,7 @@
                     </div>
                     <div class="flex items-center space-x-4">
                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                            {{ $invitation->getRoleDisplayName() }}
+                            {{ $invitation->getTeamDisplayName() }}
                         </span>
                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
                             Invited
@@ -238,7 +237,7 @@
 
     <!-- Invite Modal -->
     <div x-show="showInviteModal" x-transition class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50" role="dialog" aria-labelledby="modal-title" aria-modal="true">
-        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="relative top-20 mx-auto p-6 border max-w-4xl w-full shadow-lg rounded-md bg-white">
             <div class="mt-3" x-data="inviteForm()">
                 <div class="flex items-center justify-between mb-4">
                     <h3 id="modal-title" class="text-lg font-medium text-gray-900">Add Team Member</h3>
@@ -254,82 +253,111 @@
                 
                 <form @submit.prevent="submitForm()" x-ref="inviteForm">
                     @csrf
-                    <div class="space-y-4">
-                        <div>
-                            <label for="email" class="block text-sm font-medium text-gray-700 mb-1">
-                                Email Address <span class="text-red-500">*</span>
-                            </label>
-                            <input type="email" 
-                                   name="email" 
-                                   id="email" 
-                                   x-model="form.email"
-                                   @blur="validateEmail()"
-                                   required
-                                   aria-describedby="email-help email-error"
-                                   class="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                   :class="errors.email ? 'border-red-300' : 'border-gray-300'"
-                                   placeholder="Enter work email address (e.g., john@company.com)">
-                            <p id="email-help" class="mt-1 text-xs text-gray-500">This will be their login username</p>
-                            <p x-show="errors.email" x-text="errors.email" id="email-error" class="mt-1 text-xs text-red-600"></p>
+                    <div class="space-y-6">
+                        <!-- Basic Information Section -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label for="email" class="block text-sm font-medium text-gray-700 mb-1">
+                                    Email Address <span class="text-red-500">*</span>
+                                </label>
+                                <input type="email"
+                                        name="email"
+                                        id="email"
+                                        x-model="form.email"
+                                        @blur="validateEmail()"
+                                        required
+                                        aria-describedby="email-help email-error"
+                                        class="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                        :class="errors.email ? 'border-red-300' : 'border-gray-300'"
+                                        placeholder="Enter work email address (e.g., john@company.com)">
+                                <p id="email-help" class="mt-1 text-xs text-gray-500">This will be their login username</p>
+                                <p x-show="errors.email" x-text="errors.email" id="email-error" class="mt-1 text-xs text-red-600"></p>
+                            </div>
+
+                            <div>
+                                <label for="name" class="block text-sm font-medium text-gray-700 mb-1">
+                                    Full Name <span class="text-red-500">*</span>
+                                </label>
+                                <input type="text"
+                                        name="name"
+                                        id="name"
+                                        x-model="form.name"
+                                        required
+                                        class="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                        :class="errors.name ? 'border-red-300' : 'border-gray-300'"
+                                        placeholder="Enter full name">
+                                <p x-show="errors.name" x-text="errors.name" class="mt-1 text-xs text-red-600"></p>
+                            </div>
                         </div>
-                        
-                        <div>
-                            <label for="name" class="block text-sm font-medium text-gray-700 mb-1">
-                                Full Name <span class="text-red-500">*</span>
-                            </label>
-                            <input type="text" 
-                                   name="name" 
-                                   id="name" 
-                                   x-model="form.name"
-                                   required
-                                   class="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                   :class="errors.name ? 'border-red-300' : 'border-gray-300'"
-                                   placeholder="Enter full name">
-                            <p x-show="errors.name" x-text="errors.name" class="mt-1 text-xs text-red-600"></p>
+
+                        <!-- Password and Team Section -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label for="password" class="block text-sm font-medium text-gray-700 mb-1">
+                                    Password <span class="text-red-500">*</span>
+                                </label>
+                                <input type="password"
+                                        name="password"
+                                        id="password"
+                                        x-model="form.password"
+                                        required
+                                        class="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                        :class="errors.password ? 'border-red-300' : 'border-gray-300'"
+                                        placeholder="Set login password (min 8 characters)">
+                                <p class="mt-1 text-xs text-gray-500">User can change this password after first login</p>
+                                <p x-show="errors.password" x-text="errors.password" class="mt-1 text-xs text-red-600"></p>
+                            </div>
+
+                            <div>
+                                <label for="team_id" class="block text-sm font-medium text-gray-700 mb-1">
+                                    Team (Optional)
+                                </label>
+                                <select name="team_id"
+                                        id="team_id"
+                                        x-model="form.team_id"
+                                        class="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 border-gray-300">
+                                    <option value="">No Team</option>
+                                    @foreach(\App\Models\Team::where('business_id', auth()->user()->business_id)->get() as $team)
+                                        <option value="{{ $team->id }}">{{ $team->team_name }}</option>
+                                    @endforeach
+                                </select>
+                                <p class="mt-1 text-xs text-gray-500">Assign user to a team for identification</p>
+                            </div>
                         </div>
-                        
+
                         <div>
-                            <label for="password" class="block text-sm font-medium text-gray-700 mb-1">
-                                Password <span class="text-red-500">*</span>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                Permissions <span class="text-red-500">*</span>
                             </label>
-                            <input type="password" 
-                                   name="password" 
-                                   id="password" 
-                                   x-model="form.password"
-                                   required
-                                   class="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                   :class="errors.password ? 'border-red-300' : 'border-gray-300'"
-                                   placeholder="Set login password (min 8 characters)">
-                            <p class="mt-1 text-xs text-gray-500">User can change this password after first login</p>
-                            <p x-show="errors.password" x-text="errors.password" class="mt-1 text-xs text-red-600"></p>
-                        </div>
-                        
-                        <div>
-                            <label for="role" class="block text-sm font-medium text-gray-700 mb-1">
-                                Role <span class="text-red-500">*</span>
-                            </label>
-                            <select name="role" 
-                                    id="role" 
-                                    x-model="form.role"
-                                    @change="updateRoleDescription()"
-                                    required
-                                    aria-describedby="role-help role-error"
-                                    class="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                    :class="errors.role ? 'border-red-300' : 'border-gray-300'">
-                                <option value="">Choose a role for this team member</option>
-                                @if(auth()->user()->business->subscription_tier === 'billing_sales')
-                                    <option value="manager">Manager - Full access to sales & billing</option>
-                                    <option value="viewer">Viewer - Read-only access to reports</option>
-                                @else
-                                    <option value="manager">Manager - Full access to all modules</option>
-                                    <option value="inventory_manager">Inventory Manager - Manage stock and materials</option>
-                                    <option value="purchase_team">Purchase Team - Handle orders and vendors</option>
-                                    <option value="operator">Machine Operator - View tasks and update status</option>
-                                    <option value="viewer">Viewer - Read-only access to reports</option>
-                                @endif
-                            </select>
-                            <p x-show="roleDescription" x-text="roleDescription" id="role-help" class="mt-1 text-xs text-blue-600"></p>
-                            <p x-show="errors.role" x-text="errors.role" id="role-error" class="mt-1 text-xs text-red-600"></p>
+                            <div class="border border-gray-300 rounded-md p-3 max-h-40 overflow-y-auto">
+                                <div class="grid grid-cols-1 gap-2">
+                                    @php
+                                        $availablePermissions = [
+                                            'add_customer' => 'Add Customer',
+                                            'create_quote' => 'Create Quote',
+                                            'edit_quote' => 'Edit Quote',
+                                            'convert_quote_to_invoice' => 'Convert Quote to Invoice',
+                                            'add_expense' => 'Add Expense',
+                                            'view_reports' => 'View Reports',
+                                            'manage_commodity' => 'Manage Commodity',
+                                            'manage_invoices' => 'Manage Invoices',
+                                            'manage_team' => 'Manage Team'
+                                        ];
+                                    @endphp
+                                    @foreach($availablePermissions as $key => $label)
+                                        <div class="flex items-center">
+                                            <input type="checkbox"
+                                                   name="permissions[]"
+                                                   value="{{ $key }}"
+                                                   x-model="form.permissions"
+                                                   class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                                            <label class="ml-2 text-sm text-gray-700">{{ $label }}</label>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                            <p class="mt-1 text-xs text-gray-500">Select the permissions this user should have</p>
+                            <p x-show="errors.permissions" x-text="errors.permissions" class="mt-1 text-xs text-red-600"></p>
                         </div>
                     </div>
                     
@@ -379,13 +407,13 @@ function inviteForm() {
             email: '',
             name: '',
             password: '',
-            role: ''
+            team_id: '',
+            permissions: []
         },
         errors: {},
         message: '',
         messageType: 'success',
         loading: false,
-        roleDescription: '',
         
         validateEmail() {
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -398,50 +426,40 @@ function inviteForm() {
             }
         },
         
-        updateRoleDescription() {
-            const tier = '{{ auth()->user()->business->subscription_tier }}';
-            
-            const descriptions = tier === 'billing_sales' ? {
-                'manager': 'Can manage customers, quotations, invoices, and team members',
-                'viewer': 'Can view reports and data but cannot make changes'
-            } : {
-                'manager': 'Can access all features and manage team members',
-                'inventory_manager': 'Can manage inventory, materials, and stock levels',
-                'purchase_team': 'Can create and manage purchase orders and vendor relationships',
-                'operator': 'Can view assigned tasks and update work order status',
-                'viewer': 'Can view reports and data but cannot make changes'
-            };
-            
-            this.roleDescription = descriptions[this.form.role] || '';
-            
-            if (!this.form.role) {
-                this.errors.role = 'Please select a role';
+        validatePermissions() {
+            if (!this.form.permissions || this.form.permissions.length === 0) {
+                this.errors.permissions = 'Please select at least one permission';
             } else {
-                delete this.errors.role;
+                delete this.errors.permissions;
             }
         },
         
         async submitForm() {
             this.validateEmail();
-            this.updateRoleDescription();
-            
+            this.validatePermissions();
+
             if (Object.keys(this.errors).length > 0) {
                 this.message = 'Please fix the errors above';
                 this.messageType = 'error';
                 return;
             }
-            
+
             this.loading = true;
             this.message = '';
-            
+
             try {
                 const formData = new FormData();
                 formData.append('_token', document.querySelector('meta[name="csrf-token"]').content);
                 formData.append('email', this.form.email);
                 formData.append('name', this.form.name);
                 formData.append('password', this.form.password);
-                formData.append('role', this.form.role);
-                
+                formData.append('team_id', this.form.team_id);
+
+                // Add permissions
+                this.form.permissions.forEach(permission => {
+                    formData.append('permissions[]', permission);
+                });
+
                 const response = await fetch('{{ route("team.invite") }}', {
                     method: 'POST',
                     body: formData,
@@ -449,15 +467,14 @@ function inviteForm() {
                         'X-Requested-With': 'XMLHttpRequest'
                     }
                 });
-                
+
                 const data = await response.json();
-                
+
                 if (response.ok) {
                     this.message = 'Team member added successfully!';
                     this.messageType = 'success';
-                    this.form = { email: '', name: '', password: '', role: '' };
-                    this.roleDescription = '';
-                    
+                    this.form = { email: '', name: '', password: '', team_id: '', permissions: [] };
+
                     setTimeout(() => {
                         window.location.reload();
                     }, 2000);

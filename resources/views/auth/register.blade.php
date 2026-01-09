@@ -98,7 +98,7 @@
                             <i class="fas fa-user-tag text-blue-600 mr-3"></i>
                             <div>
                                 <p class="text-blue-800 font-medium">Team Invitation</p>
-                                <p class="text-blue-700 text-sm">Role: {{ $invitation->getRoleDisplayName() }}</p>
+                                <p class="text-blue-700 text-sm">Team: {{ $invitation->getTeamDisplayName() }}</p>
                             </div>
                         </div>
                     </div>

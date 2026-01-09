@@ -154,7 +154,7 @@
                 <!-- Business Info -->
                 <div class="px-6 py-4 border-b bg-gray-50">
                     <p class="text-sm font-medium text-gray-900">{{ auth()->user()?->business?->name ?? 'Default Workshop' }}</p>
-                    <p class="text-xs text-gray-500">{{ auth()->user()?->getRoleDisplayName() ?? 'User' }} • {{ auth()->user()?->business?->subscription_tier === 'billing_sales' ? 'Sales & Billing' : 'Manufacturing System' }}</p>
+                    <p class="text-xs text-gray-500">{{ auth()->user()?->getTeamDisplayName() ?? 'Independent User' }} • {{ auth()->user()?->business?->subscription_tier === 'billing_sales' ? 'Sales & Billing' : 'Manufacturing System' }}</p>
                 </div>
 
                 <!-- Navigation -->
@@ -181,7 +181,7 @@
                             </button>
                             <div x-show="sections.operations" x-transition class="space-y-1 ml-2">
                                 
-                                @if(in_array('materials', $allowedModules) && auth()->check() && auth()->user()->canViewModule('materials'))
+                                @if(auth()->check() && auth()->user()->hasPermission('view_material'))
                                     <a href="{{ route('materials.index') }}" data-tour="materials" class="@if(request()->routeIs('materials.*')) bg-indigo-50 text-indigo-700 border-l-4 border-indigo-500 font-medium @else text-gray-600 hover:bg-gray-50 hover:text-gray-900 @endif group flex items-center px-3 py-2 text-sm rounded-md transition-colors duration-150">
                                         <svg class="mr-3 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
@@ -233,21 +233,25 @@
                             </svg>
                         </button>
                         <div x-show="sections.sales" x-transition class="space-y-1 ml-2">
-                            <a href="{{ route('customers.index') }}" class="@if(request()->routeIs('customers.*')) bg-indigo-50 text-indigo-700 border-l-4 border-indigo-500 font-medium @else text-gray-600 hover:bg-gray-50 hover:text-gray-900 @endif group flex items-center px-3 py-2 text-sm rounded-md transition-colors duration-150">
-                                <svg class="mr-3 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
-                                </svg>
-                                Customers
-                            </a>
+                            @if(auth()->check() && auth()->user()->hasPermission('add_customer'))
+                                <a href="{{ route('customers.index') }}" class="@if(request()->routeIs('customers.*')) bg-indigo-50 text-indigo-700 border-l-4 border-indigo-500 font-medium @else text-gray-600 hover:bg-gray-50 hover:text-gray-900 @endif group flex items-center px-3 py-2 text-sm rounded-md transition-colors duration-150">
+                                    <svg class="mr-3 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+                                    </svg>
+                                    Customers
+                                </a>
+                            @endif
                             
-                            <a href="{{ route('materials.index') }}" class="@if(request()->routeIs('materials.*')) bg-indigo-50 text-indigo-700 border-l-4 border-indigo-500 font-medium @else text-gray-600 hover:bg-gray-50 hover:text-gray-900 @endif group flex items-center px-3 py-2 text-sm rounded-md transition-colors duration-150">
-                                <svg class="mr-3 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
-                                </svg>
-                                Commodity
-                            </a>
+                            @if(auth()->check() && auth()->user()->hasPermission('view_material'))
+                                <a href="{{ route('materials.index') }}" class="@if(request()->routeIs('materials.*')) bg-indigo-50 text-indigo-700 border-l-4 border-indigo-500 font-medium @else text-gray-600 hover:bg-gray-50 hover:text-gray-900 @endif group flex items-center px-3 py-2 text-sm rounded-md transition-colors duration-150">
+                                    <svg class="mr-3 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                                    </svg>
+                                    Commodity
+                                </a>
+                            @endif
                             
-                            @if(in_array('quotations', $allowedModules) && auth()->check() && auth()->user()->canViewModule('quotations'))
+                            @if(auth()->check() && auth()->user()->hasAnyQuotationPermission())
                                 <a href="{{ route('quotations.index') }}" class="@if(request()->routeIs('quotations.*')) bg-indigo-50 text-indigo-700 border-l-4 border-indigo-500 font-medium @else text-gray-600 hover:bg-gray-50 hover:text-gray-900 @endif group flex items-center px-3 py-2 text-sm rounded-md transition-colors duration-150">
                                     <svg class="mr-3 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
@@ -277,12 +281,14 @@
                         </button>
                         <div x-show="sections.accounts" x-transition class="space-y-1 ml-2">
 
-                            <a href="{{ route('expenses.index') }}" class="@if(request()->routeIs('expenses.*')) bg-indigo-50 text-indigo-700 border-l-4 border-indigo-500 font-medium @else text-gray-600 hover:bg-gray-50 hover:text-gray-900 @endif group flex items-center px-3 py-2 text-sm rounded-md transition-colors duration-150">
-                                <svg class="mr-3 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                                </svg>
-                                Expenses
-                            </a>
+                            @if(auth()->check() && (auth()->user()->hasPermission('view_expense') || auth()->user()->hasPermission('add_expense')))
+                                <a href="{{ route('expenses.index') }}" class="@if(request()->routeIs('expenses.*')) bg-indigo-50 text-indigo-700 border-l-4 border-indigo-500 font-medium @else text-gray-600 hover:bg-gray-50 hover:text-gray-900 @endif group flex items-center px-3 py-2 text-sm rounded-md transition-colors duration-150">
+                                    <svg class="mr-3 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                    </svg>
+                                    Expenses
+                                </a>
+                            @endif
 
                             <a href="{{ route('payments.record') }}" class="@if(request()->routeIs('payments.record')) bg-indigo-50 text-indigo-700 border-l-4 border-indigo-500 font-medium @else text-gray-600 hover:bg-gray-50 hover:text-gray-900 @endif group flex items-center px-3 py-2 text-sm rounded-md transition-colors duration-150">
                                 <svg class="mr-3 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -342,13 +348,22 @@
                             </button>
                             <div x-show="sections.management" x-transition class="space-y-1 ml-2">
                                 @if(auth()->check() && auth()->user()->canViewModule('team'))
-                                    <a href="{{ route('team.index') }}" class="@if(request()->routeIs('team.index')) bg-indigo-50 text-indigo-700 border-l-4 border-indigo-500 font-medium @else text-gray-600 hover:bg-gray-50 hover:text-gray-900 @endif group flex items-center px-3 py-2 text-sm rounded-md transition-colors duration-150">
-                                        <svg class="mr-3 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                                        </svg>
-                                        Team
-                                    </a>
-                                @endif
+                                     <a href="{{ route('team.index') }}" class="@if(request()->routeIs('team.index')) bg-indigo-50 text-indigo-700 border-l-4 border-indigo-500 font-medium @else text-gray-600 hover:bg-gray-50 hover:text-gray-900 @endif group flex items-center px-3 py-2 text-sm rounded-md transition-colors duration-150">
+                                         <svg class="mr-3 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                         </svg>
+                                         Team Members
+                                     </a>
+                                 @endif
+
+                                 @if(auth()->check() && auth()->user()->isAdmin())
+                                     <a href="{{ route('teams.index') }}" class="@if(request()->routeIs('teams.*')) bg-indigo-50 text-indigo-700 border-l-4 border-indigo-500 font-medium @else text-gray-600 hover:bg-gray-50 hover:text-gray-900 @endif group flex items-center px-3 py-2 text-sm rounded-md transition-colors duration-150">
+                                         <svg class="mr-3 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                                         </svg>
+                                         Teams/Departments
+                                     </a>
+                                 @endif
                                 
                                 @if(auth()->check() && auth()->user()->isAdmin())
                                     <a href="{{ route('business.profile') }}" class="@if(request()->routeIs('business.profile')) bg-indigo-50 text-indigo-700 border-l-4 border-indigo-500 font-medium @else text-gray-600 hover:bg-gray-50 hover:text-gray-900 @endif group flex items-center px-3 py-2 text-sm rounded-md transition-colors duration-150">
@@ -677,7 +692,7 @@
                                 Commodity
                             </a>
                             
-                            @if(in_array('quotations', $allowedModules) && auth()->check() && auth()->user()->canViewModule('quotations'))
+                            @if(auth()->check() && auth()->user()->hasAnyQuotationPermission())
                                 <a href="{{ route('quotations.index') }}" class="@if(request()->routeIs('quotations.*')) bg-indigo-50 text-indigo-700 border-l-4 border-indigo-500 font-medium @else text-gray-600 hover:bg-gray-50 hover:text-gray-900 @endif flex items-center px-3 py-2 text-sm rounded-md touch-target transition-colors duration-150">
                                     <svg class="mr-3 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
@@ -739,13 +754,22 @@
                             </button>
                             <div x-show="sections.management" x-transition class="space-y-1 ml-2">
                                 @if(auth()->check() && auth()->user()->canViewModule('team'))
-                                    <a href="{{ route('team.index') }}" class="@if(request()->routeIs('team.index')) bg-indigo-50 text-indigo-700 border-l-4 border-indigo-500 font-medium @else text-gray-600 hover:bg-gray-50 hover:text-gray-900 @endif flex items-center px-3 py-2 text-sm rounded-md touch-target transition-colors duration-150">
-                                        <svg class="mr-3 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                                        </svg>
-                                        Team
-                                    </a>
-                                @endif
+                                     <a href="{{ route('team.index') }}" class="@if(request()->routeIs('team.index')) bg-indigo-50 text-indigo-700 border-l-4 border-indigo-500 font-medium @else text-gray-600 hover:bg-gray-50 hover:text-gray-900 @endif flex items-center px-3 py-2 text-sm rounded-md touch-target transition-colors duration-150">
+                                         <svg class="mr-3 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                         </svg>
+                                         Team Members
+                                     </a>
+                                 @endif
+
+                                 @if(auth()->check() && auth()->user()->isAdmin())
+                                     <a href="{{ route('teams.index') }}" class="@if(request()->routeIs('teams.*')) bg-indigo-50 text-indigo-700 border-l-4 border-indigo-500 font-medium @else text-gray-600 hover:bg-gray-50 hover:text-gray-900 @endif flex items-center px-3 py-2 text-sm rounded-md touch-target transition-colors duration-150">
+                                         <svg class="mr-3 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                                         </svg>
+                                         Teams/Departments
+                                     </a>
+                                 @endif
                                 
                                 @if(auth()->check() && auth()->user()->isAdmin())
                                     <a href="{{ route('business.profile') }}" class="@if(request()->routeIs('business.profile')) bg-indigo-50 text-indigo-700 border-l-4 border-indigo-500 font-medium @else text-gray-600 hover:bg-gray-50 hover:text-gray-900 @endif flex items-center px-3 py-2 text-sm rounded-md touch-target transition-colors duration-150">

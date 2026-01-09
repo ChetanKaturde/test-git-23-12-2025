@@ -219,8 +219,8 @@
                 <h5 class="mb-1 text-black">{{ $user->name }}</h5>
                 <p class="mb-2 text-black opacity-75">{{ $user->email }}</p>
                 <span class="badge bg-white bg-opacity-20 text-black px-3 py-2 rounded-pill">
-                    <i class="fas fa-{{ $user->role == 'admin' ? 'crown' : ($user->role == 'purchase_team' ? 'shopping-cart' : ($user->role == 'inventory_manager' ? 'boxes' : 'user')) }} me-1"></i>
-                    {{ $user->getRoleDisplayName() }}
+                    <i class="fas fa-user me-1"></i>
+                    {{ $user->getTeamDisplayName() }}
                 </span>
             </div>
         </div>

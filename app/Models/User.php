@@ -21,6 +21,8 @@ class User extends Authenticatable
         'email_verified_at',
         'notification_preferences',
         'business_id',
+        'team_id',
+        'permissions',
         'phone',
         'company_address',
         'company_city',
@@ -54,6 +56,7 @@ class User extends Authenticatable
         'last_login_at' => 'datetime',
         'is_active' => 'boolean',
         'notification_preferences' => 'array',
+        'permissions' => 'array',
         'can_manage_materials' => 'boolean',
         'can_create_purchase_orders' => 'boolean',
         'can_manage_machines' => 'boolean',
@@ -65,22 +68,12 @@ class User extends Authenticatable
     ];
 
     /**
-     * Role display name (for UI)
-     */
-    public function getRoleDisplayName()
-    {
-        $roleDisplayNames = [
-            'admin' => 'Administrator',
-            'manager' => 'Manager',
-            'purchase_team' => 'Purchase Team',
-            'inventory_manager' => 'Inventory Manager',
-            'operator' => 'Machine Operator',
-            'viewer' => 'Viewer',
-            'user' => 'User',
-        ];
-
-        return $roleDisplayNames[$this->role] ?? ucfirst(str_replace('_', ' ', $this->role));
-    }
+     * Team display name (for UI)
+      */
+     public function getTeamDisplayName()
+     {
+         return $this->team ? 'Team: ' . $this->team->team_name : 'Team: Not Assigned';
+     }
 
     /**
      * Active status display
@@ -200,6 +193,14 @@ class User extends Authenticatable
     public function business()
     {
         return $this->belongsTo(Business::class);
+    }
+
+    /**
+     * Relationship: Team this user belongs to
+     */
+    public function team()
+    {
+        return $this->belongsTo(Team::class);
     }
   
     public function warehouses()
@@ -376,5 +377,63 @@ public function canEditModule($moduleName)
             'can_edit' => (bool) $permission->can_edit,
             'can_delete' => (bool) $permission->can_delete,
         ];
+    }
+
+    /**
+     * Check if user has a specific flexible permission
+     */
+    public function hasPermission($permission)
+    {
+        // Admin always has all permissions
+        if ($this->isAdmin()) {
+            return true;
+        }
+
+        $permissions = $this->permissions ?? [];
+
+        // Handle permission key variations
+        $permissionMappings = [
+            'create_quotation' => ['create_quotation', 'create_quote'],
+            'edit_quotation' => ['edit_quotation', 'edit_quote'],
+            'view_quotation' => ['view_quotation', 'view_quote'],
+            'delete_quotation' => ['delete_quotation', 'delete_quote'],
+            'convert_quotation_to_invoice' => ['convert_quotation_to_invoice', 'convert_quote_to_invoice'],
+        ];
+
+        if (isset($permissionMappings[$permission])) {
+            return !empty(array_intersect($permissionMappings[$permission], $permissions));
+        }
+
+        return in_array($permission, $permissions);
+    }
+
+    /**
+     * Check if user has any quotation permission
+     */
+    public function hasAnyQuotationPermission()
+    {
+        if ($this->isAdmin()) {
+            return true;
+        }
+
+        $quotationPermissions = ['view_quotation', 'create_quotation', 'edit_quotation', 'delete_quotation', 'create_quote', 'edit_quote'];
+        $permissions = $this->permissions ?? [];
+        return !empty(array_intersect($quotationPermissions, $permissions));
+    }
+
+    /**
+     * Get all flexible permissions for the user
+     */
+    public function getPermissions()
+    {
+        return $this->permissions ?? [];
+    }
+
+    /**
+     * Set flexible permissions for the user
+     */
+    public function setPermissions(array $permissions)
+    {
+        $this->update(['permissions' => array_unique($permissions)]);
     }
 }

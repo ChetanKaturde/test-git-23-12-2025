@@ -4,9 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\Invitation;
+use App\Models\Team;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 
 class TeamController extends Controller
 {
@@ -37,7 +40,7 @@ class TeamController extends Controller
 
             return view('settings.team', compact('teamMembers', 'pendingInvitations'));
         } catch (\Exception $e) {
-            \Log::error('Team index error: ' . $e->getMessage());
+            Log::error('Team index error: ' . $e->getMessage());
             return response()->view('errors.500', [], 500);
         }
     }
@@ -53,7 +56,7 @@ class TeamController extends Controller
         
         // Check Free Plan limits
         if (!$business->canInviteUser()) {
-            \Log::info('Free user hit team member limit', ['business_id' => $business->id]);
+            Log::info('Free user hit team member limit', ['business_id' => $business->id]);
             return response()->json(['message' => 'Free Plan allows only 2 team members. Please upgrade to invite more users.'], 400);
         }
 
@@ -66,7 +69,9 @@ class TeamController extends Controller
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
             'name' => ['required', 'string', 'max:255'],
             'password' => ['required', 'string', 'min:8'],
-            'role' => ['required', 'in:' . implode(',', $allowedRoles)],
+            'team_id' => ['nullable', 'exists:teams,id'],
+            'permissions' => ['array'],
+            'permissions.*' => ['string'],
         ]);
 
         try {
@@ -75,21 +80,18 @@ class TeamController extends Controller
                 'business_id' => Auth::user()->business_id,
                 'name' => $request->name,
                 'email' => $request->email,
-                'password' => \Hash::make($request->password),
-                'role' => $request->role,
+                'password' => Hash::make($request->password),
+                'team_id' => $request->team_id,
+                'permissions' => $request->permissions ?? [],
                 'is_active' => true,
                 'email_verified_at' => now(),
             ]);
-
-            // Set default permissions based on role
-            $defaults = $this->getDefaultPermissionsByRole($request->role);
-            $user->update($defaults);
 
             return response()->json([
                 'message' => 'Team member added successfully! Login credentials: Email: ' . $request->email . ', Password: ' . $request->password
             ]);
         } catch (\Exception $e) {
-            \Log::error('Team member creation error: ' . $e->getMessage());
+            Log::error('Team member creation error: ' . $e->getMessage());
             return response()->json(['message' => 'Failed to create team member.'], 500);
         }
     }
@@ -242,7 +244,7 @@ class TeamController extends Controller
 
     public function updatePermissions(Request $request, User $user)
     {
-        if (!Auth::user()->can_manage_team) {
+        if (!Auth::user()->isAdmin() && !Auth::user()->can_manage_team) {
             abort(403, 'You do not have permission to update permissions.');
         }
 
@@ -250,15 +252,16 @@ class TeamController extends Controller
             abort(403, 'You can only manage permissions of your business members.');
         }
 
-        // Update permission columns directly
+        $request->validate([
+            'team_id' => ['nullable', 'exists:teams,id'],
+            'permissions' => ['array'],
+            'permissions.*' => ['string'],
+        ]);
+
+        // Update team and permissions
         $user->update([
-            'can_manage_materials' => $request->has('can_manage_materials'),
-            'can_create_purchase_orders' => $request->has('can_create_purchase_orders'),
-            'can_manage_machines' => $request->has('can_manage_machines'),
-            'can_create_work_orders' => $request->has('can_create_work_orders'),
-            'can_manage_invoices' => $request->has('can_manage_invoices'),
-            'can_manage_vendors' => $request->has('can_manage_vendors'),
-            'can_manage_team' => $request->has('can_manage_team'),
+            'team_id' => $request->team_id,
+            'permissions' => $request->permissions ?? [],
         ]);
 
         return back()->with('success', 'Permissions updated successfully for ' . $user->name);
@@ -278,7 +281,7 @@ class TeamController extends Controller
         $defaults = $this->getDefaultPermissionsByRole($user->role);
         $user->update($defaults);
 
-        return back()->with('success', 'Default permissions set for ' . $user->getRoleDisplayName());
+        return back()->with('success', 'Default permissions set for ' . $user->getTeamDisplayName());
     }
     
     public function grantFullAccess(User $user)

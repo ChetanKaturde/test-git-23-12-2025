@@ -19,7 +19,7 @@
                 <div class="flex items-center mt-2 space-x-3">
                     <span class="text-lg font-medium text-gray-700">{{ $user->name }}</span>
                     <span class="px-3 py-1 text-sm font-semibold rounded-full bg-blue-100 text-blue-800">
-                        {{ $user->getRoleDisplayName() }}
+                        {{ $user->getTeamDisplayName() }}
                     </span>
                 </div>
             </div>

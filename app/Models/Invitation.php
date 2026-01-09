@@ -13,7 +13,7 @@ class Invitation extends Model
     protected $fillable = [
         'business_id',
         'email',
-        'role',
+        'team_id',
         'token',
         'expires_at',
     ];
@@ -27,21 +27,18 @@ class Invitation extends Model
         return $this->belongsTo(Business::class);
     }
 
+    public function team()
+    {
+        return $this->belongsTo(Team::class);
+    }
+
     public function isExpired()
     {
         return $this->expires_at->isPast();
     }
 
-    public function getRoleDisplayName()
+    public function getTeamDisplayName()
     {
-        $roleDisplayNames = [
-            'manager' => 'Manager',
-            'inventory_manager' => 'Inventory Manager',
-            'purchase_team' => 'Purchase Team',
-            'operator' => 'Machine Operator',
-            'viewer' => 'Viewer',
-        ];
-
-        return $roleDisplayNames[$this->role] ?? ucfirst(str_replace('_', ' ', $this->role));
+        return $this->team ? $this->team->name : 'Independent User';
     }
 }

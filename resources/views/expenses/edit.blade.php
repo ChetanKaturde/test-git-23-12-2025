@@ -141,7 +141,7 @@
                             <p class="text-xs text-gray-500">Current file</p>
                         </div>
                     </div>
-                    <a href="{{ Storage::url($expense->proof_file_path) }}"
+                    <a href="{{ asset($expense->proof_file_path) }}"
                        target="_blank"
                        class="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors text-xs">
                         <i class="fas fa-eye mr-1"></i>
@@ -156,7 +156,7 @@
                 <label for="proof_file" class="block text-sm font-medium text-gray-700 mb-2">
                     Replace Proof File (Optional)
                 </label>
-                <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:border-gray-400 transition-colors">
+                <div id="upload-area" class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:border-gray-400 transition-colors">
                     <div class="space-y-1 text-center">
                         <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
                             <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
@@ -172,6 +172,21 @@
                             PNG, JPG, PDF up to 5MB
                         </p>
                     </div>
+                </div>
+                <div id="file-info" class="mt-1 hidden flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                            <i id="file-icon" class="fas fa-file text-green-600 text-sm"></i>
+                        </div>
+                        <div>
+                            <p id="file-name" class="text-sm font-medium text-gray-900">New file selected</p>
+                            <p id="file-size" class="text-xs text-gray-500">File size</p>
+                        </div>
+                    </div>
+                    <button type="button" id="remove-file" class="inline-flex items-center px-3 py-1 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors text-xs">
+                        <i class="fas fa-trash mr-1"></i>
+                        Remove
+                    </button>
                 </div>
                 @error('proof_file')
                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -196,15 +211,67 @@
 </div>
 
 <script>
-// File upload preview
-document.getElementById('proof_file').addEventListener('change', function(e) {
-    const file = e.target.files[0];
-    if (file) {
-        const fileName = file.name;
-        const fileSize = (file.size / 1024 / 1024).toFixed(2) + ' MB';
+// File upload functionality
+const fileInput = document.getElementById('proof_file');
+const uploadArea = document.getElementById('upload-area');
+const fileInfo = document.getElementById('file-info');
+const fileName = document.getElementById('file-name');
+const fileSize = document.getElementById('file-size');
+const fileIcon = document.getElementById('file-icon');
+const removeFileBtn = document.getElementById('remove-file');
 
-        // You could add file preview logic here
-        console.log('Selected file:', fileName, fileSize);
+function updateFileDisplay(file) {
+    if (file) {
+        fileName.textContent = file.name;
+        fileSize.textContent = (file.size / 1024 / 1024).toFixed(2) + ' MB';
+
+        // Set icon based on file type
+        const fileType = file.type;
+        if (fileType.startsWith('image/')) {
+            fileIcon.className = 'fas fa-image text-green-600 text-sm';
+        } else if (fileType === 'application/pdf') {
+            fileIcon.className = 'fas fa-file-pdf text-red-600 text-sm';
+        } else {
+            fileIcon.className = 'fas fa-file text-blue-600 text-sm';
+        }
+
+        uploadArea.classList.add('hidden');
+        fileInfo.classList.remove('hidden');
+    } else {
+        uploadArea.classList.remove('hidden');
+        fileInfo.classList.add('hidden');
+        fileInput.value = '';
+    }
+}
+
+fileInput.addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    updateFileDisplay(file);
+});
+
+removeFileBtn.addEventListener('click', function() {
+    updateFileDisplay(null);
+});
+
+// Drag and drop functionality
+uploadArea.addEventListener('dragover', function(e) {
+    e.preventDefault();
+    uploadArea.classList.add('border-indigo-500', 'bg-indigo-50');
+});
+
+uploadArea.addEventListener('dragleave', function(e) {
+    e.preventDefault();
+    uploadArea.classList.remove('border-indigo-500', 'bg-indigo-50');
+});
+
+uploadArea.addEventListener('drop', function(e) {
+    e.preventDefault();
+    uploadArea.classList.remove('border-indigo-500', 'bg-indigo-50');
+
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+        fileInput.files = files;
+        updateFileDisplay(files[0]);
     }
 });
 </script>

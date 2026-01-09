@@ -11,7 +11,7 @@
         <div class="flex justify-between items-center">
             <div>
                 <h3 class="text-lg font-semibold text-gray-900">Activity Log for {{ $user->name }}</h3>
-                <p class="text-sm text-gray-600 mt-1">{{ $user->getRoleDisplayName() }} • {{ $user->email }}</p>
+                <p class="text-sm text-gray-600 mt-1">{{ $user->getTeamDisplayName() }} • {{ $user->email }}</p>
             </div>
             <a href="{{ route('team.index') }}" class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700">
                 <i class="fas fa-arrow-left mr-2"></i>Back to Team

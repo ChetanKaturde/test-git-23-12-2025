@@ -22,13 +22,18 @@ class ExpenseController extends Controller
         try {
             $businessId = auth()->user()->business_id;
 
-            // Check if user can view expenses (only business owners)
-            if (!in_array(auth()->user()->role, ['admin', 'manager'])) {
-                return redirect()->route('dashboard')
-                    ->with('error', 'You do not have permission to view expenses.');
-            }
+             // Check if user can view expenses
+             if (!auth()->user()->hasPermission('view_expense') && !auth()->user()->hasPermission('add_expense')) {
+                 return redirect()->route('dashboard')
+                     ->with('error', 'You do not have permission to view expenses.');
+             }
 
             $query = Expense::where('business_id', $businessId);
+
+            // Filter to own expenses if no view_all_expenses permission
+            if (!auth()->user()->hasPermission('view_all_expenses')) {
+                $query->where('created_by', auth()->id());
+            }
 
             // Apply filters
             if ($request->filled('category')) {
@@ -69,8 +74,8 @@ class ExpenseController extends Controller
      */
     public function create()
     {
-        // Check if user can create expenses (only business owners)
-        if (!in_array(auth()->user()->role, ['admin', 'manager'])) {
+        // Check if user can create expenses
+        if (!auth()->user()->hasPermission('add_expense')) {
             return redirect()->route('expenses.index')
                 ->with('error', 'You do not have permission to create expenses.');
         }
@@ -102,7 +107,7 @@ class ExpenseController extends Controller
     {
         try {
             // Check if user can create expenses
-            if (!in_array(auth()->user()->role, ['admin', 'manager'])) {
+            if (!auth()->user()->hasPermission('add_expense')) {
                 return redirect()->route('expenses.index')
                     ->with('error', 'You do not have permission to create expenses.');
             }
@@ -123,8 +128,8 @@ class ExpenseController extends Controller
             if ($request->hasFile('proof_file')) {
                 $file = $request->file('proof_file');
                 $filename = time() . '_' . $file->getClientOriginalName();
-                $path = $file->storeAs('expense_proofs', $filename, 'public');
-                $validated['proof_file_path'] = $path;
+                $file->move(public_path('expense_proofs'), $filename);
+                $validated['proof_file_path'] = 'expense_proofs/' . $filename;
             }
 
             $expense = Expense::create($validated);
@@ -148,10 +153,16 @@ class ExpenseController extends Controller
         }
 
         // Check permissions
-        if (!in_array(auth()->user()->role, ['admin', 'manager'])) {
-            return redirect()->route('expenses.index')
-                ->with('error', 'You do not have permission to view this expense.');
-        }
+         if (!auth()->user()->hasPermission('view_expense') && !auth()->user()->hasPermission('add_expense')) {
+             return redirect()->route('expenses.index')
+                 ->with('error', 'You do not have permission to view this expense.');
+         }
+
+         // If no view_all_expenses, check ownership
+         if (!auth()->user()->hasPermission('view_all_expenses') && $expense->created_by !== auth()->id()) {
+             return redirect()->route('expenses.index')
+                 ->with('error', 'You do not have permission to view this expense.');
+         }
 
         $expense->load('createdBy');
         return view('expenses.show', compact('expense'));
@@ -168,10 +179,16 @@ class ExpenseController extends Controller
         }
 
         // Check permissions
-        if (!in_array(auth()->user()->role, ['admin', 'manager'])) {
-            return redirect()->route('expenses.index')
-                ->with('error', 'You do not have permission to edit expenses.');
-        }
+         if (!auth()->user()->hasPermission('add_expense')) {
+             return redirect()->route('expenses.index')
+                 ->with('error', 'You do not have permission to edit expenses.');
+         }
+
+         // If no view_all_expenses, check ownership
+         if (!auth()->user()->hasPermission('view_all_expenses') && $expense->created_by !== auth()->id()) {
+             return redirect()->route('expenses.index')
+                 ->with('error', 'You do not have permission to edit this expense.');
+         }
 
         $categories = [
             'staff_payroll' => 'Staff Payroll',
@@ -204,10 +221,16 @@ class ExpenseController extends Controller
         }
 
         // Check permissions
-        if (!in_array(auth()->user()->role, ['admin', 'manager'])) {
-            return redirect()->route('expenses.index')
-                ->with('error', 'You do not have permission to edit expenses.');
-        }
+         if (!auth()->user()->hasPermission('add_expense')) {
+             return redirect()->route('expenses.index')
+                 ->with('error', 'You do not have permission to edit expenses.');
+         }
+
+         // If no view_all_expenses, check ownership
+         if (!auth()->user()->hasPermission('view_all_expenses') && $expense->created_by !== auth()->id()) {
+             return redirect()->route('expenses.index')
+                 ->with('error', 'You do not have permission to edit this expense.');
+         }
 
         try {
             $validated = $request->validate([
@@ -222,14 +245,14 @@ class ExpenseController extends Controller
             // Handle file upload
             if ($request->hasFile('proof_file')) {
                 // Delete old file if exists
-                if ($expense->proof_file_path && Storage::disk('public')->exists($expense->proof_file_path)) {
-                    Storage::disk('public')->delete($expense->proof_file_path);
+                if ($expense->proof_file_path && file_exists(public_path($expense->proof_file_path))) {
+                    unlink(public_path($expense->proof_file_path));
                 }
 
                 $file = $request->file('proof_file');
                 $filename = time() . '_' . $file->getClientOriginalName();
-                $path = $file->storeAs('expense_proofs', $filename, 'public');
-                $validated['proof_file_path'] = $path;
+                $file->move(public_path('expense_proofs'), $filename);
+                $validated['proof_file_path'] = 'expense_proofs/' . $filename;
             }
 
             $expense->update($validated);
@@ -253,15 +276,21 @@ class ExpenseController extends Controller
         }
 
         // Check permissions
-        if (!in_array(auth()->user()->role, ['admin', 'manager'])) {
-            return redirect()->route('expenses.index')
-                ->with('error', 'You do not have permission to delete expenses.');
-        }
+         if (!auth()->user()->hasPermission('add_expense')) {
+             return redirect()->route('expenses.index')
+                 ->with('error', 'You do not have permission to delete expenses.');
+         }
+
+         // If no view_all_expenses, check ownership
+         if (!auth()->user()->hasPermission('view_all_expenses') && $expense->created_by !== auth()->id()) {
+             return redirect()->route('expenses.index')
+                 ->with('error', 'You do not have permission to delete this expense.');
+         }
 
         try {
             // Delete associated file if exists
-            if ($expense->proof_file_path && Storage::disk('public')->exists($expense->proof_file_path)) {
-                Storage::disk('public')->delete($expense->proof_file_path);
+            if ($expense->proof_file_path && file_exists(public_path($expense->proof_file_path))) {
+                unlink(public_path($expense->proof_file_path));
             }
 
             $expense->delete();

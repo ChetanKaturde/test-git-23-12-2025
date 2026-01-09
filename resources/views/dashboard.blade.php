@@ -100,7 +100,7 @@
             <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
                     <h1 class="text-2xl md:text-3xl font-bold mb-2">Welcome back, {{ auth()->user()->name }}!</h1>
-                    <p class="text-blue-100 text-sm md:text-base">{{ auth()->user()->business?->name ?? 'Default Workshop' }} • {{ auth()->user()->getRoleDisplayName() }}</p>
+                    <p class="text-blue-100 text-sm md:text-base">{{ auth()->user()->business?->name ?? 'Default Workshop' }} • {{ auth()->user()->getTeamDisplayName() }}</p>
                     <div class="flex items-center mt-2 text-blue-200 text-sm">
                         <i class="fas fa-clock mr-2"></i>
                         <span>{{ now()->format('l, F j, Y • g:i A') }}</span>

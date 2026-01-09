@@ -16,24 +16,32 @@ class QuotationController extends Controller
 {
     public function index()
     {
+        if (!auth()->user()->hasAnyQuotationPermission()) {
+            abort(403, 'You do not have permission to view quotations.');
+        }
+
         $quotations = Quotation::with('customer')
             ->where('business_id', auth()->user()->business_id)
             ->latest()
             ->get();
-        
+
         return view('quotations.index', compact('quotations'));
     }
 
     public function create()
     {
+        if (!auth()->user()->hasPermission('create_quotation')) {
+            abort(403, 'You do not have permission to create quotations.');
+        }
+
         $customers = Customer::where('business_id', auth()->user()->business_id)
             ->where('is_active', true)
             ->get();
-        
+
         $materials = Material::where('business_id', auth()->user()->business_id)
             ->where('is_active', true)
             ->get();
-        
+
         return view('quotations.create', compact('customers', 'materials'));
     }
 
@@ -112,6 +120,10 @@ class QuotationController extends Controller
             abort(404);
         }
 
+        if (!auth()->user()->hasAnyQuotationPermission()) {
+            abort(403, 'You do not have permission to view this quotation.');
+        }
+
         $quotation->load(['customer', 'items.material']);
         return view('quotations.show', compact('quotation'));
     }
@@ -170,6 +182,10 @@ class QuotationController extends Controller
             abort(404);
         }
 
+        if (!auth()->user()->hasPermission('edit_quotation')) {
+            abort(403, 'You do not have permission to edit quotations.');
+        }
+
         if (!in_array($quotation->status, ['draft', 'sent'])) {
             return redirect()->route('quotations.show', $quotation)
                 ->with('error', 'Cannot edit converted quotations.');
@@ -178,13 +194,13 @@ class QuotationController extends Controller
         $customers = Customer::where('business_id', auth()->user()->business_id)
             ->where('is_active', true)
             ->get();
-        
+
         $materials = Material::where('business_id', auth()->user()->business_id)
             ->where('is_active', true)
             ->get();
-        
+
         $quotation->load('items');
-        
+
         return view('quotations.edit', compact('quotation', 'customers', 'materials'));
     }
 
@@ -260,12 +276,16 @@ class QuotationController extends Controller
             abort(404);
         }
 
+        if (!auth()->user()->hasPermission('convert_quotation_to_invoice')) {
+            abort(403, 'You do not have permission to convert quotations to invoices.');
+        }
+
         if ($quotation->status === 'converted') {
             return back()->with('error', 'Quotation already converted to invoice.');
         }
-        
+
         $business = auth()->user()->business;
-        
+
         // Check Free Plan limits
         if (!$business->canCreateInvoice()) {
             \Log::info('Free user hit invoice limit on conversion', ['business_id' => $business->id]);

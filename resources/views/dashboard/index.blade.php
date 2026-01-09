@@ -10,7 +10,7 @@
             Welcome back, {{ Auth::user()->name }}!
         </h1>
         <p class="welcome-subtitle">
-            Ready to manage your inventory efficiently? Your {{ Auth::user()->getRoleDisplayName() }} dashboard is at your service.
+            Ready to manage your inventory efficiently? Your {{ Auth::user()->getTeamDisplayName() }} dashboard is at your service.
         </p>
         <small class="text-muted">
             <i class="fas fa-clock me-1"></i>Last login: {{ $stats['last_login'] }}
@@ -273,8 +273,8 @@
                 use Illuminate\Support\Facades\Auth;
 
                 $user = Auth::user();
-                $roleDisplay = method_exists($user, 'getRoleDisplayName') ? $user->getRoleDisplayName() : null;
-                $role = strtolower($roleDisplay ?: '');
+                $teamDisplay = $user->getTeamDisplayName();
+                $team = strtolower($teamDisplay ?: '');
 
                 $excludedRoutes = collect([
                     'dashboard',
@@ -293,7 +293,7 @@
                     'view blocks',
                 ]);
 
-                $quickActions = collect($navigationItems ?? [])->filter(function($item, $key) use ($user, $role, $excludedRoutes, $excludedTitles) {
+                $quickActions = collect($navigationItems ?? [])->filter(function($item, $key) use ($user, $team, $excludedRoutes, $excludedTitles) {
                     $route = $item['route'] ?? '';
                     $title = strtolower(trim($item['title'] ?? ''));
 
@@ -303,11 +303,11 @@
 
                     if ($user->isAdmin()) return true;
 
-                    if ($role === 'purchase') {
+                    if ($team === 'purchase team') {
                         return in_array($title, ['purchase orders']);
                     }
 
-                    if ($role === 'inventory') {
+                    if ($team === 'inventory manager') {
                         return in_array($title, ['inventory control', 'barcode management']);
                     }
 

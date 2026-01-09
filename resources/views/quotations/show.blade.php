@@ -85,8 +85,8 @@
                     Download PDF
                 </a>
                 
-                @if(in_array($quotation->status, ['draft', 'sent']))
-                    <a href="{{ route('quotations.edit', $quotation) }}" 
+                @if(in_array($quotation->status, ['draft', 'sent']) && auth()->user()->hasPermission('edit_quotation'))
+                    <a href="{{ route('quotations.edit', $quotation) }}"
                        class="inline-flex items-center px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 focus:ring-2 focus:ring-offset-2 focus:ring-gray-300 transition-colors">
                         <i class="fas fa-edit w-5 h-5 mr-2"></i>
                         Edit
@@ -94,18 +94,23 @@
                 @endif
                 
                 @if($quotation->status !== 'converted')
-                    @if($canCreateInvoice)
+                    @if($canCreateInvoice && auth()->user()->hasPermission('convert_quotation_to_invoice'))
                         <form action="{{ route('quotations.convert', $quotation) }}" method="POST" class="inline">
                             @csrf
-                            <button type="submit" 
-                                    class="inline-flex items-center px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors" 
+                            <button type="submit"
+                                    class="inline-flex items-center px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors"
                                     onclick="return confirm('Convert to invoice?')">
                                 <i class="fas fa-file-invoice w-5 h-5 mr-2"></i>
                                 Convert to Invoice
                             </button>
                         </form>
-                    @else
+                    @elseif(!$canCreateInvoice)
                         <button disabled class="inline-flex items-center px-4 py-2 bg-gray-300 text-gray-500 rounded-md cursor-not-allowed" title="Upgrade to create more invoices">
+                            <i class="fas fa-file-invoice w-5 h-5 mr-2"></i>
+                            Convert to Invoice
+                        </button>
+                    @else
+                        <button disabled class="inline-flex items-center px-4 py-2 bg-gray-300 text-gray-500 rounded-md cursor-not-allowed" title="You don't have permission to convert quotations to invoices">
                             <i class="fas fa-file-invoice w-5 h-5 mr-2"></i>
                             Convert to Invoice
                         </button>

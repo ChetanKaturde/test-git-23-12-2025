@@ -23,10 +23,12 @@
                     <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
                     <span>{{ $quotations->count() }} Total</span>
                 </div>
-                <a href="{{ route('quotations.create') }}" class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
-                    <i class="fas fa-plus w-5 h-5 mr-2"></i>
-                    New Quotation
-                </a>
+                @if(auth()->user()->hasPermission('create_quotation'))
+                    <a href="{{ route('quotations.create') }}" class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
+                        <i class="fas fa-plus w-5 h-5 mr-2"></i>
+                        New Quotation
+                    </a>
+                @endif
             </div>
         </div>
     </div>
@@ -235,11 +237,13 @@
                     Start creating professional quotations for your customers. Track proposals and convert them to invoices seamlessly.
                 </p>
                 <div class="flex flex-col sm:flex-row gap-3 justify-center">
-                    <a href="{{ route('quotations.create') }}" 
-                       class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
-                        <i class="fas fa-plus w-5 h-5 mr-2"></i>
-                        Create Quote
-                    </a>
+                    @if(auth()->user()->hasPermission('create_quotation'))
+                        <a href="{{ route('quotations.create') }}"
+                           class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
+                            <i class="fas fa-plus w-5 h-5 mr-2"></i>
+                            Create Quote
+                        </a>
+                    @endif
                     <a href="{{ route('customers.index') }}" 
                        class="inline-flex items-center px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 focus:ring-2 focus:ring-offset-2 focus:ring-gray-300 transition-colors">
                         <i class="fas fa-users w-5 h-5 mr-2"></i>

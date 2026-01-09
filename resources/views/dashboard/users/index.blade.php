@@ -136,8 +136,8 @@
                         </td>
                         <td>{{ $user->email }}</td>
                         <td>
-                            <span class="badge bg-{{ $user->role == 'admin' ? 'danger' : ($user->role == 'purchase_team' ? 'primary' : ($user->role == 'inventory_manager' ? 'info' : 'secondary')) }}">
-                                {{ $user->getRoleDisplayName() }}
+                            <span class="badge bg-secondary">
+                                {{ $user->getTeamDisplayName() }}
                             </span>
                         </td>
                         <td>

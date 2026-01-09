@@ -14,7 +14,7 @@
                 </div>
                 <div>
                     <h2 class="text-2xl font-bold text-gray-900">{{ $user->name }}</h2>
-                    <p class="text-gray-600">{{ $user->getRoleDisplayName() }}</p>
+                    <p class="text-gray-600">{{ $user->getTeamDisplayName() }}</p>
                     <p class="text-sm text-gray-500">{{ $user->email }}</p>
                 </div>
             </div>
@@ -41,8 +41,8 @@
                 <p class="mt-1 text-sm text-gray-900">{{ $user->phone ? '+91 ' . $user->phone : 'Not provided' }}</p>
             </div>
             <div>
-                <label class="block text-sm font-medium text-gray-500">Role</label>
-                <p class="mt-1 text-sm text-gray-900">{{ $user->getRoleDisplayName() }}</p>
+                <label class="block text-sm font-medium text-gray-500">Team</label>
+                <p class="mt-1 text-sm text-gray-900">{{ $user->getTeamDisplayName() }}</p>
             </div>
         </div>
     </div>

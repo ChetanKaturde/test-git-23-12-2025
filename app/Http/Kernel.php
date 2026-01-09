@@ -66,6 +66,7 @@ class Kernel extends HttpKernel
         'require.business.profile' => \App\Http\Middleware\RequireBusinessProfile::class,
       
        // Add your custom middleware here
-        'check.material.availability' => \App\Http\Middleware\CheckMaterialAvailability::class,
+       'check.material.availability' => \App\Http\Middleware\CheckMaterialAvailability::class,
+       'permission' => \App\Http\Middleware\CheckPermission::class,
     ];
 }

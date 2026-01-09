@@ -68,7 +68,7 @@
                         </div>
                         <div>
                             <p class="text-sm font-medium text-gray-900">{{ $member->name }}</p>
-                            <p class="text-xs text-gray-500">{{ $member->getRoleDisplayName() }}</p>
+                            <p class="text-xs text-gray-500">{{ $member->getTeamDisplayName() }}</p>
                         </div>
                     </div>
                     <div class="text-right">

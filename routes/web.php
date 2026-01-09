@@ -207,8 +207,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/reports/expenses', [\App\Http\Controllers\ReportsController::class, 'expenses'])->name('reports.expenses');
     Route::get('/reports/profit-loss', [\App\Http\Controllers\ReportsController::class, 'profitLoss'])->name('reports.profit-loss');
     
-    // Quotations - with module permission
-    Route::middleware(['auth', 'module.permission:quotations,view'])->group(function () {
+    // Quotations - permissions handled in controller
+    Route::middleware('auth')->group(function () {
         Route::resource('quotations', \App\Http\Controllers\QuotationController::class)->only(['index', 'create', 'store', 'show', 'edit', 'update']);
         Route::get('quotations/{quotation}/pdf', [\App\Http\Controllers\QuotationController::class, 'pdf'])->name('quotations.pdf');
         Route::post('quotations/{quotation}/convert-to-invoice', [\App\Http\Controllers\QuotationController::class, 'convertToInvoice'])->name('quotations.convert');
@@ -240,6 +240,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/activity-log', [\App\Http\Controllers\ActivityLogController::class, 'index'])->name('activity-log.index');
     });
     
+    // Teams CRUD (for team management)
+    Route::resource('teams', \App\Http\Controllers\TeamsController::class);
+
     // Team Management (Permission-based - checks done in controller)
     Route::get('/settings/team', [\App\Http\Controllers\TeamController::class, 'index'])->name('team.index');
     Route::post('/settings/team/invite', [\App\Http\Controllers\TeamController::class, 'invite'])->name('team.invite');
