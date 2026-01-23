@@ -250,9 +250,9 @@ Route::middleware('auth')->group(function () {
     Route::delete('/settings/team/members/{user}', [\App\Http\Controllers\TeamController::class, 'removeMember'])->name('team.remove-member');
     Route::patch('/settings/team/members/{user}/permissions', [\App\Http\Controllers\TeamController::class, 'updatePermissions'])->name('team.update-permissions');
     Route::patch('/settings/team/members/{user}/status', [\App\Http\Controllers\TeamController::class, 'toggleStatus'])->name('team.toggle-status');
-    Route::post('/settings/team/members/{user}/reset-password', [\App\Http\Controllers\TeamController::class, 'resetPassword'])->name('team.reset-password');
-    Route::get('/settings/team/members/{user}/activities', [\App\Http\Controllers\TeamController::class, 'viewActivities'])->name('team.view-activities');
+    Route::get('/settings/team/members/{user}/view-password', [\App\Http\Controllers\TeamController::class, 'viewPassword'])->name('team.view-password');
     Route::get('/team/performance', [\App\Http\Controllers\TeamController::class, 'performance'])->name('team.performance');
+    Route::post('/team/performance', [\App\Http\Controllers\TeamController::class, 'performance'])->name('team.performance.post');
     
     // Logout
     Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
@@ -332,6 +332,31 @@ Route::middleware('auth')->get('/materials/all', [MaterialController::class, 'ge
 // Global search API
 Route::middleware('auth')->get('/api/search', [\App\Http\Controllers\SearchController::class, 'search'])->name('api.search');
 
+// API route for validating sales representative ID
+Route::get('/api/validate-representative-id/{id}', function ($id) {
+    $representative = \App\Models\SalesRepresentative::where('representative_id', $id)->first();
+
+    if (!$representative) {
+        return response()->json([
+            'valid' => false,
+            'message' => 'Invalid sales representative ID'
+        ]);
+    }
+
+    if ($representative->status !== 'Active') {
+        return response()->json([
+            'valid' => false,
+            'message' => 'Sales representative is not active'
+        ]);
+    }
+
+    return response()->json([
+        'valid' => true,
+        'name' => $representative->full_name,
+        'message' => 'Valid sales representative'
+    ]);
+});
+
 // Debug routes
 Route::post('/debug-login', function(\Illuminate\Http\Request $request) {
     $credentials = $request->only('email', 'password');
@@ -359,20 +384,38 @@ Route::get('/test-invoices', function() {
         if (!\Auth::check()) {
             return 'Not authenticated';
         }
-        
+
         $user = \Auth::user();
         $businessId = $user->business_id;
-        
+
         if (!$businessId) {
             return 'No business ID for user: ' . $user->email;
         }
-        
+
         $invoiceCount = \App\Models\Invoice::where('business_id', $businessId)->count();
-        
+
         return 'User: ' . $user->email . ', Business ID: ' . $businessId . ', Invoice count: ' . $invoiceCount;
     } catch (Exception $e) {
         return 'Error: ' . $e->getMessage();
     }
+});
+
+// Super Admin Routes (Hidden)
+Route::prefix('superadmin')->group(function () {
+    Route::get('/login', [\App\Http\Controllers\SuperAdminLoginController::class, 'showLoginForm'])->name('superadmin.login');
+    Route::post('/login', [\App\Http\Controllers\SuperAdminLoginController::class, 'login'])->name('superadmin.login.post');
+    Route::post('/logout', [\App\Http\Controllers\SuperAdminLoginController::class, 'logout'])->name('superadmin.logout');
+
+    Route::middleware('superadmin.auth')->group(function () {
+        Route::get('/dashboard', [\App\Http\Controllers\SuperAdminDashboardController::class, 'index'])->name('superadmin.dashboard');
+        Route::get('/contact-messages', [\App\Http\Controllers\SuperAdminContactController::class, 'index'])->name('superadmin.contact-messages');
+        Route::delete('/contact-messages/{contactRequest}', [\App\Http\Controllers\SuperAdminContactController::class, 'destroy'])->name('superadmin.contact-messages.destroy');
+        Route::post('/contact-messages/bulk-delete', [\App\Http\Controllers\SuperAdminContactController::class, 'bulkDelete'])->name('superadmin.contact-messages.bulk-delete');
+        Route::get('/contact-messages/export', [\App\Http\Controllers\SuperAdminContactController::class, 'export'])->name('superadmin.contact-messages.export');
+        Route::get('/business-owners', [\App\Http\Controllers\SuperAdminBusinessController::class, 'index'])->name('superadmin.business-owners');
+        Route::resource('sales-representatives', \App\Http\Controllers\SuperAdminSalesRepresentativeController::class, ['except' => ['destroy'], 'as' => 'superadmin']);
+        Route::post('/sales-representatives/{id}/toggle-status', [\App\Http\Controllers\SuperAdminSalesRepresentativeController::class, 'toggleStatus'])->name('superadmin.sales-representatives.toggle-status');
+    });
 });
 
 

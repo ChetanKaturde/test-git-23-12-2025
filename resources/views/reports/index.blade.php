@@ -46,7 +46,7 @@
                     <h3 class="text-2xl font-bold text-gray-900 mb-2">Business Expenses</h3>
                     <p class="text-lg text-gray-600">Track and analyze your business expenses</p>
                 </div>
-                <a href="{{ route('reports.expenses') }}" class="inline-flex items-center px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors text-lg font-medium">
+                <a href="{{ route('reports.expenses') }}" class="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-lg font-medium">
                     View Expense Report
                     <i class="fas fa-arrow-right ml-2"></i>
                 </a>

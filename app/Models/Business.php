@@ -33,6 +33,7 @@ class Business extends Model
         'payment_terms',
         'terms_and_conditions',
         'timezone',
+        'sales_representative_id',
     ];
 
     protected $casts = [
@@ -75,6 +76,11 @@ class Business extends Model
     public function machines()
     {
         return $this->hasMany(Machine::class);
+    }
+
+    public function salesRepresentative()
+    {
+        return $this->belongsTo(SalesRepresentative::class, 'sales_representative_id', 'representative_id');
     }
 
     public function invoices()

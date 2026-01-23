@@ -143,6 +143,7 @@
 </head>
 <body class="bg-gray-50">
     <div class="flex h-screen">
+        @if(auth()->check())
         <!-- Sidebar -->
         <div class="hidden md:flex md:w-64 md:flex-col">
             <div class="flex flex-col flex-grow overflow-y-auto bg-white border-r">
@@ -234,13 +235,13 @@
                         </button>
                         <div x-show="sections.sales" x-transition class="space-y-1 ml-2">
                             @if(auth()->check() && auth()->user()->hasPermission('add_customer'))
-                                <a href="{{ route('customers.index') }}" class="@if(request()->routeIs('customers.*')) bg-indigo-50 text-indigo-700 border-l-4 border-indigo-500 font-medium @else text-gray-600 hover:bg-gray-50 hover:text-gray-900 @endif group flex items-center px-3 py-2 text-sm rounded-md transition-colors duration-150">
-                                    <svg class="mr-3 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
-                                    </svg>
-                                    Customers
-                                </a>
-                            @endif
+                               <a href="{{ route('customers.index') }}" class="@if(request()->routeIs('customers.*')) bg-indigo-50 text-indigo-700 border-l-4 border-indigo-500 font-medium @else text-gray-600 hover:bg-gray-50 hover:text-gray-900 @endif group flex items-center px-3 py-2 text-sm rounded-md transition-colors duration-150">
+                                   <svg class="mr-3 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                   </svg>
+                                   Customers
+                               </a>
+                           @endif
                             
                             @if(auth()->check() && auth()->user()->hasPermission('view_material'))
                                 <a href="{{ route('materials.index') }}" class="@if(request()->routeIs('materials.*')) bg-indigo-50 text-indigo-700 border-l-4 border-indigo-500 font-medium @else text-gray-600 hover:bg-gray-50 hover:text-gray-900 @endif group flex items-center px-3 py-2 text-sm rounded-md transition-colors duration-150">
@@ -272,39 +273,43 @@
                     </div>
 
                     <!-- ACCOUNTS Section -->
-                    <div class="space-y-1">
-                        <button @click="toggleSection('accounts')" class="w-full flex items-center justify-between px-3 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider hover:text-gray-700">
-                            <span>Accounts</span>
-                            <svg :class="{'rotate-90': sections.accounts}" class="w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                            </svg>
-                        </button>
-                        <div x-show="sections.accounts" x-transition class="space-y-1 ml-2">
-
-                            @if(auth()->check() && (auth()->user()->hasPermission('view_expense') || auth()->user()->hasPermission('add_expense')))
-                                <a href="{{ route('expenses.index') }}" class="@if(request()->routeIs('expenses.*')) bg-indigo-50 text-indigo-700 border-l-4 border-indigo-500 font-medium @else text-gray-600 hover:bg-gray-50 hover:text-gray-900 @endif group flex items-center px-3 py-2 text-sm rounded-md transition-colors duration-150">
-                                    <svg class="mr-3 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                                    </svg>
-                                    Expenses
-                                </a>
-                            @endif
-
-                            <a href="{{ route('payments.record') }}" class="@if(request()->routeIs('payments.record')) bg-indigo-50 text-indigo-700 border-l-4 border-indigo-500 font-medium @else text-gray-600 hover:bg-gray-50 hover:text-gray-900 @endif group flex items-center px-3 py-2 text-sm rounded-md transition-colors duration-150">
-                                <svg class="mr-3 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                    @if(auth()->user()->isAdmin() || auth()->user()->hasPermission('view_expenses') || auth()->user()->hasPermission('add_expense'))
+                        <div class="space-y-1">
+                            <button @click="toggleSection('accounts')" class="w-full flex items-center justify-between px-3 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider hover:text-gray-700">
+                                <span>Accounts</span>
+                                <svg :class="{'rotate-90': sections.accounts}" class="w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                                 </svg>
-                                Record Payment
-                            </a>
+                            </button>
+                            <div x-show="sections.accounts" x-transition class="space-y-1 ml-2">
 
-                            <a href="{{ route('payments.index') }}" class="@if(request()->routeIs('payments.index')) bg-indigo-50 text-indigo-700 border-l-4 border-indigo-500 font-medium @else text-gray-600 hover:bg-gray-50 hover:text-gray-900 @endif group flex items-center px-3 py-2 text-sm rounded-md transition-colors duration-150">
-                                <svg class="mr-3 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                </svg>
-                                Payment Receipts
-                            </a>
+                                @if(auth()->check() && (auth()->user()->hasPermission('view_expenses') || auth()->user()->hasPermission('add_expense') || auth()->user()->isAdmin()))
+                                    <a href="{{ route('expenses.index') }}" class="@if(request()->routeIs('expenses.*')) bg-indigo-50 text-indigo-700 border-l-4 border-indigo-500 font-medium @else text-gray-600 hover:bg-gray-50 hover:text-gray-900 @endif group flex items-center px-3 py-2 text-sm rounded-md transition-colors duration-150">
+                                        <svg class="mr-3 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                        </svg>
+                                        Expenses
+                                    </a>
+                                @endif
+
+                                @if(auth()->user()->isAdmin() || auth()->user()->hasPermission('record_payment'))
+                                    <a href="{{ route('payments.record') }}" class="@if(request()->routeIs('payments.record')) bg-indigo-50 text-indigo-700 border-l-4 border-indigo-500 font-medium @else text-gray-600 hover:bg-gray-50 hover:text-gray-900 @endif group flex items-center px-3 py-2 text-sm rounded-md transition-colors duration-150">
+                                        <i class="fas fa-rupee-sign mr-3 w-5 h-5"></i>
+                                        Record Payment
+                                    </a>
+                                @endif
+
+                                @if(auth()->user()->isAdmin() || auth()->user()->hasPermission('view_payment_receipts'))
+                                    <a href="{{ route('payments.index') }}" class="@if(request()->routeIs('payments.index')) bg-indigo-50 text-indigo-700 border-l-4 border-indigo-500 font-medium @else text-gray-600 hover:bg-gray-50 hover:text-gray-900 @endif group flex items-center px-3 py-2 text-sm rounded-md transition-colors duration-150">
+                                        <svg class="mr-3 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                        </svg>
+                                        Payment Receipts
+                                    </a>
+                                @endif
+                            </div>
                         </div>
-                    </div>
+                    @endif
 
                     <!-- PROCUREMENT Section -->
                     @if(array_intersect(['vendors', 'purchase_orders'], $allowedModules) && (auth()->user()->canViewModule('vendors') || auth()->user()->canViewModule('purchase_orders')))
@@ -338,7 +343,7 @@
                     @endif
 
                     <!-- MANAGEMENT Section -->
-                    @if(auth()->user()->canViewModule('team') || auth()->user()->canViewModule('reports') || in_array(auth()->user()->role, ['admin', 'manager']))
+                    @if(auth()->user()->isAdmin() || auth()->user()->hasPermission('manage_team') || auth()->user()->hasPermission('view_reports') || in_array(auth()->user()->role, ['admin', 'manager']))
                         <div class="space-y-1">
                             <button @click="toggleSection('management')" class="w-full flex items-center justify-between px-3 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider hover:text-gray-700">
                                 <span>Management</span>
@@ -347,7 +352,7 @@
                                 </svg>
                             </button>
                             <div x-show="sections.management" x-transition class="space-y-1 ml-2">
-                                @if(auth()->check() && auth()->user()->canViewModule('team'))
+                                @if(auth()->check() && (auth()->user()->hasPermission('manage_team') || auth()->user()->isAdmin()))
                                      <a href="{{ route('team.index') }}" class="@if(request()->routeIs('team.index')) bg-indigo-50 text-indigo-700 border-l-4 border-indigo-500 font-medium @else text-gray-600 hover:bg-gray-50 hover:text-gray-900 @endif group flex items-center px-3 py-2 text-sm rounded-md transition-colors duration-150">
                                          <svg class="mr-3 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
@@ -356,7 +361,7 @@
                                      </a>
                                  @endif
 
-                                 @if(auth()->check() && auth()->user()->isAdmin())
+                                 @if(auth()->check() && (auth()->user()->hasPermission('manage_team') || auth()->user()->isAdmin()))
                                      <a href="{{ route('teams.index') }}" class="@if(request()->routeIs('teams.*')) bg-indigo-50 text-indigo-700 border-l-4 border-indigo-500 font-medium @else text-gray-600 hover:bg-gray-50 hover:text-gray-900 @endif group flex items-center px-3 py-2 text-sm rounded-md transition-colors duration-150">
                                          <svg class="mr-3 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
@@ -364,7 +369,7 @@
                                          Teams/Departments
                                      </a>
                                  @endif
-                                
+
                                 @if(auth()->check() && auth()->user()->isAdmin())
                                     <a href="{{ route('business.profile') }}" class="@if(request()->routeIs('business.profile')) bg-indigo-50 text-indigo-700 border-l-4 border-indigo-500 font-medium @else text-gray-600 hover:bg-gray-50 hover:text-gray-900 @endif group flex items-center px-3 py-2 text-sm rounded-md transition-colors duration-150">
                                         <svg class="mr-3 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -373,30 +378,30 @@
                                         Business Profile
                                     </a>
                                 @endif
-                                
-                                @if(auth()->check() && auth()->user()->canViewModule('reports'))
+
+                                @if(auth()->check() && (auth()->user()->hasPermission('view_reports') || auth()->user()->isAdmin()))
                                     <a href="{{ route('reports.index') }}" class="@if(request()->routeIs('reports.index')) bg-indigo-50 text-indigo-700 border-l-4 border-indigo-500 font-medium @else text-gray-600 hover:bg-gray-50 hover:text-gray-900 @endif group flex items-center px-3 py-2 text-sm rounded-md transition-colors duration-150">
-                                        <svg class="mr-3 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                                        </svg>
-                                        Reports
-                                    </a>
-                                    
-                                    <a href="{{ route('activity-log.index') }}" class="@if(request()->routeIs('activity-log.*')) bg-indigo-50 text-indigo-700 border-l-4 border-indigo-500 font-medium @else text-gray-600 hover:bg-gray-50 hover:text-gray-900 @endif group flex items-center px-3 py-2 text-sm rounded-md transition-colors duration-150">
+                                       <svg class="mr-3 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                       </svg>
+                                       Reports
+                                   </a>
+
+                                    {{-- <a href="{{ route('activity-log.index') }}" class="@if(request()->routeIs('activity-log.*')) bg-indigo-50 text-indigo-700 border-l-4 border-indigo-500 font-medium @else text-gray-600 hover:bg-gray-50 hover:text-gray-900 @endif group flex items-center px-3 py-2 text-sm rounded-md transition-colors duration-150">
                                         <svg class="mr-3 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                         </svg>
                                         Activity Log
-                                    </a>
-                                    
-                                    <a href="{{ route('reports.aging') }}" class="@if(request()->routeIs('reports.*')) bg-indigo-50 text-indigo-700 border-l-4 border-indigo-500 font-medium @else text-gray-600 hover:bg-gray-50 hover:text-gray-900 @endif group flex items-center px-3 py-2 text-sm rounded-md transition-colors duration-150">
+                                    </a> --}}
+
+                                    {{-- <a href="{{ route('reports.aging') }}" class="@if(request()->routeIs('reports.*')) bg-indigo-50 text-indigo-700 border-l-4 border-indigo-500 font-medium @else text-gray-600 hover:bg-gray-50 hover:text-gray-900 @endif group flex items-center px-3 py-2 text-sm rounded-md transition-colors duration-150">
                                         <svg class="mr-3 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
                                         </svg>
                                         Aging Report
-                                    </a>
+                                    </a> --}}
                                 @endif
-                                
+
                                 @if(auth()->check() && in_array(auth()->user()->role, ['admin', 'manager']))
                                     <a href="{{ route('team.performance') }}" class="@if(request()->routeIs('team.performance')) bg-indigo-50 text-indigo-700 border-l-4 border-indigo-500 font-medium @else text-gray-600 hover:bg-gray-50 hover:text-gray-900 @endif group flex items-center px-3 py-2 text-sm rounded-md transition-colors duration-150">
                                         <svg class="mr-3 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -411,9 +416,11 @@
                 </nav>
             </div>
         </div>
+        @endif
 
         <!-- Main content -->
         <div class="flex flex-col flex-1 overflow-hidden">
+            @if(auth()->check())
             <!-- Header -->
             <header class="bg-white shadow-sm border-b">
                 <!-- Desktop Header -->
@@ -565,6 +572,7 @@
                     </div>
                 </div>
             </header>
+            @endif
 
             <!-- Main Content -->
             <main class="flex-1 overflow-y-auto bg-gray-50">
@@ -597,6 +605,7 @@
         
 
         
+        @if(auth()->check())
         <!-- Mobile Navigation -->
         <div id="mobile-menu" class="md:hidden fixed inset-0 z-50 hidden">
             <div class="fixed inset-0 bg-gray-600 bg-opacity-75" onclick="toggleMobileMenu()"></div>
@@ -680,7 +689,7 @@
                         <div x-show="sections.sales" x-transition class="space-y-1 ml-2">
                             <a href="{{ route('customers.index') }}" class="@if(request()->routeIs('customers.*')) bg-indigo-50 text-indigo-700 border-l-4 border-indigo-500 font-medium @else text-gray-600 hover:bg-gray-50 hover:text-gray-900 @endif flex items-center px-3 py-2 text-sm rounded-md touch-target transition-colors duration-150">
                                 <svg class="mr-3 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
                                 </svg>
                                 Customers
                             </a>
@@ -711,6 +720,45 @@
                             @endif
                         </div>
                     </div>
+
+                    <!-- ACCOUNTS Section -->
+                    @if(auth()->user()->isAdmin() || auth()->user()->hasPermission('view_expenses') || auth()->user()->hasPermission('add_expense'))
+                        <div class="space-y-1">
+                            <button @click="toggleSection('accounts')" class="w-full flex items-center justify-between px-3 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider hover:text-gray-700 touch-target">
+                                <span>Accounts</span>
+                                <svg :class="{'rotate-90': sections.accounts}" class="w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                </svg>
+                            </button>
+                            <div x-show="sections.accounts" x-transition class="space-y-1 ml-2">
+
+                                @if(auth()->check() && (auth()->user()->hasPermission('view_expenses') || auth()->user()->hasPermission('add_expense') || auth()->user()->isAdmin()))
+                                    <a href="{{ route('expenses.index') }}" class="@if(request()->routeIs('expenses.*')) bg-indigo-50 text-indigo-700 border-l-4 border-indigo-500 font-medium @else text-gray-600 hover:bg-gray-50 hover:text-gray-900 @endif flex items-center px-3 py-2 text-sm rounded-md touch-target transition-colors duration-150">
+                                        <svg class="mr-3 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                        </svg>
+                                        Expenses
+                                    </a>
+                                @endif
+
+                                @if(auth()->user()->isAdmin() || auth()->user()->hasPermission('record_payment'))
+                                    <a href="{{ route('payments.record') }}" class="@if(request()->routeIs('payments.record')) bg-indigo-50 text-indigo-700 border-l-4 border-indigo-500 font-medium @else text-gray-600 hover:bg-gray-50 hover:text-gray-900 @endif flex items-center px-3 py-2 text-sm rounded-md touch-target transition-colors duration-150">
+                                        <i class="fas fa-rupee-sign mr-3 w-5 h-5"></i>
+                                        Record Payment
+                                    </a>
+                                @endif
+
+                                @if(auth()->user()->isAdmin() || auth()->user()->hasPermission('view_payment_receipts'))
+                                    <a href="{{ route('payments.index') }}" class="@if(request()->routeIs('payments.index')) bg-indigo-50 text-indigo-700 border-l-4 border-indigo-500 font-medium @else text-gray-600 hover:bg-gray-50 hover:text-gray-900 @endif flex items-center px-3 py-2 text-sm rounded-md touch-target transition-colors duration-150">
+                                        <svg class="mr-3 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                        </svg>
+                                        Payment Receipts
+                                    </a>
+                                @endif
+                            </div>
+                        </div>
+                    @endif
 
                     <!-- PROCUREMENT Section -->
                     @if(array_intersect(['vendors', 'purchase_orders'], $allowedModules) && (auth()->user()->canViewModule('vendors') || auth()->user()->canViewModule('purchase_orders')))
@@ -744,7 +792,7 @@
                     @endif
 
                     <!-- MANAGEMENT Section -->
-                    @if(auth()->user()->canViewModule('team') || auth()->user()->canViewModule('reports') || in_array(auth()->user()->role, ['admin', 'manager']))
+                    @if(auth()->user()->isAdmin() || auth()->user()->hasPermission('manage_team') || auth()->user()->hasPermission('view_reports') || in_array(auth()->user()->role, ['admin', 'manager']))
                         <div class="space-y-1">
                             <button @click="toggleSection('management')" class="w-full flex items-center justify-between px-3 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider hover:text-gray-700 touch-target">
                                 <span>Management</span>
@@ -753,7 +801,7 @@
                                 </svg>
                             </button>
                             <div x-show="sections.management" x-transition class="space-y-1 ml-2">
-                                @if(auth()->check() && auth()->user()->canViewModule('team'))
+                                @if(auth()->check() && (auth()->user()->hasPermission('manage_team') || auth()->user()->isAdmin()))
                                      <a href="{{ route('team.index') }}" class="@if(request()->routeIs('team.index')) bg-indigo-50 text-indigo-700 border-l-4 border-indigo-500 font-medium @else text-gray-600 hover:bg-gray-50 hover:text-gray-900 @endif flex items-center px-3 py-2 text-sm rounded-md touch-target transition-colors duration-150">
                                          <svg class="mr-3 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
@@ -762,7 +810,7 @@
                                      </a>
                                  @endif
 
-                                 @if(auth()->check() && auth()->user()->isAdmin())
+                                 @if(auth()->check() && (auth()->user()->hasPermission('manage_team') || auth()->user()->isAdmin()))
                                      <a href="{{ route('teams.index') }}" class="@if(request()->routeIs('teams.*')) bg-indigo-50 text-indigo-700 border-l-4 border-indigo-500 font-medium @else text-gray-600 hover:bg-gray-50 hover:text-gray-900 @endif flex items-center px-3 py-2 text-sm rounded-md touch-target transition-colors duration-150">
                                          <svg class="mr-3 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
@@ -770,7 +818,7 @@
                                          Teams/Departments
                                      </a>
                                  @endif
-                                
+
                                 @if(auth()->check() && auth()->user()->isAdmin())
                                     <a href="{{ route('business.profile') }}" class="@if(request()->routeIs('business.profile')) bg-indigo-50 text-indigo-700 border-l-4 border-indigo-500 font-medium @else text-gray-600 hover:bg-gray-50 hover:text-gray-900 @endif flex items-center px-3 py-2 text-sm rounded-md touch-target transition-colors duration-150">
                                         <svg class="mr-3 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -779,30 +827,30 @@
                                         Business Profile
                                     </a>
                                 @endif
-                                
-                                @if(auth()->check() && auth()->user()->canViewModule('reports'))
+
+                                @if(auth()->check() && (auth()->user()->hasPermission('view_reports') || auth()->user()->isAdmin()))
                                     <a href="{{ route('reports.index') }}" class="@if(request()->routeIs('reports.index')) bg-indigo-50 text-indigo-700 border-l-4 border-indigo-500 font-medium @else text-gray-600 hover:bg-gray-50 hover:text-gray-900 @endif flex items-center px-3 py-2 text-sm rounded-md touch-target transition-colors duration-150">
-                                        <svg class="mr-3 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                                        </svg>
-                                        Reports
-                                    </a>
-                                    
-                                    <a href="{{ route('activity-log.index') }}" class="@if(request()->routeIs('activity-log.*')) bg-indigo-50 text-indigo-700 border-l-4 border-indigo-500 font-medium @else text-gray-600 hover:bg-gray-50 hover:text-gray-900 @endif flex items-center px-3 py-2 text-sm rounded-md touch-target transition-colors duration-150">
+                                       <svg class="mr-3 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                       </svg>
+                                       Reports
+                                   </a>
+
+                                    {{-- <a href="{{ route('activity-log.index') }}" class="@if(request()->routeIs('activity-log.*')) bg-indigo-50 text-indigo-700 border-l-4 border-indigo-500 font-medium @else text-gray-600 hover:bg-gray-50 hover:text-gray-900 @endif flex items-center px-3 py-2 text-sm rounded-md touch-target transition-colors duration-150">
                                         <svg class="mr-3 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                         </svg>
                                         Activity Log
-                                    </a>
-                                    
-                                    <a href="{{ route('reports.aging') }}" class="@if(request()->routeIs('reports.*')) bg-indigo-50 text-indigo-700 border-l-4 border-indigo-500 font-medium @else text-gray-600 hover:bg-gray-50 hover:text-gray-900 @endif flex items-center px-3 py-2 text-sm rounded-md touch-target transition-colors duration-150">
+                                    </a> --}}
+
+                                    {{-- <a href="{{ route('reports.aging') }}" class="@if(request()->routeIs('reports.*')) bg-indigo-50 text-indigo-700 border-l-4 border-indigo-500 font-medium @else text-gray-600 hover:bg-gray-50 hover:text-gray-900 @endif flex items-center px-3 py-2 text-sm rounded-md touch-target transition-colors duration-150">
                                         <svg class="mr-3 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
                                         </svg>
                                         Aging Report
-                                    </a>
+                                    </a> --}}
                                 @endif
-                                
+
                                 @if(auth()->check() && in_array(auth()->user()->role, ['admin', 'manager']))
                                     <a href="{{ route('team.performance') }}" class="@if(request()->routeIs('team.performance')) bg-indigo-50 text-indigo-700 border-l-4 border-indigo-500 font-medium @else text-gray-600 hover:bg-gray-50 hover:text-gray-900 @endif flex items-center px-3 py-2 text-sm rounded-md touch-target transition-colors duration-150">
                                         <svg class="mr-3 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -817,6 +865,7 @@
                 </nav>
             </div>
         </div>
+        @endif
     </div>
     
     <script>

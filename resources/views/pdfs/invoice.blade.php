@@ -87,7 +87,41 @@
             color: #111827;
             margin-bottom: 8px;
         }
-        
+
+        /* Items Table */
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+            border: 1px solid #d1d5db;
+        }
+
+        .items-table th {
+            background: #6b7280;
+            color: white;
+            padding: 12px 8px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 10pt;
+        }
+
+        .items-table td {
+            padding: 10px 8px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .items-table tr:nth-child(even) {
+            background: #f9fafb;
+        }
+
+        .text-right {
+            text-align: right;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
         .totals-section {
             margin-left: auto;
             width: 300px;
@@ -130,7 +164,27 @@
             color: #dc2626;
             font-size: 12pt;
         }
-        
+
+        /* Terms & Conditions */
+        .terms-section {
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .terms-title {
+            font-weight: bold;
+            color: #dc2626;
+            margin-bottom: 10px;
+            font-size: 12pt;
+        }
+
+        .terms-content {
+            color: #6b7280;
+            line-height: 1.6;
+        }
+
         .footer {
             text-align: center;
             color: #9ca3af;
@@ -196,7 +250,37 @@
                 @endif
             </div>
         </div>
-        
+
+        <!-- Items Table -->
+        @if(isset($items) && count($items) > 0)
+        <table class="items-table">
+            <thead>
+                <tr>
+                    <th style="width: 40%;">Description</th>
+                    <th style="width: 10%;" class="text-center">Qty</th>
+                    <th style="width: 15%;" class="text-right">Rate</th>
+                    <th style="width: 10%;" class="text-center">Tax</th>
+                    <th style="width: 15%;" class="text-right">Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($items as $item)
+                <tr>
+                    <td>{{ $item->description ?? 'Item' }}</td>
+                    <td class="text-center">{{ $item->quantity ?? 1 }}</td>
+                    <td class="text-right">
+                        <span class="currency">₹</span>{{ number_format($item->unit_price ?? 0, 2) }}
+                    </td>
+                    <td class="text-center">{{ $item->tax_rate ?? 0 }}%</td>
+                    <td class="text-right">
+                        <span class="currency">₹</span>{{ number_format($item->total_price ?? 0, 2) }}
+                    </td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+        @endif
+
         <div class="totals-section">
             <table class="totals-table">
                 <tr>
@@ -221,7 +305,15 @@
                 </tr>
             </table>
         </div>
-        
+
+        <!-- Terms & Conditions -->
+        @if($business->terms_and_conditions)
+        <div class="terms-section">
+            <div class="terms-title">Terms & Conditions</div>
+            <div class="terms-content">{{ $business->terms_and_conditions }}</div>
+        </div>
+        @endif
+
         <div class="footer">
             <div>Page 1 of 1</div>
             <div style="margin-top: 5px;">© 2025 Monitorbizz — All rights reserved</div>

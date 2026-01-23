@@ -150,12 +150,28 @@
                                 <option value="billing_sales" {{ old('subscription_tier') === 'billing_sales' ? 'selected' : '' }}>
                                     Sales & Billing - For service businesses (Free: 50 invoices/month)
                                 </option>
-                                <option value="full_erp" {{ old('subscription_tier') === 'full_erp' ? 'selected' : '' }}>
+                                <!-- Full ERP option commented out as per requirements -->
+                                <!-- <option value="full_erp" {{ old('subscription_tier') === 'full_erp' ? 'selected' : '' }}>
                                     Full ERP - For manufacturers (Paid: Unlimited + Manufacturing)
-                                </option>
+                                </option> -->
                             </select>
                             <p class="text-gray-500 text-xs mt-1">You can upgrade anytime</p>
                             @error('subscription_tier')
+                                <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div>
+                            <label for="sales_representative_id" class="block text-sm font-medium text-gray-700 mb-2">Sales Representative ID</label>
+                            <input id="sales_representative_id" name="sales_representative_id" type="text" required
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors @error('sales_representative_id') border-red-500 @enderror"
+                                   placeholder="e.g., MNBZ7A9X2K4Q" value="{{ old('sales_representative_id') }}">
+                            <div id="representative-name" class="mt-2 text-sm text-green-600 hidden">
+                                <i class="fas fa-check-circle mr-1"></i>
+                                <span id="rep-name-text"></span>
+                            </div>
+                            <p class="text-gray-500 text-xs mt-1">Enter the ID provided by your sales representative</p>
+                            @error('sales_representative_id')
                                 <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                             @enderror
                         </div>
@@ -256,6 +272,43 @@
         // Phone number formatting
         document.getElementById('business_phone')?.addEventListener('input', function(e) {
             this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);
+        });
+
+        // Sales Representative ID validation
+        let repIdTimeout;
+        document.getElementById('sales_representative_id')?.addEventListener('input', function(e) {
+            clearTimeout(repIdTimeout);
+            const repId = this.value.trim();
+            const nameDiv = document.getElementById('representative-name');
+            const nameText = document.getElementById('rep-name-text');
+
+            if (repId.length === 0) {
+                nameDiv.classList.add('hidden');
+                nameText.textContent = '';
+                return;
+            }
+
+            repIdTimeout = setTimeout(() => {
+                fetch(`/api/validate-representative-id/${repId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.valid) {
+                            nameText.textContent = data.name;
+                            nameDiv.classList.remove('hidden', 'text-red-600');
+                            nameDiv.classList.add('text-green-600');
+                            nameDiv.querySelector('i').className = 'fas fa-check-circle mr-1';
+                        } else {
+                            nameText.textContent = data.message;
+                            nameDiv.classList.remove('hidden', 'text-green-600');
+                            nameDiv.classList.add('text-red-600');
+                            nameDiv.querySelector('i').className = 'fas fa-times-circle mr-1';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error validating representative ID:', error);
+                        nameDiv.classList.add('hidden');
+                    });
+            }, 500);
         });
     </script>
 </body>

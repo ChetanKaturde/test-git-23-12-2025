@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
+use App\Models\ContactRequest;
 
 class ContactController extends Controller
 {
@@ -13,17 +14,26 @@ class ContactController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|max:255',
-            'phone' => 'nullable|string|max:20',
-            'business_type' => 'nullable|string|max:100',
+            'mobile' => 'required|string|regex:/^[0-9]{10}$/',
+            'business_type' => 'required|string|max:100',
             'message' => 'required|string|max:1000',
         ]);
 
         try {
-            // Log the contact form submission
-            Log::info('Contact form submission', [
+            // Save contact request to database
+            ContactRequest::create([
                 'name' => $request->name,
                 'email' => $request->email,
-                'phone' => $request->phone,
+                'mobile' => $request->mobile,
+                'business_type' => $request->business_type,
+                'message' => $request->message,
+            ]);
+
+            // Log the contact form submission
+            Log::info('Contact form submission saved', [
+                'name' => $request->name,
+                'email' => $request->email,
+                'mobile' => $request->mobile,
                 'business_type' => $request->business_type,
                 'message' => $request->message,
                 'ip' => $request->ip(),
@@ -41,7 +51,7 @@ class ContactController extends Controller
 
         } catch (\Exception $e) {
             Log::error('Contact form error: ' . $e->getMessage());
-            
+
             return response()->json([
                 'success' => false,
                 'message' => 'Sorry, there was an error sending your message. Please try again.'

@@ -34,6 +34,7 @@ class Kernel extends HttpKernel
             \App\Http\Middleware\NotificationMiddleware::class,
             \App\Http\Middleware\PerformanceMonitoring::class,
             \App\Http\Middleware\EnsureUserHasPermissions::class,
+            \App\Http\Middleware\CheckUserActive::class,
         ],
 
         'api' => [
@@ -68,5 +69,6 @@ class Kernel extends HttpKernel
        // Add your custom middleware here
        'check.material.availability' => \App\Http\Middleware\CheckMaterialAvailability::class,
        'permission' => \App\Http\Middleware\CheckPermission::class,
+       'superadmin.auth' => \App\Http\Middleware\SuperAdminAuth::class,
     ];
 }

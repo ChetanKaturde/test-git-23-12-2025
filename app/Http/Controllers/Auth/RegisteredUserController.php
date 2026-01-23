@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Business;
 use App\Models\Invitation;
+use App\Models\SalesRepresentative;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -99,6 +100,7 @@ class RegisteredUserController extends Controller
                 'is_active' => true,
                 'subscription_plan' => 'free',
                 'subscription_tier' => $request->subscription_tier,
+                'sales_representative_id' => $request->sales_representative_id,
             ]);
 
             // Create owner user

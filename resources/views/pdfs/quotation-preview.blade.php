@@ -19,8 +19,8 @@
 <body>
     <div class="header">
         <div>
-            @if($business->logo_path && file_exists(public_path('storage/' . $business->logo_path)))
-                <img src="{{ public_path('storage/' . $business->logo_path) }}" alt="Logo" class="logo">
+            @if($business->logo_path && file_exists(public_path($business->logo_path)))
+                <img src="{{ url($business->logo_path) }}" alt="Logo" class="logo">
             @else
                 <div style="width: 80px; height: 80px; background: #e5e7eb; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold; color: #374151;">
                     {{ substr($business->name ?? 'B', 0, 1) }}

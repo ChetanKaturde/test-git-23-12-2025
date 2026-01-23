@@ -240,12 +240,12 @@
         <!-- Header Section -->
         <div class="header">
             <div class="company-section">
-                @if(!$business->logo_path || !file_exists(public_path('storage/' . $business->logo_path)))
+                @if(!$business->logo_path || !file_exists(public_path($business->logo_path)))
                     <div class="company-name">{{ $business->name ?? 'Your Business Name' }}</div>
                 @endif
-                
+
                 <div class="company-details">
-                    @if($business->logo_path && file_exists(public_path('storage/' . $business->logo_path)))
+                    @if($business->logo_path && file_exists(public_path($business->logo_path)))
                         <div style="font-size: 16pt; font-weight: bold; color: #1e40af; margin-bottom: 8px;">
                             {{ $business->name ?? 'Your Business Name' }}
                         </div>
@@ -276,9 +276,9 @@
                 </div>
             </div>
             
-            @if($business->logo_path && file_exists(public_path('storage/' . $business->logo_path)))
+            @if($business->logo_path && file_exists(public_path($business->logo_path)))
                 <div class="logo-section">
-                    <img src="{{ public_path('storage/' . $business->logo_path) }}" alt="Company Logo" class="logo">
+                    <img src="{{ url($business->logo_path) }}" alt="Company Logo" class="logo">
                 </div>
             @endif
         </div>

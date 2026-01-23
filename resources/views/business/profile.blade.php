@@ -27,9 +27,13 @@
                             </button>
                         </form>
                     @endif
-                    <button type="button" onclick="previewPDF()" class="inline-flex items-center px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors text-sm font-medium">
-                        <i class="fas fa-eye mr-2"></i>Preview PDF
-                    </button>
+                    {{-- Temporarily disabled PDF download button --}}
+                    {{-- <form action="{{ route('business.profile.preview') }}" method="POST" class="inline">
+                        @csrf
+                        <button type="submit" class="inline-flex items-center px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors text-sm font-medium">
+                            <i class="fas fa-download mr-2"></i>Download PDF
+                        </button>
+                    </form> --}}
                 </div>
             </div>
         </div>
@@ -50,7 +54,7 @@
                             <div class="flex-shrink-0">
                                 <div id="logoPreview" class="w-24 h-24 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center bg-white">
                                     @if($business->logo_path)
-                                        <img src="{{ Storage::url($business->logo_path) }}" alt="Logo" class="w-full h-full object-contain rounded-lg">
+                                        <img src="{{ url($business->logo_path) }}" alt="Logo" class="w-full h-full object-contain rounded-lg">
                                     @else
                                         <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
                                             <span class="text-blue-600 font-bold text-lg">{{ substr($business->name ?? 'B', 0, 1) }}</span>
@@ -189,8 +193,8 @@
                             <label class="block text-sm font-medium text-gray-700 mb-2">Currency</label>
                             <select name="currency" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
                                 <option value="INR" {{ old('currency', $business->currency) == 'INR' ? 'selected' : '' }}>INR (₹)</option>
-                                <option value="USD" {{ old('currency', $business->currency) == 'USD' ? 'selected' : '' }}>USD ($)</option>
-                                <option value="EUR" {{ old('currency', $business->currency) == 'EUR' ? 'selected' : '' }}>EUR (€)</option>
+                                {{-- <option value="USD" {{ old('currency', $business->currency) == 'USD' ? 'selected' : '' }}>USD ($)</option> --}}
+                                {{-- <option value="EUR" {{ old('currency', $business->currency) == 'EUR' ? 'selected' : '' }}>EUR (€)</option> --}}
                             </select>
                             @error('currency')<p class="text-red-500 text-sm mt-1">{{ $message }}</p>@enderror
                         </div>
@@ -343,50 +347,6 @@ window.addEventListener('beforeunload', function(e) {
     }
 });
 
-// PDF Preview
-function previewPDF() {
-    const form = document.getElementById('businessForm');
-    const formData = new FormData(form);
-    
-    // Show loading state
-    const button = event.target;
-    const originalText = button.innerHTML;
-    button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Generating...';
-    button.disabled = true;
-    
-    fetch('{{ route("business.profile.preview") }}', {
-        method: 'POST',
-        body: formData,
-        headers: {
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-        }
-    })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-        return response.blob();
-    })
-    .then(blob => {
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'business-profile-preview.pdf';
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('Error generating PDF preview. Please try again.');
-    })
-    .finally(() => {
-        // Restore button state
-        button.innerHTML = originalText;
-        button.disabled = false;
-    });
-}
 
 // Update logo fallback when business name changes
 document.getElementById('businessName').addEventListener('input', function(e) {

@@ -1,177 +1,193 @@
 @extends('layouts.app')
-@section('title', 'Team Performance')
-@section('page-title', 'Team Performance Dashboard')
+@section('title', 'Performance Dashboard')
+@section('page-title', 'Performance Dashboard')
 
 @section('content')
+@php
+$inputType = 'date';
+$inputName = 'date_value';
+$inputLabel = 'Select Date';
+$inputPlaceholder = '';
+$inputMin = '';
+$inputMax = '';
+$showQuarter = false;
+if ($selectedFilterType === 'day') {
+    $inputType = 'date';
+    $inputName = 'date';
+    $inputLabel = 'Select Date';
+} elseif ($selectedFilterType === 'month') {
+    $inputType = 'month';
+    $inputName = 'month';
+    $inputLabel = 'Select Month';
+} elseif ($selectedFilterType === 'year') {
+    $inputType = 'number';
+    $inputName = 'year';
+    $inputLabel = 'Select Year';
+    $inputPlaceholder = 'e.g. 2024';
+    $inputMin = '2000';
+    $inputMax = '2100';
+} elseif ($selectedFilterType === 'quarter') {
+    $inputType = 'number';
+    $inputName = 'year';
+    $inputLabel = 'Select Year';
+    $inputPlaceholder = 'e.g. 2024';
+    $inputMin = '2000';
+    $inputMax = '2100';
+    $showQuarter = true;
+}
+@endphp
 <div class="p-6">
-    <!-- Summary Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-{{ $subscriptionTier === 'full_erp' ? '4' : '1' }} gap-4 mb-6">
-        <div class="bg-white rounded-lg shadow p-6">
-            <div class="flex items-center">
-                <div class="p-2 bg-blue-100 rounded-lg">
-                    <i class="fas fa-users text-blue-600"></i>
-                </div>
-                <div class="ml-4">
-                    <p class="text-sm font-medium text-gray-600">Active Team Members</p>
-                    <p class="text-2xl font-semibold text-gray-900">{{ $teamStats['active_members'] }}</p>
-                </div>
-            </div>
+<div class="bg-white rounded-lg shadow p-6">
+<h3 class="text-lg font-medium text-gray-900 mb-4">Commodity Performance</h3>
+
+<!-- Filter Form -->
+<form method="POST" action="{{ route('team.performance') }}" class="mb-6">
+    @csrf
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div>
+            <label for="filter_type" class="block text-sm font-medium text-gray-700 mb-2">Filter Type</label>
+            <select name="filter_type" id="filter_type" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                <option value="day" {{ old('filter_type', $selectedFilterType) === 'day' ? 'selected' : '' }}>Specific Day</option>
+                <option value="month" {{ old('filter_type', $selectedFilterType) === 'month' ? 'selected' : '' }}>Specific Month</option>
+                <option value="year" {{ old('filter_type', $selectedFilterType) === 'year' ? 'selected' : '' }}>Specific Year</option>
+                <option value="quarter" {{ old('filter_type', $selectedFilterType) === 'quarter' ? 'selected' : '' }}>Specific Quarter</option>
+            </select>
         </div>
-        
-        @if($subscriptionTier === 'full_erp')
-        <div class="bg-white rounded-lg shadow p-6">
-            <div class="flex items-center">
-                <div class="p-2 bg-green-100 rounded-lg">
-                    <i class="fas fa-tasks text-green-600"></i>
-                </div>
-                <div class="ml-4">
-                    <p class="text-sm font-medium text-gray-600">Completed Work Orders</p>
-                    <p class="text-2xl font-semibold text-gray-900">{{ $teamStats['completed_work_orders'] ?? 0 }}</p>
-                </div>
-            </div>
+        <div id="date_input_container">
+            <label for="date_value" class="block text-sm font-medium text-gray-700 mb-2" id="date_label">{{ $inputLabel }}</label>
+            <input type="{{ $inputType }}" name="{{ $inputName }}" id="date_value" value="{{ old($inputName, $selectedDateValue) }}" placeholder="{{ $inputPlaceholder }}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" {{ $inputMin ? 'min="' . $inputMin . '"' : '' }} {{ $inputMax ? 'max="' . $inputMax . '"' : '' }} required>
         </div>
-        <div class="bg-white rounded-lg shadow p-6">
-            <div class="flex items-center">
-                <div class="p-2 bg-yellow-100 rounded-lg">
-                    <i class="fas fa-clock text-yellow-600"></i>
-                </div>
-                <div class="ml-4">
-                    <p class="text-sm font-medium text-gray-600">Pending Tasks</p>
-                    <p class="text-2xl font-semibold text-gray-900">{{ $teamStats['pending_work_orders'] ?? 0 }}</p>
-                </div>
-            </div>
+        <div id="quarter_container" style="display: {{ $showQuarter ? 'block' : 'none' }};">
+            <label for="quarter" class="block text-sm font-medium text-gray-700 mb-2">Quarter</label>
+            <select name="quarter" id="quarter" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="1" {{ old('quarter', $selectedQuarter) == '1' ? 'selected' : '' }}>Q1 (Jan-Mar)</option>
+                <option value="2" {{ old('quarter', $selectedQuarter) == '2' ? 'selected' : '' }}>Q2 (Apr-Jun)</option>
+                <option value="3" {{ old('quarter', $selectedQuarter) == '3' ? 'selected' : '' }}>Q3 (Jul-Sep)</option>
+                <option value="4" {{ old('quarter', $selectedQuarter) == '4' ? 'selected' : '' }}>Q4 (Oct-Dec)</option>
+            </select>
         </div>
-        <div class="bg-white rounded-lg shadow p-6">
-            <div class="flex items-center">
-                <div class="p-2 bg-purple-100 rounded-lg">
-                    <i class="fas fa-cogs text-purple-600"></i>
-                </div>
-                <div class="ml-4">
-                    <p class="text-sm font-medium text-gray-600">Active Machines</p>
-                    <p class="text-2xl font-semibold text-gray-900">{{ $teamStats['active_machines'] ?? 0 }}</p>
-                </div>
-            </div>
+        <div class="flex items-end">
+            <button type="submit" class="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">Apply Filter</button>
         </div>
+    </div>
+</form>
+
+@if($selectedFilterType && $selectedDateValue)
+<div class="mb-4">
+    <p class="text-sm text-gray-600">Selected Period:
+        @if($selectedFilterType === 'day')
+            {{ \Carbon\Carbon::createFromFormat('Y-m-d', $selectedDateValue)->format('F j, Y') }}
+        @elseif($selectedFilterType === 'month')
+            {{ \Carbon\Carbon::createFromFormat('Y-m', $selectedDateValue)->format('F Y') }}
+        @elseif($selectedFilterType === 'year')
+            {{ $selectedDateValue }}
+        @elseif($selectedFilterType === 'quarter')
+            Q{{ $selectedQuarter }} {{ $selectedDateValue }} ({{ ['Jan-Mar', 'Apr-Jun', 'Jul-Sep', 'Oct-Dec'][$selectedQuarter - 1] }})
         @endif
-    </div>
+    </p>
+</div>
+@endif
 
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <!-- Team Members Performance -->
-        <div class="bg-white rounded-lg shadow p-6">
-            <h3 class="text-lg font-medium text-gray-900 mb-4">Team Members</h3>
-            <div class="space-y-4">
-                @forelse($teamMembers as $member)
-                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                    <div class="flex items-center">
-                        <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
-                            <span class="text-sm font-medium text-blue-600">{{ substr($member->name, 0, 1) }}</span>
-                        </div>
-                        <div>
-                            <p class="text-sm font-medium text-gray-900">{{ $member->name }}</p>
-                            <p class="text-xs text-gray-500">{{ $member->getTeamDisplayName() }}</p>
-                        </div>
-                    </div>
-                    <div class="text-right">
-                        @if($subscriptionTier === 'full_erp')
-                        <p class="text-sm font-medium text-gray-900">{{ $member->completed_work_orders ?? 0 }} tasks</p>
-                        @endif
-                        <p class="text-xs text-gray-500">
-                            @if($member->is_active)
-                                <span class="text-green-600">Active</span>
-                            @else
-                                <span class="text-red-600">Inactive</span>
-                            @endif
-                        </p>
-                    </div>
-                </div>
-                @empty
-                <p class="text-gray-500 text-center py-4">No team members found</p>
-                @endforelse
-            </div>
-        </div>
-
-        <!-- Recent Activity -->
-        <div class="bg-white rounded-lg shadow p-6">
-            <h3 class="text-lg font-medium text-gray-900 mb-4">Recent Activity</h3>
-            <div class="space-y-3">
-                @forelse($recentActivities as $activity)
-                <div class="flex items-start space-x-3">
-                    <div class="flex-shrink-0">
-                        <div class="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
-                            @if($activity->event === 'work_order_completed')
-                                <i class="fas fa-check text-green-600 text-xs"></i>
-                            @elseif($activity->event === 'work_order_started')
-                                <i class="fas fa-play text-blue-600 text-xs"></i>
-                            @else
-                                <i class="fas fa-info text-gray-600 text-xs"></i>
-                            @endif
-                        </div>
-                    </div>
-                    <div class="flex-1 min-w-0">
-                        <p class="text-sm text-gray-900">{{ $activity->description }}</p>
-                        <p class="text-xs text-gray-500">{{ $activity->created_at->diffForHumans() }}</p>
-                    </div>
-                </div>
-                @empty
-                <p class="text-gray-500 text-center py-4">No recent activities</p>
-                @endforelse
-            </div>
-        </div>
-    </div>
-
-    @if($subscriptionTier === 'full_erp' && $workOrders->count() > 0)
-    <!-- Work Orders Status -->
-    <div class="mt-6 bg-white rounded-lg shadow p-6">
-        <h3 class="text-lg font-medium text-gray-900 mb-4">Work Orders Overview</h3>
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">WO Number</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Assigned To</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Machine</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Progress</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                    @foreach($workOrders as $workOrder)
-                    <tr>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                            <a href="{{ route('work-orders.show', $workOrder) }}" class="text-blue-600 hover:text-blue-900">
-                                {{ $workOrder->wo_number }}
-                            </a>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {{ $workOrder->assignedTo->name ?? 'Unassigned' }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {{ $workOrder->machine->name ?? 'N/A' }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                @if($workOrder->status === 'pending') bg-yellow-100 text-yellow-800
-                                @elseif($workOrder->status === 'in_progress') bg-blue-100 text-blue-800
-                                @elseif($workOrder->status === 'completed') bg-green-100 text-green-800
-                                @else bg-gray-100 text-gray-800 @endif">
-                                {{ ucfirst(str_replace('_', ' ', $workOrder->status)) }}
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            @if($workOrder->started_at && $workOrder->completed_at)
-                                <span class="text-green-600">Completed</span>
-                            @elseif($workOrder->started_at)
-                                <span class="text-blue-600">In Progress</span>
-                            @else
-                                <span class="text-gray-500">Not Started</span>
-                            @endif
-                        </td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
+@if($commodityStats)
+<div class="space-y-6">
+    <!-- Best Selling Commodity -->
+    @if($commodityStats['best_selling'])
+    <div class="bg-white border border-gray-200 rounded-lg p-6">
+        <h4 class="text-lg font-medium text-gray-900 mb-4">Best Selling Commodity</h4>
+        <div class="bg-green-50 p-4 rounded-lg">
+            <p class="text-lg font-semibold text-green-800">{{ $commodityStats['best_selling']->commodity }}</p>
+            <p class="text-sm text-gray-600">Quantity Sold: {{ number_format($commodityStats['best_selling']->total_quantity, 2) }}</p>
+            <p class="text-sm text-gray-600">Revenue Generated: ₹{{ number_format($commodityStats['best_selling']->total_revenue, 2) }}</p>
         </div>
     </div>
     @endif
+
+    <!-- Least Selling Commodity -->
+    @if($commodityStats['least_selling'] && $commodityStats['least_selling']->commodity !== ($commodityStats['best_selling']->commodity ?? ''))
+    <div class="bg-white border border-gray-200 rounded-lg p-6">
+        <h4 class="text-lg font-medium text-gray-900 mb-4">Least Selling Commodity</h4>
+        <div class="bg-yellow-50 p-4 rounded-lg">
+            <p class="text-lg font-semibold text-yellow-800">{{ $commodityStats['least_selling']->commodity }}</p>
+            <p class="text-sm text-gray-600">Quantity Sold: {{ number_format($commodityStats['least_selling']->total_quantity, 2) }}</p>
+            <p class="text-sm text-gray-600">Revenue Generated: ₹{{ number_format($commodityStats['least_selling']->total_revenue, 2) }}</p>
+        </div>
+    </div>
+    @endif
+
+    <!-- Not Selling Commodities -->
+    <div class="bg-white border border-gray-200 rounded-lg p-6">
+        <h4 class="text-lg font-medium text-gray-900 mb-4">Not Selling Commodities</h4>
+        @if($commodityStats['not_selling']->isNotEmpty())
+        <div class="space-y-2">
+            @foreach($commodityStats['not_selling'] as $commodity)
+            <div class="bg-red-50 p-3 rounded-lg">
+                <p class="text-sm font-medium text-red-800">{{ $commodity->commodity }}</p>
+                <p class="text-xs text-gray-600">Quantity: 0 | Revenue: ₹0.00</p>
+            </div>
+            @endforeach
+        </div>
+        @else
+        <p class="text-sm text-gray-500">All commodities had sales during this period.</p>
+        @endif
+    </div>
 </div>
+@elseif($selectedFilterType)
+<p class="text-gray-500 text-center py-4">No data available for selected period.</p>
+@endif
+</div>
+</div>
+
+<script>
+document.getElementById('filter_type').addEventListener('change', function() {
+    const filterType = this.value;
+    const dateInput = document.getElementById('date_value');
+    const label = document.getElementById('date_label');
+    const quarterContainer = document.getElementById('quarter_container');
+
+    // Reset date input value
+    dateInput.value = '';
+
+    if (filterType === 'day') {
+        dateInput.type = 'date';
+        label.textContent = 'Select Date';
+        dateInput.placeholder = '';
+        dateInput.name = 'date';
+        dateInput.required = true;
+        quarterContainer.style.display = 'none';
+    } else if (filterType === 'month') {
+        dateInput.type = 'month';
+        label.textContent = 'Select Month';
+        dateInput.placeholder = '';
+        dateInput.name = 'month';
+        dateInput.required = true;
+        quarterContainer.style.display = 'none';
+    } else if (filterType === 'year') {
+        dateInput.type = 'number';
+        label.textContent = 'Select Year';
+        dateInput.placeholder = 'e.g. 2024';
+        dateInput.min = '2000';
+        dateInput.max = '2100';
+        dateInput.name = 'year';
+        dateInput.required = true;
+        quarterContainer.style.display = 'none';
+    } else if (filterType === 'quarter') {
+        dateInput.type = 'number';
+        label.textContent = 'Select Year';
+        dateInput.placeholder = 'e.g. 2024';
+        dateInput.min = '2000';
+        dateInput.max = '2100';
+        dateInput.name = 'year';
+        dateInput.required = true;
+        quarterContainer.style.display = 'block';
+    }
+});
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const filterType = document.getElementById('filter_type').value;
+    if (filterType === 'quarter') {
+        document.getElementById('quarter_container').style.display = 'block';
+    }
+});
+</script>
 @endsection

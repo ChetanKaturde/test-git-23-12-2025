@@ -25,14 +25,18 @@
             
             <!-- Action Buttons -->
             <div class="flex flex-col sm:flex-row gap-4 justify-center mb-8">
-                <a href="{{ route('register') }}" 
+                <a href="{{ route('register') }}"
                    class="bg-white text-indigo-600 font-semibold py-3 px-8 rounded-lg hover:bg-gray-100 transition-all duration-200 transform hover:scale-105">
                     Start Free Trial
                 </a>
-                <a href="#" 
+                <a href="#pricing"
                    class="bg-indigo-800 text-white font-semibold py-3 px-8 rounded-lg hover:bg-indigo-900 transition-all duration-200">
-                    Watch 2-Min Demo
+                    View Pricing
                 </a>
+                <button @click="showContact = true"
+                        class="bg-indigo-800 text-white font-semibold py-3 px-8 rounded-lg hover:bg-indigo-900 transition-all duration-200">
+                    Contact Us
+                </button>
             </div>
             
             <!-- Status Badge -->
@@ -200,6 +204,128 @@
         </div>
     </div>
 
+    <!-- Pricing Section -->
+    <div id="pricing" class="py-20 bg-gray-50">
+        <div class="max-w-6xl mx-auto px-4">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl font-bold text-gray-900 mb-4">Choose Your Plan</h2>
+                <p class="text-gray-600 text-lg">Start free, upgrade when you grow</p>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-8">
+                <!-- Free Plan -->
+                <div class="bg-white p-8 rounded-xl border-2 border-indigo-200">
+                    <div class="text-center mb-6">
+                        <h3 class="text-2xl font-bold text-gray-900 mb-2">Free Plan</h3>
+                        <div class="text-4xl font-bold text-indigo-600 mb-4">₹0<span class="text-lg font-normal text-gray-500">/month</span></div>
+                        <p class="text-gray-600">Perfect for getting started</p>
+                    </div>
+
+                    <ul class="space-y-3 mb-8">
+                        <li class="flex items-center space-x-3">
+                            <div class="text-green-500 font-bold">✅</div>
+                            <span class="text-gray-700">50 invoices per month</span>
+                        </li>
+                        <li class="flex items-center space-x-3">
+                            <div class="text-green-500 font-bold">✅</div>
+                            <span class="text-gray-700">2 team members</span>
+                        </li>
+                        <li class="flex items-center space-x-3">
+                            <div class="text-green-500 font-bold">✅</div>
+                            <span class="text-gray-700">Basic reporting</span>
+                        </li>
+                        <li class="flex items-center space-x-3">
+                            <div class="text-green-500 font-bold">✅</div>
+                            <span class="text-gray-700">Email support</span>
+                        </li>
+                    </ul>
+
+                    <div class="text-center">
+                        <a href="{{ route('register') }}" class="w-full bg-indigo-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-indigo-700 transition-colors inline-block">
+                            Get Started Free
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Pro Plan -->
+                <div class="bg-white p-8 rounded-xl border-2 border-indigo-500 relative">
+                    <div class="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                        <span class="bg-indigo-500 text-white px-4 py-2 rounded-full text-sm font-semibold">Most Popular</span>
+                    </div>
+
+                    <div class="text-center mb-6">
+                        <h3 class="text-2xl font-bold text-gray-900 mb-2">Pro Plan</h3>
+                        <div class="text-4xl font-bold text-indigo-600 mb-4">₹999<span class="text-lg font-normal text-gray-500">/month</span></div>
+                        <p class="text-gray-600">For growing businesses</p>
+                    </div>
+
+                    <ul class="space-y-3 mb-8">
+                        <li class="flex items-center space-x-3">
+                            <div class="text-green-500 font-bold">✅</div>
+                            <span class="text-gray-700">Unlimited invoices</span>
+                        </li>
+                        <li class="flex items-center space-x-3">
+                            <div class="text-green-500 font-bold">✅</div>
+                            <span class="text-gray-700">Unlimited team members</span>
+                        </li>
+                        <li class="flex items-center space-x-3">
+                            <div class="text-green-500 font-bold">✅</div>
+                            <span class="text-gray-700">Advanced reporting</span>
+                        </li>
+                        <li class="flex items-center space-x-3">
+                            <div class="text-green-500 font-bold">✅</div>
+                            <span class="text-gray-700">Manufacturing features</span>
+                        </li>
+                        <li class="flex items-center space-x-3">
+                            <div class="text-green-500 font-bold">✅</div>
+                            <span class="text-gray-700">Priority support</span>
+                        </li>
+                    </ul>
+
+                    <div class="text-center">
+                        <a href="{{ route('register') }}" class="w-full bg-indigo-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-indigo-700 transition-colors inline-block">
+                            Start Pro Trial
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Enterprise Plan -->
+                <div class="bg-white p-8 rounded-xl border-2 border-gray-200">
+                    <div class="text-center mb-6">
+                        <h3 class="text-2xl font-bold text-gray-900 mb-2">Enterprise</h3>
+                        <div class="text-4xl font-bold text-gray-900 mb-4">₹2999<span class="text-lg font-normal text-gray-500">/month</span></div>
+                        <p class="text-gray-600">For large operations</p>
+                    </div>
+
+                    <ul class="space-y-3 mb-8">
+                        <li class="flex items-center space-x-3">
+                            <div class="text-green-500 font-bold">✅</div>
+                            <span class="text-gray-700">Everything in Pro</span>
+                        </li>
+                        <li class="flex items-center space-x-3">
+                            <div class="text-green-500 font-bold">✅</div>
+                            <span class="text-gray-700">Custom integrations</span>
+                        </li>
+                        <li class="flex items-center space-x-3">
+                            <div class="text-green-500 font-bold">✅</div>
+                            <span class="text-gray-700">Dedicated support</span>
+                        </li>
+                        <li class="flex items-center space-x-3">
+                            <div class="text-green-500 font-bold">✅</div>
+                            <span class="text-gray-700">On-premise deployment</span>
+                        </li>
+                    </ul>
+
+                    <div class="text-center">
+                        <button @click="showContact = true" class="w-full bg-gray-900 text-white font-semibold py-3 px-6 rounded-lg hover:bg-gray-800 transition-colors">
+                            Contact Sales
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- CTA Section -->
     <div class="gradient-bg py-20">
         <div class="max-w-4xl mx-auto px-4 text-center text-white">
@@ -209,20 +335,24 @@
                 Free for 50 invoices/month. No credit card required.
             </p>
             <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                <a href="{{ route('register') }}" 
+                <a href="{{ route('register') }}"
                    class="bg-white text-indigo-600 font-semibold py-3 px-8 rounded-lg hover:bg-gray-100 transition-all duration-200 transform hover:scale-105">
                     Start Free Trial
                 </a>
-                <button @click="showContact = true" 
+                <a href="#pricing"
+                   class="bg-indigo-800 text-white font-semibold py-3 px-8 rounded-lg hover:bg-indigo-900 transition-all duration-200">
+                    View Pricing
+                </a>
+                <button @click="showContact = true"
                         class="bg-indigo-800 text-white font-semibold py-3 px-8 rounded-lg hover:bg-indigo-900 transition-all duration-200">
-                    Contact Sales
+                    Contact Us
                 </button>
             </div>
         </div>
     </div>
 
     <!-- Contact Modal -->
-    <div x-show="showContact" x-cloak class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+    <div x-show="showContact" x-cloak class="contact-modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
         <div class="bg-white rounded-lg max-w-md w-full p-6" @click.away="showContact = false">
             <div class="flex justify-between items-center mb-4">
                 <h3 class="text-xl font-semibold">Contact Us</h3>
@@ -243,18 +373,26 @@
                     <input type="email" name="email" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
-                    <input type="tel" name="phone" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Mobile Number</label>
+                    <input type="tel" name="mobile" required pattern="[0-9]{10}" title="Please enter a 10-digit mobile number" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Business Type</label>
-                    <select name="business_type" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <select name="business_type" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                         <option value="">Select your business type</option>
+                        <option value="consulting">Consulting Services</option>
+                        <option value="freelancer">Freelancer</option>
+                        <option value="agency">Digital Marketing Agency</option>
                         <option value="metal_workshop">Metal Workshop</option>
                         <option value="furniture">Furniture Manufacturing</option>
                         <option value="auto_garage">Auto Garage</option>
                         <option value="textile">Textile Manufacturing</option>
-                        <option value="other">Other Manufacturing</option>
+                        <option value="electronics">Electronics Manufacturing</option>
+                        <option value="pharmaceutical">Pharmaceutical</option>
+                        <option value="food_processing">Food Processing</option>
+                        <option value="construction">Construction</option>
+                        <option value="retail">Retail Business</option>
+                        <option value="other">Other</option>
                     </select>
                 </div>
                 <div>
@@ -286,6 +424,9 @@
 
     <style>
         [x-cloak] { display: none !important; }
+        .contact-modal textarea {
+            resize: none;
+        }
     </style>
     
     <script>

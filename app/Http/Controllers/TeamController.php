@@ -8,6 +8,7 @@ use App\Models\Team;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 
@@ -17,14 +18,15 @@ class TeamController extends Controller
     {
         try {
             // Check permission-based access (admin always has access)
-            if (!Auth::user()->isAdmin() && !Auth::user()->can_manage_team) {
+            if (!Auth::user()->isAdmin() && !Auth::user()->hasPermission('manage_team')) {
                 abort(403, 'You do not have permission to manage team members.');
             }
 
             $businessId = Auth::user()->business_id;
-            
+
             $teamMembers = User::where('business_id', $businessId)
                 ->where('id', '!=', Auth::id())
+                ->where('role', '!=', 'admin')
                 ->orderBy('created_at', 'desc')
                 ->get();
 
@@ -48,7 +50,7 @@ class TeamController extends Controller
     public function invite(Request $request)
     {
         // Only users with team management permission can invite (admin always can)
-        if (!Auth::user()->isAdmin() && !Auth::user()->can_manage_team) {
+        if (!Auth::user()->isAdmin() && !Auth::user()->hasPermission('manage_team')) {
             abort(403, 'You do not have permission to invite team members.');
         }
         
@@ -81,6 +83,7 @@ class TeamController extends Controller
                 'name' => $request->name,
                 'email' => $request->email,
                 'password' => Hash::make($request->password),
+                'plain_password' => $request->password,
                 'team_id' => $request->team_id,
                 'permissions' => $request->permissions ?? [],
                 'is_active' => true,
@@ -99,7 +102,7 @@ class TeamController extends Controller
     public function removeInvitation(Invitation $invitation)
     {
         // Only users with team management permission can remove invitations (admin always can)
-        if (!Auth::user()->isAdmin() && !Auth::user()->can_manage_team) {
+        if (!Auth::user()->isAdmin() && !Auth::user()->hasPermission('manage_team')) {
             abort(403, 'You do not have permission to manage invitations.');
         }
 
@@ -116,7 +119,7 @@ class TeamController extends Controller
     public function removeMember(User $user)
     {
         // Only users with team management permission can remove members (admin always can)
-        if (!Auth::user()->isAdmin() && !Auth::user()->can_manage_team) {
+        if (!Auth::user()->isAdmin() && !Auth::user()->hasPermission('manage_team')) {
             abort(403, 'You do not have permission to remove team members.');
         }
 
@@ -130,14 +133,96 @@ class TeamController extends Controller
             return back()->withErrors(['error' => 'Cannot remove administrator users.']);
         }
 
+        // Check for related records that would prevent deletion
+        $relatedRecords = $this->checkUserHasRelatedRecords($user);
+
+        if (!empty($relatedRecords)) {
+            $message = 'This user cannot be deleted because they have existing records. Please deactivate the user instead. Related records: ' . implode(', ', $relatedRecords);
+            return back()->withErrors(['error' => $message]);
+        }
+
         $user->delete();
 
         return back()->with('success', 'Team member removed successfully.');
     }
 
+    /**
+     * Check if user has any related records that would prevent deletion
+     */
+    private function checkUserHasRelatedRecords(User $user)
+    {
+        $relatedRecords = [];
+
+        try {
+            // Check purchase orders (using relationship if available)
+            if (method_exists($user, 'purchaseOrders')) {
+                if ($user->purchaseOrders()->count() > 0) {
+                    $relatedRecords[] = 'Purchase Orders';
+                }
+            }
+        } catch (\Exception $e) {
+            // Skip if relationship fails
+        }
+
+        // Schema-safe checks - only query tables/columns that exist
+        $checks = [
+            ['table' => 'payments', 'column' => 'created_by', 'label' => 'Payments'],
+            ['table' => 'work_orders', 'column' => 'operator_id', 'label' => 'Work Orders'],
+            ['table' => 'invoices', 'column' => 'generated_by', 'label' => 'Invoices'],
+            ['table' => 'expenses', 'column' => 'created_by', 'label' => 'Expenses'],
+            ['table' => 'barcodes', 'column' => 'generated_by', 'label' => 'Barcodes'],
+            ['table' => 'dispatches', 'column' => 'dispatched_by', 'label' => 'Dispatches'],
+            ['table' => 'locations', 'column' => 'manager_id', 'label' => 'Locations'],
+            ['table' => 'report_logs', 'column' => 'generated_by', 'label' => 'Report Logs'],
+            ['table' => 'returns', 'column' => 'returned_by', 'label' => 'Returns'],
+            ['table' => 'quality_checks', 'column' => 'checked_by', 'label' => 'Quality Checks'],
+            ['table' => 'batches', 'column' => 'received_by', 'label' => 'Batches'],
+            ['table' => 'profile_histories', 'column' => 'changed_by', 'label' => 'Profile Changes'],
+        ];
+
+        foreach ($checks as $check) {
+            try {
+                if (\Illuminate\Support\Facades\Schema::hasTable($check['table'])) {
+                    $count = \Illuminate\Support\Facades\DB::table($check['table'])
+                        ->where($check['column'], $user->id)
+                        ->count();
+
+                    if ($count > 0) {
+                        $relatedRecords[] = $check['label'];
+                    }
+
+                    // Special case for returns approved_by
+                    if ($check['table'] === 'returns' && $check['column'] === 'returned_by') {
+                        $approvedCount = \Illuminate\Support\Facades\DB::table('returns')
+                            ->where('approved_by', $user->id)
+                            ->count();
+                        if ($approvedCount > 0 && !in_array('Returns', $relatedRecords)) {
+                            $relatedRecords[] = 'Returns';
+                        }
+                    }
+
+                    // Special case for quality_checks approved_by
+                    if ($check['table'] === 'quality_checks' && $check['column'] === 'checked_by') {
+                        $approvedCount = \Illuminate\Support\Facades\DB::table('quality_checks')
+                            ->where('approved_by', $user->id)
+                            ->count();
+                        if ($approvedCount > 0 && !in_array('Quality Checks', $relatedRecords)) {
+                            $relatedRecords[] = 'Quality Checks';
+                        }
+                    }
+                }
+            } catch (\Exception $e) {
+                // Skip this check if table/column doesn't exist or query fails
+                continue;
+            }
+        }
+
+        return $relatedRecords;
+    }
+
     public function updateRole(Request $request, User $user)
     {
-        if (!Auth::user()->can_manage_team) {
+        if (!Auth::user()->isAdmin() && !Auth::user()->hasPermission('manage_team')) {
             abort(403, 'You do not have permission to update roles.');
         }
 
@@ -163,7 +248,7 @@ class TeamController extends Controller
 
     public function toggleStatus(User $user)
     {
-        if (!Auth::user()->can_manage_team) {
+        if (!Auth::user()->isAdmin() && !Auth::user()->hasPermission('manage_team')) {
             abort(403, 'You do not have permission to manage user status.');
         }
 
@@ -175,63 +260,40 @@ class TeamController extends Controller
             return back()->withErrors(['error' => 'Cannot deactivate admin users.']);
         }
 
+        $wasActive = $user->is_active;
         $user->update(['is_active' => !$user->is_active]);
         $status = $user->is_active ? 'activated' : 'deactivated';
+
+        // If user was deactivated, invalidate their session
+        if ($wasActive && !$user->is_active) {
+            // Invalidate all sessions for this user
+            DB::table('sessions')
+                ->where('user_id', $user->id)
+                ->delete();
+        }
 
         return back()->with('success', "User {$status} successfully.");
     }
 
-    public function resetPassword(User $user)
+    public function viewPassword(User $user)
     {
-        if (!Auth::user()->can_manage_team) {
-            abort(403, 'You do not have permission to reset passwords.');
+        if (!Auth::user()->isAdmin() && !Auth::user()->hasPermission('manage_team')) {
+            abort(403, 'You do not have permission to view passwords.');
         }
 
         if ($user->business_id !== Auth::user()->business_id) {
-            abort(403, 'You can only manage members of your business.');
+            abort(403, 'You can only view passwords of your business members.');
         }
 
-        $newPassword = \Illuminate\Support\Str::random(8);
-        $user->update(['password' => \Illuminate\Support\Facades\Hash::make($newPassword)]);
+        $password = $user->plain_password ?? 'Password not available';
 
-        return back()->with('success', "Password reset successfully. New password: {$newPassword}");
+        return response()->json(['password' => $password]);
     }
 
-    public function viewActivities(User $user)
-    {
-        if (!Auth::user()->can_manage_team) {
-            abort(403, 'You do not have permission to view user activities.');
-        }
-
-        if ($user->business_id !== Auth::user()->business_id) {
-            abort(403, 'You can only view activities of your business members.');
-        }
-
-        try {
-            // Check if activity_log table exists
-            if (\Illuminate\Support\Facades\Schema::hasTable('activity_log')) {
-                $activities = \App\Models\ActivityLog::where('user_id', $user->id)
-                    ->latest()
-                    ->paginate(20);
-            } else {
-                // If activity log table doesn't exist, create empty collection
-                $activities = new \Illuminate\Pagination\LengthAwarePaginator(
-                    collect([]), 0, 20, 1, ['path' => request()->url()]
-                );
-            }
-        } catch (\Exception $e) {
-            // If activity log fails, create empty collection
-            $activities = new \Illuminate\Pagination\LengthAwarePaginator(
-                collect([]), 0, 20, 1, ['path' => request()->url()]
-            );
-        }
-
-        return view('team.activities', compact('user', 'activities'));
-    }
 
     public function managePermissions(User $user)
     {
-        if (!Auth::user()->can_manage_team) {
+        if (!Auth::user()->isAdmin() && !Auth::user()->hasPermission('manage_team')) {
             abort(403, 'You do not have permission to manage permissions.');
         }
 
@@ -244,7 +306,7 @@ class TeamController extends Controller
 
     public function updatePermissions(Request $request, User $user)
     {
-        if (!Auth::user()->isAdmin() && !Auth::user()->can_manage_team) {
+        if (!Auth::user()->isAdmin() && !Auth::user()->hasPermission('manage_team')) {
             abort(403, 'You do not have permission to update permissions.');
         }
 
@@ -269,7 +331,7 @@ class TeamController extends Controller
 
     public function setDefaultPermissions(User $user)
     {
-        if (!Auth::user()->can_manage_team) {
+        if (!Auth::user()->isAdmin() && !Auth::user()->hasPermission('manage_team')) {
             abort(403, 'You do not have permission to set permissions.');
         }
 
@@ -286,7 +348,7 @@ class TeamController extends Controller
     
     public function grantFullAccess(User $user)
     {
-        if (!Auth::user()->can_manage_team) {
+        if (!Auth::user()->isAdmin() && !Auth::user()->hasPermission('manage_team')) {
             abort(403, 'You do not have permission to grant full access.');
         }
 
@@ -309,7 +371,7 @@ class TeamController extends Controller
     
     public function revokeAllAccess(User $user)
     {
-        if (!Auth::user()->can_manage_team) {
+        if (!Auth::user()->isAdmin() && !Auth::user()->hasPermission('manage_team')) {
             abort(403, 'You do not have permission to revoke access.');
         }
 
@@ -330,7 +392,7 @@ class TeamController extends Controller
         return back()->with('success', 'All access revoked for ' . $user->name);
     }
 
-    public function performance()
+    public function performance(Request $request)
     {
         // Managers and admins can view team performance
         if (!in_array(Auth::user()->role, ['admin', 'manager'])) {
@@ -339,53 +401,103 @@ class TeamController extends Controller
 
         $businessId = Auth::user()->business_id;
         $subscriptionTier = Auth::user()->business->subscription_tier ?? 'billing_sales';
-        
-        // Team statistics
-        $teamStats = [
-            'active_members' => User::where('business_id', $businessId)->where('is_active', true)->count(),
-        ];
-        
-        // Add production stats only for full_erp tier
-        if ($subscriptionTier === 'full_erp') {
-            $teamStats['completed_work_orders'] = \App\Models\WorkOrder::where('business_id', $businessId)->where('status', 'completed')->count();
-            $teamStats['pending_work_orders'] = \App\Models\WorkOrder::where('business_id', $businessId)->where('status', 'pending')->count();
-            $teamStats['active_machines'] = \App\Models\Machine::where('business_id', $businessId)->where('status', 'available')->count();
-        }
 
-        // Team members with work order counts (only for full_erp)
-        if ($subscriptionTier === 'full_erp') {
-            $teamMembers = User::where('business_id', $businessId)
-                ->withCount(['assignedWorkOrders as completed_work_orders' => function($query) {
-                    $query->where('status', 'completed');
-                }])
+        $commodityStats = null;
+        $selectedFilterType = null;
+        $selectedDateValue = null;
+        $selectedQuarter = null;
+
+        if ($request->isMethod('post')) {
+            $request->validate([
+                'filter_type' => 'required|in:day,month,year,quarter',
+            ]);
+
+            $filterType = $request->filter_type;
+            $dateValue = null;
+            $quarter = null;
+
+            if ($filterType === 'day') {
+                $request->validate(['date' => 'required|date']);
+                $dateValue = $request->date;
+            } elseif ($filterType === 'month') {
+                $request->validate(['month' => 'required|string|regex:/^\d{4}-\d{2}$/']);
+                $dateValue = $request->month;
+            } elseif ($filterType === 'year') {
+                $request->validate(['year' => 'required|integer|min:2000|max:2100']);
+                $dateValue = $request->year;
+            } elseif ($filterType === 'quarter') {
+                $request->validate([
+                    'year' => 'required|integer|min:2000|max:2100',
+                    'quarter' => 'required|integer|min:1|max:4'
+                ]);
+                $dateValue = $request->year;
+                $quarter = $request->quarter;
+            }
+
+            // Determine date range based on filter type
+            switch ($filterType) {
+                case 'day':
+                    $startDate = \Carbon\Carbon::createFromFormat('Y-m-d', $dateValue)->startOfDay();
+                    $endDate = \Carbon\Carbon::createFromFormat('Y-m-d', $dateValue)->endOfDay();
+                    break;
+                case 'month':
+                    $startDate = \Carbon\Carbon::createFromFormat('Y-m', $dateValue)->startOfMonth();
+                    $endDate = \Carbon\Carbon::createFromFormat('Y-m', $dateValue)->endOfMonth();
+                    break;
+                case 'year':
+                    $startDate = \Carbon\Carbon::createFromFormat('Y', $dateValue)->startOfYear();
+                    $endDate = \Carbon\Carbon::createFromFormat('Y', $dateValue)->endOfYear();
+                    break;
+                case 'quarter':
+                    $year = $dateValue;
+                    $quarterStart = \Carbon\Carbon::createFromFormat('Y', $year)->startOfYear()->addMonths(($quarter - 1) * 3);
+                    $startDate = $quarterStart->startOfMonth();
+                    $endDate = $quarterStart->copy()->addMonths(2)->endOfMonth();
+                    break;
+            }
+
+            // Commodity Performance - based on invoice items
+            $commodityData = \App\Models\InvoiceItem::join('invoices', 'invoice_items.invoice_id', '=', 'invoices.id')
+                ->where('invoices.business_id', $businessId)
+                ->whereBetween('invoices.issue_date', [$startDate, $endDate])
+                ->selectRaw('invoice_items.description as commodity, SUM(invoice_items.quantity) as total_quantity, SUM(invoice_items.total_price) as total_revenue')
+                ->groupBy('invoice_items.description')
+                ->having('total_quantity', '>', 0)
+                ->orderBy('total_quantity', 'desc')
                 ->get();
-        } else {
-            $teamMembers = User::where('business_id', $businessId)->get();
+
+            // Get all commodities that exist (have been invoiced at some point)
+            $allCommodities = \App\Models\InvoiceItem::join('invoices', 'invoice_items.invoice_id', '=', 'invoices.id')
+                ->where('invoices.business_id', $businessId)
+                ->selectRaw('DISTINCT invoice_items.description as commodity')
+                ->pluck('commodity');
+
+            // Get commodities with sales in the period
+            $sellingCommodities = $commodityData->pluck('commodity');
+
+            // Not selling commodities: exist but no sales in period
+            $notSellingCommodities = $allCommodities->diff($sellingCommodities)->map(function($commodity) {
+                return (object) [
+                    'commodity' => $commodity,
+                    'total_quantity' => 0,
+                    'total_revenue' => 0.00
+                ];
+            });
+
+            if ($commodityData->isNotEmpty() || $notSellingCommodities->isNotEmpty()) {
+                $commodityStats = [
+                    'best_selling' => $commodityData->first(),
+                    'least_selling' => $commodityData->last(),
+                    'not_selling' => $notSellingCommodities,
+                ];
+            }
+
+            $selectedFilterType = $filterType;
+            $selectedDateValue = $dateValue;
+            $selectedQuarter = $quarter;
         }
 
-        // Recent activities (mock data for now)
-        $recentActivities = collect([
-            (object)['event' => 'invoice_created', 'description' => 'Invoice INV-2024-001 created', 'created_at' => now()->subHours(2)],
-            (object)['event' => 'quotation_sent', 'description' => 'Quotation QUO-2024-002 sent', 'created_at' => now()->subHours(4)],
-        ]);
-        
-        // Add production activities only for full_erp
-        if ($subscriptionTier === 'full_erp') {
-            $recentActivities->prepend((object)['event' => 'work_order_completed', 'description' => 'Work Order WO-2024-001 completed', 'created_at' => now()->subHours(1)]);
-            $recentActivities->prepend((object)['event' => 'machine_maintenance', 'description' => 'Machine M0001 set to maintenance', 'created_at' => now()->subHours(3)]);
-        }
-
-        // Recent work orders (only for full_erp)
-        $workOrders = collect();
-        if ($subscriptionTier === 'full_erp') {
-            $workOrders = \App\Models\WorkOrder::where('business_id', $businessId)
-                ->with(['assignedTo', 'machine'])
-                ->latest()
-                ->limit(10)
-                ->get();
-        }
-
-        return view('team.performance', compact('teamStats', 'teamMembers', 'recentActivities', 'workOrders', 'subscriptionTier'));
+        return view('team.performance', compact('commodityStats', 'selectedFilterType', 'selectedDateValue', 'selectedQuarter', 'subscriptionTier'));
     }
 
     private function getPermissionsByLevel($level)

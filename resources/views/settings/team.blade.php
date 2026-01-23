@@ -29,6 +29,41 @@
     </div>
     @endif
     
+    <!-- Error Messages -->
+    @if($errors->any())
+        <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-exclamation-circle text-red-400"></i>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium text-red-800">Error</h3>
+                    <div class="mt-2 text-sm text-red-700">
+                        <ul class="list-disc pl-5 space-y-1">
+                            @foreach($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    <!-- Success Messages -->
+    @if(session('success'))
+        <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-check-circle text-green-400"></i>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm font-medium text-green-800">{{ session('success') }}</p>
+                </div>
+            </div>
+        </div>
+    @endif
+
     <!-- Header with Invite Button -->
     <div class="bg-white rounded-lg shadow p-6">
         <div class="flex justify-between items-center">
@@ -107,6 +142,8 @@
                                                         'edit_quote' => 'Edit Quote',
                                                         'convert_quote_to_invoice' => 'Convert Quote to Invoice',
                                                         'add_expense' => 'Add Expense',
+                                                        'view_expenses' => 'View Expenses',
+                                                        'view_payment_receipts' => 'View Payment Receipts',
                                                         'view_reports' => 'View Reports',
                                                         'manage_commodity' => 'Manage Commodity',
                                                         'manage_invoices' => 'Manage Invoices',
@@ -142,34 +179,62 @@
                         
                         <!-- Action Buttons -->
                         <div class="flex items-center space-x-2">
-                            <!-- Toggle Status -->
+                            <!-- Toggle Status Switch -->
                             <form method="POST" action="{{ route('team.toggle-status', $member) }}" class="inline">
                                 @csrf
                                 @method('PATCH')
-                                <button type="submit" class="{{ $member->is_active ? 'text-orange-600 hover:text-orange-800' : 'text-green-600 hover:text-green-800' }}" 
-                                        title="{{ $member->is_active ? 'Deactivate' : 'Activate' }} user">
-                                    <i class="fas {{ $member->is_active ? 'fa-pause' : 'fa-play' }} text-sm"></i>
+                                <button type="submit" class="toggle-switch {{ $member->is_active ? 'active' : '' }}" title="{{ $member->is_active ? 'Deactivate user' : 'Activate user' }}">
+                                    <span class="toggle-slider"></span>
                                 </button>
                             </form>
-                            
-                            <!-- Reset Password -->
-                            <form method="POST" action="{{ route('team.reset-password', $member) }}" 
-                                  onsubmit="return confirm('Are you sure you want to reset this user\'s password?')" class="inline">
-                                @csrf
-                                <button type="submit" class="text-blue-600 hover:text-blue-800" title="Reset password">
-                                    <i class="fas fa-key text-sm"></i>
-                                </button>
-                            </form>
-                            
-                            <!-- View Activities -->
-                            <a href="{{ route('team.view-activities', $member) }}" class="text-purple-600 hover:text-purple-800" title="View activities">
-                                <i class="fas fa-history text-sm"></i>
-                            </a>
-                            
+
+                            <style>
+                            .toggle-switch {
+                                position: relative;
+                                width: 44px;
+                                height: 24px;
+                                background-color: #ccc;
+                                border-radius: 24px;
+                                border: none;
+                                cursor: pointer;
+                                transition: background-color 0.3s ease;
+                                outline: none;
+                            }
+                            .toggle-switch:hover {
+                                background-color: #bbb;
+                            }
+                            .toggle-switch.active {
+                                background-color: #10b981;
+                            }
+                            .toggle-switch.active:hover {
+                                background-color: #059669;
+                            }
+                            .toggle-slider {
+                                position: absolute;
+                                top: 2px;
+                                left: 2px;
+                                width: 20px;
+                                height: 20px;
+                                background-color: white;
+                                border-radius: 50%;
+                                transition: transform 0.3s ease;
+                                box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+                            }
+                            .toggle-switch.active .toggle-slider {
+                                transform: translateX(20px);
+                            }
+                            </style>
+
+                            <!-- View Password -->
+                            <button onclick="viewPassword({{ $member->id }}, '{{ $member->name }}')"
+                                    class="text-blue-600 hover:text-blue-800" title="View password">
+                                <i class="fas fa-eye text-sm"></i>
+                            </button>
+
                             <!-- Permissions are managed via the inline modal above -->
-                            
+
                             <!-- Remove User -->
-                            <form method="POST" action="{{ route('team.remove-member', $member) }}" 
+                            <form method="POST" action="{{ route('team.remove-member', $member) }}"
                                   onsubmit="return confirm('Are you sure you want to remove this team member?')" class="inline">
                                 @csrf
                                 @method('DELETE')
@@ -338,6 +403,8 @@
                                             'edit_quote' => 'Edit Quote',
                                             'convert_quote_to_invoice' => 'Convert Quote to Invoice',
                                             'add_expense' => 'Add Expense',
+                                            'view_expenses' => 'View Expenses',
+                                            'view_payment_receipts' => 'View Payment Receipts',
                                             'view_reports' => 'View Reports',
                                             'manage_commodity' => 'Manage Commodity',
                                             'manage_invoices' => 'Manage Invoices',
@@ -385,6 +452,27 @@ function copyInviteLink(url) {
         showToast('Invite link copied to clipboard!', 'success');
     }).catch(function() {
         showToast('Failed to copy link', 'error');
+    });
+}
+
+function viewPassword(userId, userName) {
+    fetch(`/settings/team/members/${userId}/view-password`, {
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.password) {
+            alert(`Password for ${userName}: ${data.password}`);
+        } else {
+            showToast('Password not available', 'error');
+        }
+    })
+    .catch(error => {
+        showToast('Failed to fetch password', 'error');
     });
 }
 

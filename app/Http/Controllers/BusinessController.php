@@ -3,9 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
-use Intervention\Image\Facades\Image;
 use Barryvdh\DomPDF\Facade\Pdf as PDF;
 use App\Services\PdfService;
 
@@ -36,7 +34,7 @@ class BusinessController extends Controller
             'name' => 'required|string|max:255',
             'legal_name' => 'nullable|string|max:255',
             'email' => 'nullable|email|max:255',
-            'phone' => 'nullable|string|max:20',
+            'phone' => 'nullable|string|regex:/^[0-9]{10}$/',
             'address' => 'required|string|max:500',
             'city' => 'required|string|max:100',
             'state' => 'required|string|max:100',
@@ -53,6 +51,7 @@ class BusinessController extends Controller
             'gstin.regex' => 'GSTIN must be in format: 22AAAAA0000A1Z5',
             'pan.regex' => 'PAN must be in format: ABCDE1234F',
             'pin_code.regex' => 'PIN code must be 6 digits',
+            'phone.regex' => 'Phone number must be exactly 10 digits',
             'logo.max' => 'Logo must be less than 2MB',
         ]);
 
@@ -67,27 +66,23 @@ class BusinessController extends Controller
             'financial_year_start', 'payment_terms'
         ]);
 
-        // Handle logo upload with resizing
+        // Handle logo upload
         if ($request->hasFile('logo')) {
             // Delete old logo if exists
-            if ($business->logo_path) {
-                Storage::disk('public')->delete($business->logo_path);
+            if ($business->logo_path && file_exists(public_path($business->logo_path))) {
+                unlink(public_path($business->logo_path));
             }
-            
+
             $logoFile = $request->file('logo');
-            $filename = 'logo_' . $business->id . '_' . time() . '.png';
-            
-            // Resize and optimize logo
-            $image = Image::make($logoFile)
-                ->resize(200, 200, function ($constraint) {
-                    $constraint->aspectRatio();
-                    $constraint->upsize();
-                })
-                ->encode('png', 90);
-            
-            $logoPath = 'logos/' . $filename;
-            Storage::disk('public')->put($logoPath, $image);
-            $updateData['logo_path'] = $logoPath;
+            $filename = 'logo_' . $business->id . '_' . time() . '.' . $logoFile->getClientOriginalExtension();
+
+            $directory = public_path('uploads/business');
+            if (!file_exists($directory)) {
+                mkdir($directory, 0755, true);
+            }
+
+            $logoFile->move($directory, $filename);
+            $updateData['logo_path'] = 'uploads/business/' . $filename;
         }
 
         $business->update($updateData);
@@ -232,28 +227,27 @@ class BusinessController extends Controller
     {
         try {
             $business = auth()->user()->business;
-            
+
             if (!$business) {
                 return back()->with('error', 'Business profile not found.');
             }
-            
+
             // Merge current form data with existing business data
             $previewData = array_merge($business->toArray(), $request->only([
                 'name', 'legal_name', 'email', 'phone', 'address', 'city', 'state', 'pin_code',
                 'gstin', 'pan', 'terms_and_conditions'
             ]));
-            
+
             $previewBusiness = (object) $previewData;
-            
-            return (new PdfService())->generateDocumentPdf($previewBusiness, [], null, true)->stream('preview.pdf');
-            
+
+            $filename = 'business-profile-' . $business->id . '.pdf';
+            return (new PdfService())->generateDocumentPdf($previewBusiness, [], null, true)->download($filename);
+
         } catch (\Exception $e) {
-            \Log::error('PDF Preview Error: ' . $e->getMessage(), [
+            \Log::error('PDF Download Error: ' . $e->getMessage(), [
                 'trace' => $e->getTraceAsString()
             ]);
-            return response()->json([
-                'error' => 'Unable to generate PDF preview: ' . $e->getMessage()
-            ], 500);
+            return back()->with('error', 'Unable to generate PDF. Please try again.');
         }
     }
 }

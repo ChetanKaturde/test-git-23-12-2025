@@ -10,6 +10,10 @@ class PaymentController extends Controller
 {
     public function index()
     {
+        if (!auth()->user()->hasPermission('view_payment_receipts')) {
+            abort(403);
+        }
+
         $businessId = auth()->user()->business_id;
         $query = Payment::where('business_id', $businessId)->with(['invoice', 'createdBy']);
 

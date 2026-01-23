@@ -22,17 +22,16 @@ class ExpenseController extends Controller
         try {
             $businessId = auth()->user()->business_id;
 
-             // Check if user can view expenses
-             if (!auth()->user()->hasPermission('view_expense') && !auth()->user()->hasPermission('add_expense')) {
-                 return redirect()->route('dashboard')
-                     ->with('error', 'You do not have permission to view expenses.');
-             }
+            $user = auth()->user();
 
-            $query = Expense::where('business_id', $businessId);
-
-            // Filter to own expenses if no view_all_expenses permission
-            if (!auth()->user()->hasPermission('view_all_expenses')) {
-                $query->where('created_by', auth()->id());
+            if ($user->hasPermission('view_expenses')) {
+                // Fetch ALL expenses
+                $query = Expense::where('business_id', $businessId);
+            } elseif ($user->hasPermission('add_expense')) {
+                // Fetch ONLY user's expenses
+                $query = Expense::where('business_id', $businessId)->where('created_by', auth()->id());
+            } else {
+                abort(403);
             }
 
             // Apply filters
@@ -152,17 +151,16 @@ class ExpenseController extends Controller
             abort(404);
         }
 
-        // Check permissions
-         if (!auth()->user()->hasPermission('view_expense') && !auth()->user()->hasPermission('add_expense')) {
-             return redirect()->route('expenses.index')
-                 ->with('error', 'You do not have permission to view this expense.');
-         }
+        $user = auth()->user();
 
-         // If no view_all_expenses, check ownership
-         if (!auth()->user()->hasPermission('view_all_expenses') && $expense->created_by !== auth()->id()) {
-             return redirect()->route('expenses.index')
-                 ->with('error', 'You do not have permission to view this expense.');
-         }
+        if ($user->hasPermission('view_expenses')) {
+            // Can view all expenses
+        } elseif ($user->hasPermission('add_expense') && $expense->created_by === auth()->id()) {
+            // Can view own expenses
+        } else {
+            return redirect()->route('expenses.index')
+                ->with('error', 'You do not have permission to view this expense.');
+        }
 
         $expense->load('createdBy');
         return view('expenses.show', compact('expense'));
@@ -178,17 +176,18 @@ class ExpenseController extends Controller
             abort(404);
         }
 
-        // Check permissions
-         if (!auth()->user()->hasPermission('add_expense')) {
-             return redirect()->route('expenses.index')
-                 ->with('error', 'You do not have permission to edit expenses.');
-         }
+        $user = auth()->user();
 
-         // If no view_all_expenses, check ownership
-         if (!auth()->user()->hasPermission('view_all_expenses') && $expense->created_by !== auth()->id()) {
-             return redirect()->route('expenses.index')
-                 ->with('error', 'You do not have permission to edit this expense.');
-         }
+        if (!$user->hasPermission('add_expense')) {
+            return redirect()->route('expenses.index')
+                ->with('error', 'You do not have permission to edit expenses.');
+        }
+
+        // Check ownership if not view_expenses (since view_expenses is read-only)
+        if (!$user->hasPermission('view_expenses') && $expense->created_by !== auth()->id()) {
+            return redirect()->route('expenses.index')
+                ->with('error', 'You do not have permission to edit this expense.');
+        }
 
         $categories = [
             'staff_payroll' => 'Staff Payroll',
@@ -220,17 +219,18 @@ class ExpenseController extends Controller
             abort(404);
         }
 
-        // Check permissions
-         if (!auth()->user()->hasPermission('add_expense')) {
-             return redirect()->route('expenses.index')
-                 ->with('error', 'You do not have permission to edit expenses.');
-         }
+        $user = auth()->user();
 
-         // If no view_all_expenses, check ownership
-         if (!auth()->user()->hasPermission('view_all_expenses') && $expense->created_by !== auth()->id()) {
-             return redirect()->route('expenses.index')
-                 ->with('error', 'You do not have permission to edit this expense.');
-         }
+        if (!$user->hasPermission('add_expense')) {
+            return redirect()->route('expenses.index')
+                ->with('error', 'You do not have permission to edit expenses.');
+        }
+
+        // Check ownership if not view_expenses
+        if (!$user->hasPermission('view_expenses') && $expense->created_by !== auth()->id()) {
+            return redirect()->route('expenses.index')
+                ->with('error', 'You do not have permission to edit this expense.');
+        }
 
         try {
             $validated = $request->validate([
@@ -275,17 +275,18 @@ class ExpenseController extends Controller
             abort(404);
         }
 
-        // Check permissions
-         if (!auth()->user()->hasPermission('add_expense')) {
-             return redirect()->route('expenses.index')
-                 ->with('error', 'You do not have permission to delete expenses.');
-         }
+        $user = auth()->user();
 
-         // If no view_all_expenses, check ownership
-         if (!auth()->user()->hasPermission('view_all_expenses') && $expense->created_by !== auth()->id()) {
-             return redirect()->route('expenses.index')
-                 ->with('error', 'You do not have permission to delete this expense.');
-         }
+        if (!$user->hasPermission('add_expense')) {
+            return redirect()->route('expenses.index')
+                ->with('error', 'You do not have permission to delete expenses.');
+        }
+
+        // Check ownership if not view_expenses
+        if (!$user->hasPermission('view_expenses') && $expense->created_by !== auth()->id()) {
+            return redirect()->route('expenses.index')
+                ->with('error', 'You do not have permission to delete this expense.');
+        }
 
         try {
             // Delete associated file if exists

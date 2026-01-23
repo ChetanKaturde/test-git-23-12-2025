@@ -190,32 +190,33 @@ public function getDimensionsAttribute($value)
         // Create SKU based on category and name
         $category = $material->category ?? 'GEN';
         $name = $material->name;
-        
+
         // Clean and format category (first 3 letters, uppercase)
         $categoryCode = strtoupper(substr(preg_replace('/[^A-Za-z]/', '', $category), 0, 3));
         if (strlen($categoryCode) < 3) {
             $categoryCode = str_pad($categoryCode, 3, 'X');
         }
-        
+
         // Clean and format name (first 3 letters, uppercase)
         $nameCode = strtoupper(substr(preg_replace('/[^A-Za-z]/', '', $name), 0, 3));
         if (strlen($nameCode) < 3) {
             $nameCode = str_pad($nameCode, 3, 'X');
         }
-        
-        // Generate unique number suffix
-        $baseSKU = $categoryCode . $nameCode;
-        $counter = 1;
-        
-        // Include business_id in uniqueness check
+
+        // Include business_id in SKU for global uniqueness
         $businessId = $material->business_id ?? (auth()->check() ? auth()->user()->business_id : 1);
-        
+        $baseSKU = $categoryCode . $nameCode . '-' . $businessId;
+
+        // Generate unique number suffix with timestamp/random for extra uniqueness
+        $counter = 1;
+        $timestamp = now()->format('His'); // HHMMSS
+
         do {
-            $sku = $baseSKU . str_pad($counter, 3, '0', STR_PAD_LEFT);
-            $exists = static::where('sku', $sku)->where('business_id', $businessId)->exists();
+            $sku = $baseSKU . '-' . $timestamp . str_pad($counter, 2, '0', STR_PAD_LEFT);
+            $exists = static::where('sku', $sku)->exists(); // Global uniqueness
             $counter++;
-        } while ($exists && $counter <= 999);
-        
+        } while ($exists && $counter <= 99);
+
         return $sku;
     }
 
