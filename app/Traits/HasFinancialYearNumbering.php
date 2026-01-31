@@ -37,10 +37,12 @@ trait HasFinancialYearNumbering
             $nextSequence = $lastSequence + 1;
         }
 
-        // Ensure uniqueness by checking if the generated number already exists globally
+        // Generate business-scoped unique number
         $column = static::getNumberColumn();
         $generatedNumber = sprintf('%s-%s-%04d', $prefix, $fyShort, $nextSequence);
-        while (static::where($column, $generatedNumber)->exists()) {
+        
+        // Ensure uniqueness within the business scope
+        while (static::where('business_id', $business->id)->where($column, $generatedNumber)->exists()) {
             $nextSequence++;
             $generatedNumber = sprintf('%s-%s-%04d', $prefix, $fyShort, $nextSequence);
         }

@@ -92,9 +92,10 @@ class Subscription extends Model
 
     public function canUseFeature($featureName, $increment = 0)
     {
-        // Check if feature is enabled in plan
-        $featureEnabled = $this->plan_snapshot['features'][$featureName]['enabled'] ?? false;
-        if (!$featureEnabled) return false;
+        // Check if feature is enabled in plan using updated method
+        if (!$this->isFeatureEnabled($featureName)) {
+            return false;
+        }
 
         $limit = $this->getFeatureLimit($featureName);
         if ($limit === null) return true; // No limit
@@ -104,7 +105,29 @@ class Subscription extends Model
 
     public function isFeatureEnabled($featureName)
     {
-        return $this->plan_snapshot['features'][$featureName]['enabled'] ?? false;
+        $features = $this->plan_snapshot['features'] ?? [];
+        
+        // Direct match first
+        if (isset($features[$featureName])) {
+            return $features[$featureName]['enabled'] ?? false;
+        }
+        
+        // Handle common key variations
+        $keyMap = [
+            'invoice_management' => 'Invoice Management',
+            'quotation_management' => 'Quotation Management',
+            'customer_management' => 'Customer Management',
+            'commodity_management' => 'Commodity Management',
+            'expense_management' => 'Expense Management',
+            'team_management' => 'Team Management',
+        ];
+        
+        // Try mapped key
+        if (isset($keyMap[$featureName]) && isset($features[$keyMap[$featureName]])) {
+            return $features[$keyMap[$featureName]]['enabled'] ?? false;
+        }
+        
+        return false;
     }
 
     public function incrementFeatureUsage($featureName, $amount = 1)
