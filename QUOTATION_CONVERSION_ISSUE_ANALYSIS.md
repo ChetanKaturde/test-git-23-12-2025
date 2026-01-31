@@ -36,12 +36,42 @@
 - ✅ Business ID 2: `INV-2526-0001` (existing)
 - ✅ Business ID 17: `INV-2526-0001` (can be created)
 - ✅ Number generation works correctly for business-scoped uniqueness
+- ✅ User `amazonq@asd.cm` conversion test: **SUCCESS**
+
+### **GIT COMMIT**:
+- **Commit**: `e25f1a0` - FIX: Quotation to Invoice conversion - Database constraint issue
+- **Backup**: `4b134b9` - Safe rollback point available
+- **Files**: 7 files changed, 385 insertions(+), 16 deletions(-)
 
 ### **IMPACT**:
 - **Status**: **RESOLVED** ✅
 - **Users Affected**: All users with active subscriptions can now convert quotations
 - **Business Impact**: Sales workflow restored, revenue generation enabled
 - **Data Integrity**: ✅ Maintained, no data loss
+
+### **FUTURE DEBUGGING**:
+If this error appears again, check:
+1. Database constraint on `invoices.invoice_number`
+2. Business-scoped uniqueness in number generation
+3. Subscription feature key mapping
+4. Laravel logs for detailed error messages
+
+---
+
+## NOTES FOR DEVELOPMENT TEAM:
+
+### **Key Learnings**:
+1. **Database Constraints**: Always use business-scoped unique constraints for multi-tenant data
+2. **Feature Keys**: Maintain consistency between stored feature names and code checks
+3. **Error Logging**: Detailed step-by-step logging helps identify exact failure points
+4. **Testing**: Test with multiple businesses to catch constraint violations
+
+### **Best Practices Applied**:
+- ✅ Created backup commit before implementing fixes
+- ✅ Comprehensive error logging for future debugging
+- ✅ Business-scoped database constraints for multi-tenant architecture
+- ✅ Feature key mapping for backward compatibility
+- ✅ Detailed commit messages for future reference
 
 ---
 
