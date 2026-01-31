@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Log;
 
 class SuperAdminLoginController extends Controller
 {
@@ -22,9 +23,11 @@ class SuperAdminLoginController extends Controller
 
         if (Auth::guard('superadmin')->attempt($request->only('email', 'password'))) {
             $request->session()->regenerate();
+            Log::info('Superadmin login successful', ['email' => $request->email]);
             return redirect()->intended(route('superadmin.dashboard'));
         }
 
+        Log::warning('Superadmin login failed', ['email' => $request->email, 'ip' => $request->ip()]);
         throw ValidationException::withMessages([
             'email' => ['The provided credentials do not match our records.'],
         ]);

@@ -5,93 +5,6 @@
 
 @section('content')
 <div class="p-4 md:p-6 space-y-6">
-    <!-- Onboarding Widget -->
-    @if(!session('onboarding_dismissed') && (empty(auth()->user()->business->name) || empty(auth()->user()->business->address) || \App\Models\Customer::where('business_id', auth()->user()->business_id)->count() == 0))
-    <div id="onboardingWidget" class="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 border border-blue-200 rounded-xl p-6">
-        <div class="flex items-start justify-between mb-4">
-            <div class="flex items-center space-x-3">
-                <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
-                    <i class="fas fa-rocket text-white text-xl"></i>
-                </div>
-                <div>
-                    <h3 class="text-lg font-bold text-gray-900">Get Started with Monitorbizz</h3>
-                    <p class="text-sm text-gray-600">Complete these steps to unlock your full potential</p>
-                </div>
-            </div>
-            <button onclick="dismissOnboarding()" class="text-gray-400 hover:text-gray-600 transition-colors">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        
-        <div class="space-y-3">
-            <div class="flex items-center space-x-3 p-3 bg-white rounded-lg border {{ !empty(auth()->user()->business->name) && !empty(auth()->user()->business->address) ? 'border-green-200 bg-green-50' : 'border-gray-200' }}">
-                <div class="w-8 h-8 rounded-full flex items-center justify-center {{ !empty(auth()->user()->business->name) && !empty(auth()->user()->business->address) ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-500' }}">
-                    @if(!empty(auth()->user()->business->name) && !empty(auth()->user()->business->address))
-                        <i class="fas fa-check text-sm"></i>
-                    @else
-                        <span class="text-sm font-bold">1</span>
-                    @endif
-                </div>
-                <div class="flex-1">
-                    <p class="text-sm font-semibold text-gray-900">Complete Business Profile</p>
-                    <p class="text-xs text-gray-500">Add your business details for professional invoices</p>
-                </div>
-                @if(empty(auth()->user()->business->name) || empty(auth()->user()->business->address))
-                    <a href="{{ route('business.profile') }}" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
-                        Complete <i class="fas fa-arrow-right ml-1"></i>
-                    </a>
-                @endif
-            </div>
-            
-            <div class="flex items-center space-x-3 p-3 bg-white rounded-lg border {{ \App\Models\Customer::where('business_id', auth()->user()->business_id)->count() > 0 ? 'border-green-200 bg-green-50' : 'border-gray-200' }}">
-                <div class="w-8 h-8 rounded-full flex items-center justify-center {{ \App\Models\Customer::where('business_id', auth()->user()->business_id)->count() > 0 ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-500' }}">
-                    @if(\App\Models\Customer::where('business_id', auth()->user()->business_id)->count() > 0)
-                        <i class="fas fa-check text-sm"></i>
-                    @else
-                        <span class="text-sm font-bold">2</span>
-                    @endif
-                </div>
-                <div class="flex-1">
-                    <p class="text-sm font-semibold text-gray-900">Add Your First {{ $subscriptionTier === 'billing_sales' ? 'Customer' : 'Items' }}</p>
-                    <p class="text-xs text-gray-500">{{ $subscriptionTier === 'billing_sales' ? 'Build your customer database' : 'Set up materials and customers' }}</p>
-                </div>
-                @if(\App\Models\Customer::where('business_id', auth()->user()->business_id)->count() == 0)
-                    @php $customerCount = \App\Models\Customer::where('business_id', auth()->user()->business_id)->count(); @endphp
-                    @if($customerCount < 2)
-                        <form action="{{ route('business.load-sample-data') }}" method="POST" class="inline mr-2">
-                            @csrf
-                            <button type="submit" class="text-green-600 hover:text-green-800 text-sm font-medium">
-                                Sample Data
-                            </button>
-                        </form>
-                    @endif
-                    <a href="{{ route('customers.create') }}" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
-                        Add Now <i class="fas fa-arrow-right ml-1"></i>
-                    </a>
-                @endif
-            </div>
-            
-            <div class="flex items-center space-x-3 p-3 bg-white rounded-lg border border-gray-200">
-                <div class="w-8 h-8 rounded-full flex items-center justify-center bg-gray-200 text-gray-500">
-                    <span class="text-sm font-bold">3</span>
-                </div>
-                <div class="flex-1">
-                    <p class="text-sm font-semibold text-gray-900">Create Your First Quote</p>
-                    <p class="text-xs text-gray-500">Start generating professional quotations</p>
-                </div>
-                <a href="{{ route('quotations.create') }}" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
-                    Create <i class="fas fa-arrow-right ml-1"></i>
-                </a>
-            </div>
-        </div>
-        
-        <div class="mt-4 pt-4 border-t border-blue-200">
-            <button onclick="dismissOnboarding()" class="text-sm text-gray-500 hover:text-gray-700">
-                Don't show again
-            </button>
-        </div>
-    </div>
-    @endif
     <!-- Welcome Header -->
     <div class="bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 rounded-xl shadow-lg p-6 text-white relative overflow-hidden">
         <div class="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white bg-opacity-10 rounded-full"></div>
@@ -118,159 +31,6 @@
             </div>
         </div>
     </div>
-
-    <!-- Today's Overview -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-        <div class="flex items-center justify-between mb-6">
-            <div>
-                <h2 class="text-xl font-bold text-gray-900">Today's Overview</h2>
-                <p class="text-sm text-gray-500 mt-1">{{ now()->format('l, F j, Y') }}</p>
-            </div>
-            <div class="flex items-center space-x-2 text-sm text-gray-500">
-                <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                <span>Live Data</span>
-            </div>
-        </div>
-        
-        @if($subscriptionTier === 'full_erp')
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4 border border-blue-200">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <div class="text-2xl font-bold text-blue-700 mb-1">{{ $stats['todays_work_orders'] ?? 0 }}</div>
-                        <div class="text-sm font-medium text-blue-600">Work Orders</div>
-                        <div class="text-xs {{ ($stats['work_order_change'] ?? 0) >= 0 ? 'text-green-600' : 'text-red-600' }} mt-1 flex items-center">
-                            <i class="fas {{ ($stats['work_order_change'] ?? 0) >= 0 ? 'fa-arrow-up' : 'fa-arrow-down' }} mr-1"></i>
-                            {{ abs($stats['work_order_change'] ?? 0) }} from yesterday
-                        </div>
-                    </div>
-                    <div class="w-12 h-12 bg-blue-200 rounded-lg flex items-center justify-center">
-                        <i class="fas fa-clipboard-list text-blue-600"></i>
-                    </div>
-                </div>
-            </div>
-            <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-4 border border-green-200">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <div class="text-2xl font-bold text-green-700 mb-1">{{ $stats['machine_utilization'] ?? 0 }}%</div>
-                        <div class="text-sm font-medium text-green-600">Machine Utilization</div>
-                        <div class="w-full bg-green-200 rounded-full h-2 mt-2">
-                            <div class="bg-green-600 h-2 rounded-full transition-all duration-500" style="width: {{ $stats['machine_utilization'] ?? 0 }}%"></div>
-                        </div>
-                    </div>
-                    <div class="w-12 h-12 bg-green-200 rounded-lg flex items-center justify-center">
-                        <i class="fas fa-cogs text-green-600"></i>
-                    </div>
-                </div>
-            </div>
-            <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-4 border border-purple-200">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <div class="text-2xl font-bold text-purple-700 mb-1">₹{{ number_format($stats['production_value'] ?? 0) }}</div>
-                        <div class="text-sm font-medium text-purple-600">Production Value</div>
-                        <div class="text-xs text-purple-500 mt-1">Today's Output</div>
-                    </div>
-                    <div class="w-12 h-12 bg-purple-200 rounded-lg flex items-center justify-center">
-                        <i class="fas fa-chart-line text-purple-600"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-        @else
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4 border border-blue-200">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <div class="text-2xl font-bold text-blue-700 mb-1">{{ $stats['customers'] ?? 0 }}</div>
-                        <div class="text-sm font-medium text-blue-600">Total Customers</div>
-                        <div class="text-xs text-blue-500 mt-1">Active clients</div>
-                    </div>
-                    <div class="w-12 h-12 bg-blue-200 rounded-lg flex items-center justify-center">
-                        <i class="fas fa-users text-blue-600"></i>
-                    </div>
-                </div>
-            </div>
-            <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-4 border border-green-200">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <div class="text-2xl font-bold text-green-700 mb-1">{{ $stats['quotations_this_month'] ?? 0 }}</div>
-                        <div class="text-sm font-medium text-green-600">Quotations This Month</div>
-                        <div class="text-xs text-green-500 mt-1">Generated quotes</div>
-                    </div>
-                    <div class="w-12 h-12 bg-green-200 rounded-lg flex items-center justify-center">
-                        <i class="fas fa-file-contract text-green-600"></i>
-                    </div>
-                </div>
-            </div>
-            <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-4 border border-purple-200">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <div class="text-2xl font-bold text-purple-700 mb-1">{{ $stats['invoices'] ?? 0 }}</div>
-                        <div class="text-sm font-medium text-purple-600">Total Invoices</div>
-                        <div class="text-xs text-purple-500 mt-1">Billed amount</div>
-                    </div>
-                    <div class="w-12 h-12 bg-purple-200 rounded-lg flex items-center justify-center">
-                        <i class="fas fa-file-invoice text-purple-600"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-        @endif
-    </div>
-
-    @if($subscriptionTier === 'full_erp')
-    <!-- Performance Metrics -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-        <div class="flex items-center justify-between mb-6">
-            <div>
-                <h3 class="text-lg font-bold text-gray-900">Performance Metrics</h3>
-                <p class="text-sm text-gray-500 mt-1">Overall Equipment Effectiveness (OEE)</p>
-            </div>
-            <div x-data="{ open: false }" class="relative">
-                <button @mouseenter="open = true" @mouseleave="open = false" class="w-8 h-8 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center text-gray-500 hover:text-gray-700 transition-colors">
-                    <i class="fas fa-info text-xs"></i>
-                </button>
-                <div x-show="open" x-transition class="absolute z-20 right-0 mt-2 w-64 bg-gray-900 text-white text-xs p-3 rounded-lg shadow-lg">
-                    <div class="space-y-1">
-                        <div>Availability: 92%</div>
-                        <div>Performance: 88%</div>
-                        <div>Quality: 95%</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="flex flex-col md:flex-row md:items-center gap-6">
-            <div class="flex items-center justify-center">
-                <div class="relative w-24 h-24">
-                    <svg class="w-24 h-24 transform -rotate-90" viewBox="0 0 36 36">
-                        <path class="text-gray-200" stroke="currentColor" stroke-width="3" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
-                        <path class="text-green-500" stroke="currentColor" stroke-width="3" fill="none" stroke-dasharray="{{ ($stats['oee_score'] ?? 0) }}, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
-                    </svg>
-                    <div class="absolute inset-0 flex items-center justify-center">
-                        <span class="text-xl font-bold text-gray-900">{{ $stats['oee_score'] ?? 0 }}%</span>
-                    </div>
-                </div>
-            </div>
-            <div class="flex-1">
-                <div class="space-y-3">
-                    <div class="flex items-center justify-between">
-                        <span class="text-sm font-medium text-gray-700">Current OEE</span>
-                        <span class="text-sm font-bold text-green-600">{{ $stats['oee_score'] ?? 0 }}%</span>
-                    </div>
-                    <div class="w-full bg-gray-200 rounded-full h-2">
-                        <div class="bg-gradient-to-r from-green-400 to-green-600 h-2 rounded-full transition-all duration-1000" style="width: {{ $stats['oee_score'] ?? 0 }}%"></div>
-                    </div>
-                    <div class="flex justify-between text-xs text-gray-500">
-                        <span>Industry Average: 65%</span>
-                        <span class="{{ ($stats['oee_score'] ?? 0) > 65 ? 'text-green-600' : 'text-orange-600' }}">
-                            {{ ($stats['oee_score'] ?? 0) > 65 ? 'Above' : 'Below' }} Average
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    @endif
 
     {{-- <!-- System Overview Stats -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
@@ -398,9 +158,11 @@
                 <h3 class="text-lg font-bold text-gray-900">Sales Summary</h3>
                 <p class="text-sm text-gray-500 mt-1">Financial performance overview</p>
             </div>
+            @if($reportsEnabled)
             <a href="{{ route('reports.index') }}" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
                 View Reports <i class="fas fa-arrow-right ml-1"></i>
             </a>
+            @endif
         </div>
         <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
             <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-4 border border-green-200">
@@ -529,13 +291,13 @@
                     <span class="text-xs text-yellow-600 mt-1">Raw materials & items</span>
                 </div>
             </a>
-            <a href="{{ route('vendors.create') }}" class="group relative bg-gradient-to-br from-purple-50 to-purple-100 border border-purple-200 rounded-xl p-4 hover:from-purple-100 hover:to-purple-200 hover:border-purple-300 transition-all duration-200 hover:shadow-md">
+            <a href="{{ route('business.profile') }}" class="group relative bg-gradient-to-br from-purple-50 to-purple-100 border border-purple-200 rounded-xl p-4 hover:from-purple-100 hover:to-purple-200 hover:border-purple-300 transition-all duration-200 hover:shadow-md">
                 <div class="flex flex-col items-center text-center">
                     <div class="w-12 h-12 bg-purple-200 rounded-xl flex items-center justify-center mb-3 group-hover:bg-purple-300 transition-colors">
-                        <i class="fas fa-truck text-purple-700"></i>
+                        <i class="fas fa-building text-purple-700"></i>
                     </div>
-                    <span class="text-sm font-semibold text-purple-800">Add Supplier</span>
-                    <span class="text-xs text-purple-600 mt-1">Vendor partners</span>
+                    <span class="text-sm font-semibold text-purple-800">Business Profile</span>
+                    <span class="text-xs text-purple-600 mt-1">Manage business details</span>
                 </div>
             </a>
             @endif
@@ -657,9 +419,13 @@
                     </div>
                     <div class="flex items-center justify-between mb-2">
                         <span class="text-sm font-medium text-gray-600">Plan</span>
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ ($subscriptionPlan ?? 'free') === 'free' ? 'bg-gray-100 text-gray-800' : 'bg-green-100 text-green-800' }}">
-                            {{ ucfirst($subscriptionPlan ?? 'free') }} Plan
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $planName === 'Free' ? 'bg-gray-100 text-gray-800' : 'bg-green-100 text-green-800' }}">
+                            {{ $planName }} Plan
                         </span>
+                    </div>
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-sm font-medium text-gray-600">Users Allowed</span>
+                        <span class="text-sm font-bold text-gray-900">{{ $userCount }}</span>
                     </div>
                     <div class="flex items-center justify-between">
                         <span class="text-sm font-medium text-gray-600">Owner</span>
@@ -668,14 +434,19 @@
                 </div>
                 @if(($subscriptionPlan ?? 'free') === 'free')
                 <div class="bg-blue-50 rounded-lg p-4 border border-blue-200">
-                    <div class="flex items-center space-x-3">
-                        <div class="w-10 h-10 bg-blue-200 rounded-lg flex items-center justify-center">
-                            <i class="fas fa-crown text-blue-600"></i>
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 bg-blue-200 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-crown text-blue-600"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm font-semibold text-blue-900">Upgrade Available</p>
+                                <p class="text-xs text-blue-700">{{ $subscriptionTier === 'billing_sales' ? 'Unlock manufacturing features' : 'Unlock advanced features and analytics' }}</p>
+                            </div>
                         </div>
-                        <div>
-                            <p class="text-sm font-semibold text-blue-900">Upgrade Available</p>
-                            <p class="text-xs text-blue-700">{{ $subscriptionTier === 'billing_sales' ? 'Unlock manufacturing features' : 'Unlock advanced features and analytics' }}</p>
-                        </div>
+                        <a href="{{ route('pricing') }}" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium">
+                            Upgrade Now
+                        </a>
                     </div>
                 </div>
                 @endif
@@ -687,7 +458,7 @@
     <div class="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 border border-blue-200 rounded-xl p-6">
         <div class="flex flex-col md:flex-row md:items-center gap-4">
             <div class="flex-shrink-0">
-                <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+                <div class="w-16 h-16 bg-gradient-to-br from-blue-600 to-purple-700 rounded-xl flex items-center justify-center">
                     <i class="fas fa-industry text-white text-2xl"></i>
                 </div>
             </div>

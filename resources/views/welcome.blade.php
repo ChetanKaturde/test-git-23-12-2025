@@ -212,116 +212,46 @@
                 <p class="text-gray-600 text-lg">Start free, upgrade when you grow</p>
             </div>
 
-            <div class="grid md:grid-cols-3 gap-8">
-                <!-- Free Plan -->
-                <div class="bg-white p-8 rounded-xl border-2 border-indigo-200">
-                    <div class="text-center mb-6">
-                        <h3 class="text-2xl font-bold text-gray-900 mb-2">Free Plan</h3>
-                        <div class="text-4xl font-bold text-indigo-600 mb-4">₹0<span class="text-lg font-normal text-gray-500">/month</span></div>
-                        <p class="text-gray-600">Perfect for getting started</p>
+            <div class="grid md:grid-cols-{{ count($plans) }} gap-8">
+                @foreach($plans as $index => $plan)
+                    <div class="bg-white p-8 rounded-xl border-2 {{ $index === 1 ? 'border-indigo-500 relative' : 'border-indigo-200' }}">
+                        @if($index === 1)
+                            <div class="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                                <span class="bg-indigo-500 text-white px-4 py-2 rounded-full text-sm font-semibold">Most Popular</span>
+                            </div>
+                        @endif
+
+                        <div class="text-center mb-6">
+                            <h3 class="text-2xl font-bold text-gray-900 mb-2">{{ $plan->name }}</h3>
+                            <div class="text-4xl font-bold text-indigo-600 mb-4">₹{{ number_format($plan->price_per_user, 0) }}<span class="text-lg font-normal text-gray-500">/user/month</span></div>
+                            <p class="text-gray-600">{{ $plan->min_users }}-{{ $plan->max_users }} users</p>
+                        </div>
+
+                        <ul class="space-y-3 mb-8">
+                            @php
+                                $implementedKeys = ['quotation_management', 'invoice_management', 'expense_management', 'customer_management', 'commodity_management', 'reports_analytics', 'team_management'];
+                                $filteredFeatures = $plan->planFeatures->filter(function($pf) use ($implementedKeys) {
+                                    return in_array($pf->feature->key, $implementedKeys);
+                                });
+                            @endphp
+                            @foreach($filteredFeatures as $feature)
+                                <li class="flex items-center space-x-3">
+                                    <div class="text-green-500 font-bold">{{ $feature->enabled ? '✅' : '❌' }}</div>
+                                    <span class="text-gray-700">{{ ucwords(str_replace('_', ' ', $feature->feature->name)) }}</span>
+                                    @if($feature->enabled && $feature->quantity_limit)
+                                        <small class="text-gray-500">(Limit: {{ $feature->quantity_limit }})</small>
+                                    @endif
+                                </li>
+                            @endforeach
+                        </ul>
+
+                        <div class="text-center">
+                            <a href="{{ route('register') }}?plan={{ $plan->id }}" class="w-full bg-indigo-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-indigo-700 transition-colors inline-block">
+                                {{ $plan->price_per_user > 0 ? 'Start Trial' : 'Get Started Free' }}
+                            </a>
+                        </div>
                     </div>
-
-                    <ul class="space-y-3 mb-8">
-                        <li class="flex items-center space-x-3">
-                            <div class="text-green-500 font-bold">✅</div>
-                            <span class="text-gray-700">50 invoices per month</span>
-                        </li>
-                        <li class="flex items-center space-x-3">
-                            <div class="text-green-500 font-bold">✅</div>
-                            <span class="text-gray-700">2 team members</span>
-                        </li>
-                        <li class="flex items-center space-x-3">
-                            <div class="text-green-500 font-bold">✅</div>
-                            <span class="text-gray-700">Basic reporting</span>
-                        </li>
-                        <li class="flex items-center space-x-3">
-                            <div class="text-green-500 font-bold">✅</div>
-                            <span class="text-gray-700">Email support</span>
-                        </li>
-                    </ul>
-
-                    <div class="text-center">
-                        <a href="{{ route('register') }}" class="w-full bg-indigo-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-indigo-700 transition-colors inline-block">
-                            Get Started Free
-                        </a>
-                    </div>
-                </div>
-
-                <!-- Pro Plan -->
-                <div class="bg-white p-8 rounded-xl border-2 border-indigo-500 relative">
-                    <div class="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                        <span class="bg-indigo-500 text-white px-4 py-2 rounded-full text-sm font-semibold">Most Popular</span>
-                    </div>
-
-                    <div class="text-center mb-6">
-                        <h3 class="text-2xl font-bold text-gray-900 mb-2">Pro Plan</h3>
-                        <div class="text-4xl font-bold text-indigo-600 mb-4">₹999<span class="text-lg font-normal text-gray-500">/month</span></div>
-                        <p class="text-gray-600">For growing businesses</p>
-                    </div>
-
-                    <ul class="space-y-3 mb-8">
-                        <li class="flex items-center space-x-3">
-                            <div class="text-green-500 font-bold">✅</div>
-                            <span class="text-gray-700">Unlimited invoices</span>
-                        </li>
-                        <li class="flex items-center space-x-3">
-                            <div class="text-green-500 font-bold">✅</div>
-                            <span class="text-gray-700">Unlimited team members</span>
-                        </li>
-                        <li class="flex items-center space-x-3">
-                            <div class="text-green-500 font-bold">✅</div>
-                            <span class="text-gray-700">Advanced reporting</span>
-                        </li>
-                        <li class="flex items-center space-x-3">
-                            <div class="text-green-500 font-bold">✅</div>
-                            <span class="text-gray-700">Manufacturing features</span>
-                        </li>
-                        <li class="flex items-center space-x-3">
-                            <div class="text-green-500 font-bold">✅</div>
-                            <span class="text-gray-700">Priority support</span>
-                        </li>
-                    </ul>
-
-                    <div class="text-center">
-                        <a href="{{ route('register') }}" class="w-full bg-indigo-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-indigo-700 transition-colors inline-block">
-                            Start Pro Trial
-                        </a>
-                    </div>
-                </div>
-
-                <!-- Enterprise Plan -->
-                <div class="bg-white p-8 rounded-xl border-2 border-gray-200">
-                    <div class="text-center mb-6">
-                        <h3 class="text-2xl font-bold text-gray-900 mb-2">Enterprise</h3>
-                        <div class="text-4xl font-bold text-gray-900 mb-4">₹2999<span class="text-lg font-normal text-gray-500">/month</span></div>
-                        <p class="text-gray-600">For large operations</p>
-                    </div>
-
-                    <ul class="space-y-3 mb-8">
-                        <li class="flex items-center space-x-3">
-                            <div class="text-green-500 font-bold">✅</div>
-                            <span class="text-gray-700">Everything in Pro</span>
-                        </li>
-                        <li class="flex items-center space-x-3">
-                            <div class="text-green-500 font-bold">✅</div>
-                            <span class="text-gray-700">Custom integrations</span>
-                        </li>
-                        <li class="flex items-center space-x-3">
-                            <div class="text-green-500 font-bold">✅</div>
-                            <span class="text-gray-700">Dedicated support</span>
-                        </li>
-                        <li class="flex items-center space-x-3">
-                            <div class="text-green-500 font-bold">✅</div>
-                            <span class="text-gray-700">On-premise deployment</span>
-                        </li>
-                    </ul>
-
-                    <div class="text-center">
-                        <button @click="showContact = true" class="w-full bg-gray-900 text-white font-semibold py-3 px-6 rounded-lg hover:bg-gray-800 transition-colors">
-                            Contact Sales
-                        </button>
-                    </div>
-                </div>
+                @endforeach
             </div>
         </div>
     </div>

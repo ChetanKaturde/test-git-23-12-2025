@@ -40,6 +40,12 @@ class DashboardController extends Controller
             $businessId = $user->business_id;
             $subscriptionTier = $user->business->subscription_tier ?? 'full_erp';
             $subscriptionPlan = $user->business->subscription_plan ?? 'free';
+
+            // Get active subscription and related data
+            $activeSubscription = $user->business->subscriptions()->where('status', 'active')->first();
+            $userCount = $activeSubscription ? $activeSubscription->user_count : 0;
+            $planName = $activeSubscription ? $activeSubscription->plan->name : 'Free';
+            $reportsEnabled = $activeSubscription ? $activeSubscription->canUseFeature('reports_analytics') : false;
             
             // Get unified stats for all users
             $stats = [
@@ -68,7 +74,7 @@ class DashboardController extends Controller
             }
             
             // Use the main dashboard view for all users
-            return view('dashboard', compact('stats', 'subscriptionTier', 'subscriptionPlan', 'salesMetrics'));
+            return view('dashboard', compact('stats', 'subscriptionTier', 'subscriptionPlan', 'salesMetrics', 'userCount', 'planName', 'reportsEnabled'));
             
         } catch (\Exception $e) {
             Log::error('Dashboard error: ' . $e->getMessage());
@@ -84,7 +90,10 @@ class DashboardController extends Controller
             $salesMetrics = ['total_revenue' => 0, 'total_expenses' => 0, 'net_profit' => 0, 'outstanding_invoices' => 0, 'avg_payment_days' => 0, 'top_customers' => [], 'top_items' => []];
             $subscriptionTier = 'full_erp';
             $subscriptionPlan = 'free';
-            return view('dashboard', compact('stats', 'subscriptionTier', 'subscriptionPlan', 'salesMetrics'));
+            $userCount = 0;
+            $planName = 'Free';
+            $reportsEnabled = false;
+            return view('dashboard', compact('stats', 'subscriptionTier', 'subscriptionPlan', 'salesMetrics', 'userCount', 'planName', 'reportsEnabled'));
         }
     }
 

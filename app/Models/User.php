@@ -101,6 +101,11 @@ class User extends Authenticatable
         return $this->role === 'admin';
     }
 
+    public function isSuperAdmin()
+    {
+        return $this->role === 'superadmin';
+    }
+
     public function isPurchaseTeam()
     {
         return $this->role === 'purchase_team';
@@ -195,6 +200,98 @@ class User extends Authenticatable
     public function business()
     {
         return $this->belongsTo(Business::class);
+    }
+
+    /**
+     * Get current active subscription
+     */
+    // public function currentSubscription()
+    // {
+    //     if (!$this->business_id) return null;
+    //     return $this->business->subscriptions()->active()->first();
+    // }
+
+
+    public function currentSubscription()
+    {
+        // Superadmin doesn't have subscriptions
+        if ($this->role === 'superadmin') {
+            return null;
+        }
+        
+        if (!$this->business_id) return null;
+        return $this->business->subscriptions()->active()->first();
+    }
+
+
+    /**
+     * Check if user can use a feature
+     */
+    public function canUseFeature($featureName, $increment = 0)
+    {
+        $subscription = $this->currentSubscription();
+        return $subscription ? $subscription->canUseFeature($featureName, $increment) : false;
+    }
+
+    /**
+     * Check if feature is enabled for user's plan
+     */
+    public function isFeatureEnabled($featureName)
+    {
+        $subscription = $this->currentSubscription();
+        return $subscription ? $subscription->isFeatureEnabled($featureName) : false;
+    }
+
+    /**
+     * Check if business has a feature enabled
+     */
+    // public function businessHasFeature($feature)
+    // {
+    //     return $this->business && $this->business->hasFeature($feature);
+    // }
+
+    public function businessHasFeature($feature)
+    {
+        // Superadmin doesn't have business - return true to bypass checks
+        if ($this->role === 'superadmin') {
+            return true;
+        }
+        
+        if (!$this->business) {
+            return false;
+        }
+        
+        return $this->business->hasFeature($feature);
+    }
+
+    /**
+     * Check if user can access a feature
+     * Admin: only checks if feature is in plan
+     * Team member: checks if feature is in plan AND user has permission
+     */
+    public function canAccessFeature($feature, $permission = null)
+    {
+        // Superadmin bypasses all feature checks
+        if ($this->role === 'superadmin') {
+            return true;
+        }
+
+        // Check if feature is enabled in business plan
+        if (!$this->businessHasFeature($feature)) {
+            return false;
+        }
+
+        // Admin bypasses permission checks
+        if ($this->isAdmin()) {
+            return true;
+        }
+
+        // For team members, check permission if provided
+        if ($permission && !$this->hasPermission($permission)) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -382,15 +479,11 @@ public function canEditModule($moduleName)
     }
 
     /**
-     * Check if user has a specific flexible permission
+     * Check if user has a specific flexible permission (for team members only)
      */
     public function hasPermission($permission)
     {
-        // Admin always has all permissions
-        if ($this->isAdmin()) {
-            return true;
-        }
-
+        // Note: Admin does NOT use this method - they bypass permission checks
         $permissions = $this->permissions ?? [];
 
         // Handle permission key variations
@@ -411,9 +504,15 @@ public function canEditModule($moduleName)
 
     /**
      * Check if user has any quotation permission
+     * Admin: only checks if feature is enabled in plan
+     * Team member: checks if feature is enabled AND has permissions
      */
     public function hasAnyQuotationPermission()
     {
+        if (!$this->businessHasFeature('quotation_management')) {
+            return false;
+        }
+
         if ($this->isAdmin()) {
             return true;
         }
@@ -421,6 +520,37 @@ public function canEditModule($moduleName)
         $quotationPermissions = ['view_quotation', 'create_quotation', 'edit_quotation', 'delete_quotation', 'create_quote', 'edit_quote'];
         $permissions = $this->permissions ?? [];
         return !empty(array_intersect($quotationPermissions, $permissions));
+    }
+
+    /**
+     * ✅ FIXED: Check if user can access a feature action
+     * Plan must include feature (applies to everyone)
+     * Admin: can use features in their plan
+     * Team member: needs permission for features in their plan
+     */
+    public function canAccessFeatureAction($feature, $action = null)
+    {
+        // Superadmin bypasses all checks
+        if ($this->role === 'superadmin') {
+            return true;
+        }
+
+        // Plan must include feature (applies to everyone)
+        if (!$this->business || !$this->business->hasFeature($feature)) {
+            return false;
+        }
+
+        // Admin can use features in their plan
+        if ($this->isAdmin()) {
+            return true;
+        }
+
+        // Team members need permission if action is specified
+        if ($action) {
+            return $this->hasPermission($action);
+        }
+
+        return false;
     }
 
     /**

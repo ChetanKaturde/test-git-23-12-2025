@@ -88,6 +88,11 @@ class Business extends Model
         return $this->hasMany(Invoice::class);
     }
 
+    public function subscriptions()
+    {
+        return $this->hasMany(Subscription::class);
+    }
+
     // Helper methods
     public function getSubdomainAttribute()
     {
@@ -97,6 +102,21 @@ class Business extends Model
     public function isActive()
     {
         return $this->is_active && ($this->subscription_expires_at === null || $this->subscription_expires_at->isFuture());
+    }
+
+    /**
+     * ✅ NEW: Check if business has a specific feature enabled
+     * This method is required by User::businessHasFeature()
+     */
+    public function hasFeature($featureName)
+    {
+        $subscription = $this->subscriptions()->active()->first();
+        
+        if (!$subscription) {
+            return false;
+        }
+
+        return $subscription->isFeatureEnabled($featureName);
     }
 
     // Free Plan Limits

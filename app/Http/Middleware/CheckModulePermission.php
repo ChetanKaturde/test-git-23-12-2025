@@ -76,6 +76,12 @@ class CheckModulePermission
                 'edit' => 'edit_quotation',
                 'delete' => 'delete_quotation'
             ],
+            'customers' => [
+                'view' => 'view_customer',
+                'create' => 'create_customer',
+                'edit' => 'edit_customer',
+                'delete' => 'delete_customer'
+            ],
             'materials' => [
                 'view' => 'view_material',
                 'create' => 'create_material',

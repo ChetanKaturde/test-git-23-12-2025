@@ -21,6 +21,16 @@ class CustomerController extends Controller
 
     public function create()
     {
+        // Check if customer feature is enabled
+        if (auth()->user()->currentSubscription() && !auth()->user()->currentSubscription()->isFeatureEnabled('customer_management')) {
+            return redirect()->route('customers.index')->with('error', 'Customer management feature is not enabled in your current plan. Please upgrade your plan.');
+        }
+
+        // Check feature limits
+        if (auth()->user()->currentSubscription() && !auth()->user()->currentSubscription()->canUseFeature('customer_management', 1)) {
+            return redirect()->route('customers.index')->with('error', 'You have reached your customer limit. Please upgrade your plan to create more customers.');
+        }
+
         return view('customers.create');
     }
 
@@ -52,6 +62,11 @@ class CustomerController extends Controller
         $validated['is_active'] = true;
 
         Customer::create($validated);
+
+        // Increment feature usage
+        if (auth()->user()->currentSubscription()) {
+            auth()->user()->currentSubscription()->incrementFeatureUsage('customer_management');
+        }
 
         return redirect()->route('customers.index')
             ->with('success', 'Customer "' . $validated['name'] . '" created successfully!');

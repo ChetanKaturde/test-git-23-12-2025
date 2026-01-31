@@ -52,6 +52,11 @@ class Invoice extends Model
             ->setDescriptionForEvent(fn(string $eventName) => "Invoice {$this->invoice_number} {$eventName}");
     }
 
+    public function business()
+    {
+        return $this->belongsTo(Business::class);
+    }
+
     public function items()
     {
         return $this->hasMany(InvoiceItem::class);
@@ -93,7 +98,10 @@ class Invoice extends Model
 
     public function markAsSent()
     {
-        $this->update(['sent_at' => now()]);
+        $this->update([
+            'sent_at' => now(),
+            'status' => 'sent'
+        ]);
     }
 
     public function isSent()
@@ -101,8 +109,9 @@ class Invoice extends Model
         return $this->sent_at !== null;
     }
 
-    // Invoice number is generated in the controller
-    
+    /**
+     * ✅ CRITICAL: Tell the trait to use 'invoice_number' column
+     */
     protected static function getNumberColumn()
     {
         return 'invoice_number';

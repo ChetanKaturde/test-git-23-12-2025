@@ -10,11 +10,13 @@ use App\Http\Controllers\PurchaseOrderController;
 use App\Http\Controllers\MachineController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\InventoryController;
+use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProfileController;
 
 // Public routes
 Route::get('/', function () {
-    return view('welcome');
+    $plans = \App\Models\SubscriptionPlan::active()->get();
+    return view('welcome', compact('plans'));
 });
 
 // Contact form
@@ -178,12 +180,31 @@ Route::middleware('auth')->group(function () {
         Route::delete('work-orders/{workOrder}', [\App\Http\Controllers\WorkOrderController::class, 'destroy'])->name('work-orders.destroy');
     });
     
-    // Customers - always accessible for core workflow
-    Route::resource('customers', \App\Http\Controllers\CustomerController::class);
-    Route::patch('customers/{customer}/toggle', [\App\Http\Controllers\CustomerController::class, 'toggle'])->name('customers.toggle');
-    Route::post('customers/{customer}/contacts', [\App\Http\Controllers\CustomerController::class, 'addContact'])->name('customers.contacts.store');
-    Route::put('customers/{customer}/contacts/{contact}', [\App\Http\Controllers\CustomerController::class, 'updateContact'])->name('customers.contacts.update');
-    Route::delete('customers/{customer}/contacts/{contact}', [\App\Http\Controllers\CustomerController::class, 'deleteContact'])->name('customers.contacts.destroy');
+    // Customers - with module permission
+    Route::middleware('module.permission:customers,view')->group(function () {
+        Route::get('customers', [\App\Http\Controllers\CustomerController::class, 'index'])->name('customers.index');
+    });
+    Route::middleware('module.permission:customers,create')->group(function () {
+        Route::get('customers/create', [\App\Http\Controllers\CustomerController::class, 'create'])->name('customers.create');
+        Route::post('customers', [\App\Http\Controllers\CustomerController::class, 'store'])->name('customers.store');
+    });
+    Route::middleware('module.permission:customers,view')->group(function () {
+        Route::get('customers/{customer}', [\App\Http\Controllers\CustomerController::class, 'show'])->name('customers.show');
+    });
+    Route::middleware('module.permission:customers,edit')->group(function () {
+        Route::get('customers/{customer}/edit', [\App\Http\Controllers\CustomerController::class, 'edit'])->name('customers.edit');
+        Route::put('customers/{customer}', [\App\Http\Controllers\CustomerController::class, 'update'])->name('customers.update');
+        Route::patch('customers/{customer}/toggle', [\App\Http\Controllers\CustomerController::class, 'toggle'])->name('customers.toggle');
+    });
+    Route::middleware('module.permission:customers,delete')->group(function () {
+        Route::delete('customers/{customer}', [\App\Http\Controllers\CustomerController::class, 'destroy'])->name('customers.destroy');
+    });
+    // Contact management - same permissions as customers
+    Route::middleware('module.permission:customers,edit')->group(function () {
+        Route::post('customers/{customer}/contacts', [\App\Http\Controllers\CustomerController::class, 'addContact'])->name('customers.contacts.store');
+        Route::put('customers/{customer}/contacts/{contact}', [\App\Http\Controllers\CustomerController::class, 'updateContact'])->name('customers.contacts.update');
+        Route::delete('customers/{customer}/contacts/{contact}', [\App\Http\Controllers\CustomerController::class, 'deleteContact'])->name('customers.contacts.destroy');
+    });
     
     // Invoices - always accessible for now (no invoices module in seeder)
     Route::resource('invoices', InvoiceController::class);
@@ -260,8 +281,16 @@ Route::middleware('auth')->group(function () {
 
 // Pricing page (accessible to all authenticated users)
 Route::middleware('auth')->get('/pricing', function () {
-    return view('pricing');
+    $plans = \App\Models\SubscriptionPlan::active()->get();
+    $currentSubscription = auth()->user()->business?->subscriptions()->active()->first();
+    return view('pricing', compact('plans', 'currentSubscription'));
 })->name('pricing');
+
+// Subscription payment routes
+Route::middleware('auth')->group(function () {
+    Route::get('/subscription/{subscription}/payment', [PaymentController::class, 'subscriptionPayment'])->name('subscription.payment');
+    Route::post('/subscription/{subscription}/payment', [PaymentController::class, 'processSubscriptionPayment'])->name('subscription.payment.process');
+});
 
 // API routes for states and cities
 Route::get('/api/states', function () {
@@ -415,6 +444,10 @@ Route::prefix('superadmin')->group(function () {
         Route::get('/business-owners', [\App\Http\Controllers\SuperAdminBusinessController::class, 'index'])->name('superadmin.business-owners');
         Route::resource('sales-representatives', \App\Http\Controllers\SuperAdminSalesRepresentativeController::class, ['except' => ['destroy'], 'as' => 'superadmin']);
         Route::post('/sales-representatives/{id}/toggle-status', [\App\Http\Controllers\SuperAdminSalesRepresentativeController::class, 'toggleStatus'])->name('superadmin.sales-representatives.toggle-status');
+
+        // Subscription Plans Management
+        Route::resource('subscription-plans', \App\Http\Controllers\SuperAdminSubscriptionPlanController::class, ['as' => 'superadmin']);
+        Route::patch('subscription-plans/{plan}/toggle-status', [\App\Http\Controllers\SuperAdminSubscriptionPlanController::class, 'toggleStatus'])->name('superadmin.subscription-plans.toggle-status');
     });
 });
 

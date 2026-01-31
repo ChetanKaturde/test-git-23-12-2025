@@ -76,6 +76,10 @@ class TeamController extends Controller
             'permissions.*' => ['string'],
         ]);
 
+        // Get allowed permissions and filter the request
+        $allowedPermissions = $this->getAllowedPermissionsForBusiness();
+        $filteredPermissions = array_intersect($request->permissions ?? [], array_keys($allowedPermissions));
+
         try {
             // Create user directly
             $user = User::create([
@@ -85,7 +89,7 @@ class TeamController extends Controller
                 'password' => Hash::make($request->password),
                 'plain_password' => $request->password,
                 'team_id' => $request->team_id,
-                'permissions' => $request->permissions ?? [],
+                'permissions' => $filteredPermissions,
                 'is_active' => true,
                 'email_verified_at' => now(),
             ]);
@@ -320,13 +324,62 @@ class TeamController extends Controller
             'permissions.*' => ['string'],
         ]);
 
+        // Get allowed permissions based on subscription
+        $allowedPermissions = $this->getAllowedPermissionsForBusiness();
+
+        // Filter out any permissions that are not allowed
+        $filteredPermissions = array_intersect($request->permissions ?? [], array_keys($allowedPermissions));
+
         // Update team and permissions
         $user->update([
             'team_id' => $request->team_id,
-            'permissions' => $request->permissions ?? [],
+            'permissions' => $filteredPermissions,
         ]);
 
         return back()->with('success', 'Permissions updated successfully for ' . $user->name);
+    }
+
+    private function getAllowedPermissionsForBusiness()
+    {
+        $allPermissions = [
+            'customer_management' => [
+                'add_customer' => 'Add Customer',
+            ],
+            'quotation_management' => [
+                'create_quote' => 'Create Quote',
+                'edit_quote' => 'Edit Quote',
+                'convert_quote_to_invoice' => 'Convert Quote to Invoice',
+            ],
+            'expense_management' => [
+                'add_expense' => 'Add Expense',
+                'view_expenses' => 'View Expenses',
+                'view_payment_receipts' => 'View Payment Receipts',
+            ],
+            'reports_analytics' => [
+                'view_reports' => 'View Reports',
+            ],
+            'commodity_management' => [
+                'manage_commodity' => 'Manage Commodity',
+            ],
+            'invoice_management' => [
+                'manage_invoices' => 'Manage Invoices',
+            ],
+            'team_management' => [
+                'manage_team' => 'Manage Team',
+            ],
+        ];
+
+        $allowedPermissions = [];
+        $subscription = Auth::user()->currentSubscription();
+        if ($subscription) {
+            foreach ($allPermissions as $feature => $permissions) {
+                if ($subscription->isFeatureEnabled($feature)) {
+                    $allowedPermissions = array_merge($allowedPermissions, $permissions);
+                }
+            }
+        }
+
+        return $allowedPermissions;
     }
 
     public function setDefaultPermissions(User $user)

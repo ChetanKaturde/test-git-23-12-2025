@@ -35,6 +35,7 @@ class Kernel extends HttpKernel
             \App\Http\Middleware\PerformanceMonitoring::class,
             \App\Http\Middleware\EnsureUserHasPermissions::class,
             \App\Http\Middleware\CheckUserActive::class,
+            \App\Http\Middleware\CheckSubscription::class,
         ],
 
         'api' => [
@@ -70,5 +71,6 @@ class Kernel extends HttpKernel
        'check.material.availability' => \App\Http\Middleware\CheckMaterialAvailability::class,
        'permission' => \App\Http\Middleware\CheckPermission::class,
        'superadmin.auth' => \App\Http\Middleware\SuperAdminAuth::class,
+       'subscription.active' => \App\Http\Middleware\CheckSubscription::class,
     ];
 }

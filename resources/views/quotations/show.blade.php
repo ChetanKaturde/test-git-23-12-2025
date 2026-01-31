@@ -5,8 +5,7 @@
 @section('content')
 <div class="p-4 md:p-6 space-y-6">
     @php
-        $business = auth()->user()->business;
-        $canCreateInvoice = $business->canCreateInvoice();
+    $business = auth()->user()->business;
     @endphp
     <!-- Header Section -->
     <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
@@ -85,7 +84,7 @@
                     Download PDF
                 </a>
                 
-                @if(in_array($quotation->status, ['draft', 'sent']) && auth()->user()->hasPermission('edit_quotation'))
+                @if($quotation->status !== 'converted' && (auth()->user()->isAdmin() || auth()->user()->hasPermission('edit_quotation')))
                     <a href="{{ route('quotations.edit', $quotation) }}"
                        class="inline-flex items-center px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 focus:ring-2 focus:ring-offset-2 focus:ring-gray-300 transition-colors">
                         <i class="fas fa-edit w-5 h-5 mr-2"></i>
@@ -94,7 +93,7 @@
                 @endif
                 
                 @if($quotation->status !== 'converted')
-                    @if($canCreateInvoice && auth()->user()->hasPermission('convert_quotation_to_invoice'))
+                    @if(auth()->user()->isAdmin() || ($canCreateInvoice && auth()->user()->hasPermission('convert_quotation_to_invoice')))
                         <form action="{{ route('quotations.convert', $quotation) }}" method="POST" class="inline">
                             @csrf
                             <button type="submit"

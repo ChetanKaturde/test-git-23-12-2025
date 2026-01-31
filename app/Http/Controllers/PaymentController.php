@@ -4,10 +4,22 @@ namespace App\Http\Controllers;
 
 use App\Models\Payment;
 use App\Models\Invoice;
+use App\Models\Subscription;
 use Illuminate\Http\Request;
 
 class PaymentController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth');
+        $this->middleware(function ($request, $next) {
+            if (!auth()->user()->currentSubscription() || !auth()->user()->currentSubscription()->isFeatureEnabled('invoice_management')) {
+                abort(403, 'Invoice management feature is not enabled for your subscription plan.');
+            }
+            return $next($request);
+        });
+    }
+
     public function index()
     {
         if (!auth()->user()->hasPermission('view_payment_receipts')) {
@@ -78,5 +90,31 @@ class PaymentController extends Controller
         }
 
         return back()->with('success', 'Payment recorded successfully.');
+    }
+
+    public function subscriptionPayment(Subscription $subscription)
+    {
+        // Ensure user owns the subscription
+        if ($subscription->business_id !== auth()->user()->business_id) {
+            abort(403);
+        }
+
+        return view('payments.subscription', compact('subscription'));
+    }
+
+    public function processSubscriptionPayment(Request $request, Subscription $subscription)
+    {
+        // Ensure user owns the subscription
+        if ($subscription->business_id !== auth()->user()->business_id) {
+            abort(403);
+        }
+
+        // For now, mark as paid (since Razorpay integration is complex)
+        // In real implementation, integrate with Razorpay
+
+        // Mark subscription as paid and activate
+        $subscription->update(['status' => 'active']);
+
+        return redirect()->route('dashboard')->with('success', 'Subscription activated successfully!');
     }
 }

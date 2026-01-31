@@ -18,10 +18,6 @@
     </div>
 </div>
 
-<!-- Onboarding Checklist -->
-<div class="row mb-4">
-    @include('components.onboarding-checklist')
-</div>
 
 <!-- Dashboard Stats -->
 <div class="row g-4 mb-4">

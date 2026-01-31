@@ -92,18 +92,24 @@ class BusinessController extends Controller
 
     public function loadSampleData(Request $request)
     {
+        // Disabled sample data loading to prevent contamination of feature limits
+        return back()->with('error', 'Sample data loading is disabled.');
+
+        /*
+
+        /*
         $user = auth()->user();
         $business = $user->business;
         $subscriptionTier = $business->subscription_tier ?? 'full_erp';
-        
+
         // Check if user can load sample data
         if (!$this->canLoadSampleData()) {
             return back()->with('error', 'Sample data can only be loaded for new businesses with less than 2 customers.');
         }
-        
+
         try {
             \DB::beginTransaction();
-            
+
             if ($subscriptionTier === 'billing_sales') {
                 // Add sample data for billing_sales tier
                 $customer = \App\Models\Customer::create([
@@ -198,6 +204,7 @@ class BusinessController extends Controller
             \DB::rollBack();
             return back()->with('error', 'Failed to load sample data: ' . $e->getMessage());
         }
+        */
     }
 
     private function isProfileComplete($business)

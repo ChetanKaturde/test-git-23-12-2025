@@ -496,6 +496,13 @@
                     </a>
                 </li>
                 <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('superadmin.subscription-plans*') ? 'active' : '' }}"
+                       href="{{ route('superadmin.subscription-plans.index') }}">
+                        <i class="fas fa-crown"></i>
+                        <span>Subscription Plans</span>
+                    </a>
+                </li>
+                <li class="nav-item">
                     <form method="POST" action="{{ route('superadmin.logout') }}" class="d-inline w-100">
                         @csrf
                         <button type="submit" class="nav-link logout-btn w-100 border-0 bg-transparent text-start" 

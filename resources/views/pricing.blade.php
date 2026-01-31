@@ -14,110 +14,56 @@
     </div>
 
     <!-- Pricing Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <!-- Free Plan -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div class="text-center">
-                <h3 class="text-xl font-semibold text-gray-900 mb-2">Free Plan</h3>
-                <div class="text-3xl font-bold text-gray-900 mb-4">₹0<span class="text-sm font-normal text-gray-500">/month</span></div>
-                <p class="text-gray-600 mb-6">Perfect for getting started</p>
-            </div>
-            
-            <ul class="space-y-3 mb-6">
-                <li class="flex items-center text-sm text-gray-600">
-                    <i class="fas fa-check text-green-500 mr-3"></i>
-                    50 invoices per month
-                </li>
-                <li class="flex items-center text-sm text-gray-600">
-                    <i class="fas fa-check text-green-500 mr-3"></i>
-                    2 team members
-                </li>
-                <li class="flex items-center text-sm text-gray-600">
-                    <i class="fas fa-check text-green-500 mr-3"></i>
-                    Basic reporting
-                </li>
-                <li class="flex items-center text-sm text-gray-600">
-                    <i class="fas fa-check text-green-500 mr-3"></i>
-                    Email support
-                </li>
-            </ul>
-            
-            <button disabled class="w-full bg-gray-100 text-gray-500 py-2 px-4 rounded-lg cursor-not-allowed">
-                Current Plan
-            </button>
-        </div>
+    <div class="grid grid-cols-1 md:grid-cols-{{ count($plans) }} gap-6">
+        @foreach($plans as $index => $plan)
+            <div class="bg-white rounded-xl shadow-sm {{ $currentSubscription && $currentSubscription->plan_id == $plan->id ? 'border-2 border-green-500' : ($index === 1 ? 'border-2 border-indigo-500' : 'border border-gray-200') }} p-6 relative">
+                @if($index === 1 && !$currentSubscription)
+                    <div class="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                        <span class="bg-indigo-500 text-white px-4 py-1 rounded-full text-sm font-medium">Most Popular</span>
+                    </div>
+                @endif
 
-        <!-- Pro Plan -->
-        <div class="bg-white rounded-xl shadow-sm border-2 border-indigo-500 p-6 relative">
-            <div class="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                <span class="bg-indigo-500 text-white px-4 py-1 rounded-full text-sm font-medium">Most Popular</span>
-            </div>
-            
-            <div class="text-center">
-                <h3 class="text-xl font-semibold text-gray-900 mb-2">Pro Plan</h3>
-                <div class="text-3xl font-bold text-indigo-600 mb-4">₹999<span class="text-sm font-normal text-gray-500">/month</span></div>
-                <p class="text-gray-600 mb-6">For growing businesses</p>
-            </div>
-            
-            <ul class="space-y-3 mb-6">
-                <li class="flex items-center text-sm text-gray-600">
-                    <i class="fas fa-check text-green-500 mr-3"></i>
-                    Unlimited invoices
-                </li>
-                <li class="flex items-center text-sm text-gray-600">
-                    <i class="fas fa-check text-green-500 mr-3"></i>
-                    Unlimited team members
-                </li>
-                <li class="flex items-center text-sm text-gray-600">
-                    <i class="fas fa-check text-green-500 mr-3"></i>
-                    Advanced reporting
-                </li>
-                <li class="flex items-center text-sm text-gray-600">
-                    <i class="fas fa-check text-green-500 mr-3"></i>
-                    Priority support
-                </li>
-                <li class="flex items-center text-sm text-gray-600">
-                    <i class="fas fa-check text-green-500 mr-3"></i>
-                    Manufacturing features
-                </li>
-            </ul>
-            
-            <button class="w-full bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700 transition-colors">
-                Upgrade to Pro
-            </button>
-        </div>
+                @if($currentSubscription && $currentSubscription->plan_id == $plan->id)
+                    <div class="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                        <span class="bg-green-500 text-white px-4 py-1 rounded-full text-sm font-medium">Current Plan</span>
+                    </div>
+                @endif
 
-        <!-- Enterprise Plan -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div class="text-center">
-                <h3 class="text-xl font-semibold text-gray-900 mb-2">Enterprise</h3>
-                <div class="text-3xl font-bold text-gray-900 mb-4">₹2999<span class="text-sm font-normal text-gray-500">/month</span></div>
-                <p class="text-gray-600 mb-6">For large operations</p>
+                <div class="text-center">
+                    <h3 class="text-xl font-semibold text-gray-900 mb-2">{{ $plan->name }}</h3>
+                    <div class="text-3xl font-bold text-indigo-600 mb-4">₹{{ number_format($plan->price_per_user, 0) }}<span class="text-sm font-normal text-gray-500">/user/month</span></div>
+                    <p class="text-gray-600 mb-6">{{ $plan->min_users }}-{{ $plan->max_users }} users</p>
+                </div>
+
+                <ul class="space-y-3 mb-6">
+                    @php
+                        $implementedKeys = ['quotation_management', 'invoice_management', 'expense_management', 'customer_management', 'commodity_management', 'reports_analytics', 'team_management'];
+                        $filteredFeatures = $plan->planFeatures->filter(function($pf) use ($implementedKeys) {
+                            return in_array($pf->feature->key, $implementedKeys);
+                        });
+                    @endphp
+                    @foreach($filteredFeatures as $feature)
+                        <li class="flex items-center text-sm text-gray-600">
+                            <i class="fas {{ $feature->enabled ? 'fa-check text-green-500' : 'fa-times text-red-500' }} mr-3"></i>
+                            <span>{{ ucwords(str_replace('_', ' ', $feature->feature->name)) }}</span>
+                            @if($feature->enabled && $feature->quantity_limit)
+                                <small class="text-gray-500 ml-1">(Limit: {{ $feature->quantity_limit }})</small>
+                            @endif
+                        </li>
+                    @endforeach
+                </ul>
+
+                @if($currentSubscription && $currentSubscription->plan_id == $plan->id)
+                    <button disabled class="w-full bg-green-100 text-green-800 py-2 px-4 rounded-lg cursor-not-allowed">
+                        Current Plan
+                    </button>
+                @else
+                    <button class="w-full bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700 transition-colors">
+                        {{ $plan->price_per_user > 0 ? 'Upgrade' : 'Downgrade' }} to {{ $plan->name }}
+                    </button>
+                @endif
             </div>
-            
-            <ul class="space-y-3 mb-6">
-                <li class="flex items-center text-sm text-gray-600">
-                    <i class="fas fa-check text-green-500 mr-3"></i>
-                    Everything in Pro
-                </li>
-                <li class="flex items-center text-sm text-gray-600">
-                    <i class="fas fa-check text-green-500 mr-3"></i>
-                    Custom integrations
-                </li>
-                <li class="flex items-center text-sm text-gray-600">
-                    <i class="fas fa-check text-green-500 mr-3"></i>
-                    Dedicated support
-                </li>
-                <li class="flex items-center text-sm text-gray-600">
-                    <i class="fas fa-check text-green-500 mr-3"></i>
-                    On-premise deployment
-                </li>
-            </ul>
-            
-            <button class="w-full bg-gray-900 text-white py-2 px-4 rounded-lg hover:bg-gray-800 transition-colors">
-                Contact Sales
-            </button>
-        </div>
+        @endforeach
     </div>
 
     <!-- FAQ Section -->

@@ -43,4 +43,9 @@ return [
     'base_url' => env('SMS_BASE_URL', 'https://api.textlocal.in/send/'),
 ],
 
+'razorpay' => [
+    'key' => env('RAZORPAY_KEY'),
+    'secret' => env('RAZORPAY_SECRET'),
+],
+
 ];

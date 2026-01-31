@@ -30,8 +30,13 @@ class QuotationController extends Controller
 
     public function create()
     {
-        if (!auth()->user()->hasPermission('create_quotation')) {
+        if (!auth()->user()->canAccessFeatureAction('quotation_management', 'create_quotation')) {
             abort(403, 'You do not have permission to create quotations.');
+        }
+
+        // Check feature limits
+        if (auth()->user()->currentSubscription() && !auth()->user()->currentSubscription()->canUseFeature('quotation_management', 1)) {
+            return redirect()->route('quotations.index')->with('error', 'You have reached your quotation limit. Please upgrade your plan to create more quotations.');
         }
 
         $customers = Customer::where('business_id', auth()->user()->business_id)
@@ -109,6 +114,11 @@ class QuotationController extends Controller
                     'total' => $taxableAmount + $itemTax,
                 ]);
             }
+
+            // Increment feature usage
+            if (auth()->user()->currentSubscription()) {
+                auth()->user()->currentSubscription()->incrementFeatureUsage('quotation_management');
+            }
         });
 
         return redirect()->route('quotations.index')->with('success', 'Quotation created successfully!');
@@ -182,11 +192,11 @@ class QuotationController extends Controller
             abort(404);
         }
 
-        if (!auth()->user()->hasPermission('edit_quotation')) {
+        if (!auth()->user()->canAccessFeatureAction('quotation_management', 'edit_quotation')) {
             abort(403, 'You do not have permission to edit quotations.');
         }
 
-        if (!in_array($quotation->status, ['draft', 'sent'])) {
+        if ($quotation->status === 'converted') {
             return redirect()->route('quotations.show', $quotation)
                 ->with('error', 'Cannot edit converted quotations.');
         }
@@ -270,30 +280,42 @@ class QuotationController extends Controller
         return redirect()->route('quotations.show', $quotation)->with('success', 'Quotation updated successfully!');
     }
 
+    
+
     public function convertToInvoice(Quotation $quotation)
     {
-        if ($quotation->business_id !== auth()->user()->business_id) {
-            abort(404);
-        }
-
-        if (!auth()->user()->hasPermission('convert_quotation_to_invoice')) {
-            abort(403, 'You do not have permission to convert quotations to invoices.');
-        }
-
-        if ($quotation->status === 'converted') {
-            return back()->with('error', 'Quotation already converted to invoice.');
-        }
-
-        $business = auth()->user()->business;
-
-        // Check Free Plan limits
-        if (!$business->canCreateInvoice()) {
-            \Log::info('Free user hit invoice limit on conversion', ['business_id' => $business->id]);
-            return back()->with('error', 'You\'ve reached your Free Plan limit of 50 invoices per month. Please upgrade to convert more quotations.');
-        }
-
         try {
-            DB::transaction(function () use ($quotation) {
+            // Verify business ownership
+            if ($quotation->business_id !== auth()->user()->business_id) {
+                abort(404);
+            }
+
+            // Load relationships
+            $quotation->load(['customer', 'items']);
+
+            // Check permission
+            if (!auth()->user()->canAccessFeatureAction('invoice_management', 'convert_quotation_to_invoice')) {
+                return back()->with('error', 'You do not have permission to convert quotations to invoices.');
+            }
+
+            // Check if already converted
+            if ($quotation->status === 'converted' || Invoice::where('quotation_id', $quotation->id)->exists()) {
+                return back()->with('error', 'This quotation has already been converted to an invoice.');
+            }
+
+            // Check subscription
+            $subscription = auth()->user()->currentSubscription();
+            if (!$subscription || !$subscription->isFeatureEnabled('invoice_management')) {
+                return back()->with('error', 'Your plan does not support invoice creation. Please upgrade your plan.');
+            }
+
+            // Check limits
+            if (!$subscription->canUseFeature('invoice_management', 1)) {
+                return back()->with('error', 'Invoice limit reached. Please upgrade your plan.');
+            }
+
+            // Create invoice in transaction
+            DB::transaction(function () use ($quotation, $subscription) {
                 $invoice = Invoice::create([
                     'business_id' => $quotation->business_id,
                     'invoice_number' => $this->generateBusinessScopedNumber('INV'),
@@ -311,11 +333,13 @@ class QuotationController extends Controller
                     'due_date' => now()->addDays(30),
                 ]);
 
+                // Copy items
                 foreach ($quotation->items as $item) {
                     InvoiceItem::create([
                         'invoice_id' => $invoice->id,
                         'description' => $item->description,
                         'quantity' => $item->quantity,
+                        'unit' => $item->unit ?? 'pcs',
                         'unit_price' => $item->unit_price,
                         'tax_rate' => $item->tax_rate,
                         'tax_amount' => $item->tax_amount,
@@ -323,19 +347,31 @@ class QuotationController extends Controller
                     ]);
                 }
 
+                // Mark quotation as converted
                 $quotation->update(['status' => 'converted']);
-            });
-            
-            // Clear cache after creating invoice
-            \Cache::forget("business_{$business->id}_invoice_count");
 
-            return redirect()->route('quotations.show', $quotation)
+                // Increment usage
+                $subscription->incrementFeatureUsage('invoice_management');
+            });
+
+            // Clear cache
+            \Cache::forget("business_" . auth()->user()->business_id . "_invoice_count");
+
+            return redirect()->route('invoices.index')
                 ->with('success', 'Quotation converted to invoice successfully!');
-        } catch (\Exception $e) {
-            \Log::error('Convert to invoice error: ' . $e->getMessage());
-            return back()->with('error', 'Failed to convert quotation to invoice.');
+
+        } catch (\Throwable $e) {
+            \Log::error('Quotation to Invoice conversion failed', [
+                'quotation_id' => $quotation->id ?? null,
+                'user_id' => auth()->id(),
+                'error' => $e->getMessage(),
+                'line' => $e->getLine(),
+            ]);
+
+            return back()->with('error', 'Failed to convert quotation to invoice. Please try again.');
         }
     }
+
 
 
 

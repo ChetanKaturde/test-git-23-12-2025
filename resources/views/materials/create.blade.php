@@ -68,42 +68,13 @@
 
             <div id="barcode_field">
                 <label for="barcode" class="block text-sm font-medium text-gray-700 mb-2">Barcode</label>
-                <input type="text" name="barcode" id="barcode" value="{{ old('barcode') }}" 
+                <input type="text" name="barcode" id="barcode" value="{{ old('barcode') }}"
                        placeholder="Auto-generated if empty"
                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                 @error('barcode')
                     <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                 @enderror
             </div>
-
-            @if(auth()->user()->business->subscription_tier !== 'billing_sales')
-            <div id="material_form_field">
-                <label for="material_form" class="block text-sm font-medium text-gray-700 mb-2">Product Form</label>
-                <select name="material_form" id="material_form"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <option value="">Select Form</option>
-                    <option value="bar" {{ old('material_form') == 'bar' ? 'selected' : '' }}>Bar</option>
-                    <option value="pipe" {{ old('material_form') == 'pipe' ? 'selected' : '' }}>Pipe</option>
-                    <option value="sheet" {{ old('material_form') == 'sheet' ? 'selected' : '' }}>Sheet</option>
-                    <option value="rod" {{ old('material_form') == 'rod' ? 'selected' : '' }}>Rod</option>
-                    <option value="casting" {{ old('material_form') == 'casting' ? 'selected' : '' }}>Casting</option>
-                    <option value="plate" {{ old('material_form') == 'plate' ? 'selected' : '' }}>Plate</option>
-                </select>
-                @error('material_form')
-                    <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
-                @enderror
-            </div>
-
-            <div id="grade_field">
-                <label for="grade" class="block text-sm font-medium text-gray-700 mb-2">Grade/Specification</label>
-                <input type="text" name="grade" id="grade" value="{{ old('grade') }}"
-                       placeholder="e.g., 6061-T6, SS316, C36000"
-                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                @error('grade')
-                    <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
-                @enderror
-            </div>
-            @endif
 
             <!-- Unit System -->
             <div>
@@ -204,14 +175,11 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const itemType = document.getElementById('item_type');
-    const materialFormField = document.getElementById('material_form_field');
-    const gradeField = document.getElementById('grade_field');
     const skuField = document.getElementById('sku_field');
     const barcodeField = document.getElementById('barcode_field');
     const unitSelect = document.getElementById('unit');
     const goodUnits = document.getElementById('good_units');
     const serviceUnits = document.getElementById('service_units');
-    const isBillingSales = {{ auth()->user()->business->subscription_tier === 'billing_sales' ? 'true' : 'false' }};
 
     function toggleFields() {
         const isService = itemType.value === 'service';
@@ -225,12 +193,6 @@ document.addEventListener('DOMContentLoaded', function() {
         hsnField.style.display = isService ? 'none' : 'block';
         const sacField = document.getElementById('sac_code_field');
         sacField.style.display = isService ? 'block' : 'none';
-
-        // For billing_sales tier, hide advanced fields
-        if (!isBillingSales) {
-            materialFormField.style.display = isService ? 'none' : 'block';
-            gradeField.style.display = isService ? 'none' : 'block';
-        }
 
         // Reset unit for services, set default for goods
         if (isService) {

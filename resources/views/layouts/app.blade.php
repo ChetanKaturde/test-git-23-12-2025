@@ -171,61 +171,15 @@
                         </a>
                     </div>
 
-                    <!-- OPERATIONS Section -->
-                    @if(array_intersect(['materials', 'machines', 'work_orders', 'inventory'], $allowedModules))
-                        <div class="space-y-1">
-                            <button @click="toggleSection('operations')" class="w-full flex items-center justify-between px-3 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider hover:text-gray-700">
-                                <span>Operations</span>
-                                <svg :class="{'rotate-90': sections.operations}" class="w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                                </svg>
-                            </button>
-                            <div x-show="sections.operations" x-transition class="space-y-1 ml-2">
-                                
-                                @if(auth()->check() && auth()->user()->hasPermission('view_material'))
-                                    <a href="{{ route('materials.index') }}" data-tour="materials" class="@if(request()->routeIs('materials.*')) bg-indigo-50 text-indigo-700 border-l-4 border-indigo-500 font-medium @else text-gray-600 hover:bg-gray-50 hover:text-gray-900 @endif group flex items-center px-3 py-2 text-sm rounded-md transition-colors duration-150">
-                                        <svg class="mr-3 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
-                                        </svg>
-                                        Commodities
-                                    </a>
-                                @endif
-                                
-                                @if(in_array('machines', $allowedModules) && auth()->check() && auth()->user()->canViewModule('machines'))
-                                    <a href="{{ route('machines.index') }}" data-tour="machines" class="@if(request()->routeIs('machines.*')) bg-indigo-50 text-indigo-700 border-l-4 border-indigo-500 font-medium @else text-gray-600 hover:bg-gray-50 hover:text-gray-900 @endif group flex items-center px-3 py-2 text-sm rounded-md transition-colors duration-150">
-                                        <svg class="mr-3 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path>
-                                        </svg>
-                                        Machines
-                                    </a>
-                                @endif
-                                
-                                @if(in_array('work_orders', $allowedModules) && auth()->check() && auth()->user()->canViewModule('work_orders'))
-                                    <a href="{{ route('work-orders.index') }}" data-tour="work-orders" class="@if(request()->routeIs('work-orders.*')) bg-indigo-50 text-indigo-700 border-l-4 border-indigo-500 font-medium @else text-gray-600 hover:bg-gray-50 hover:text-gray-900 @endif group flex items-center px-3 py-2 text-sm rounded-md transition-colors duration-150">
-                                        <svg class="mr-3 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
-                                        </svg>
-                                        @if(auth()->user()->role === 'operator')
-                                            My Tasks
-                                        @else
-                                            Work Orders
-                                        @endif
-                                    </a>
-                                @endif
-                                
-                                @if(in_array('inventory', $allowedModules) && auth()->check() && auth()->user()->canViewModule('inventory'))
-                                    <a href="{{ route('inventory.index') }}" data-tour="inventory" class="@if(request()->routeIs('inventory.*')) bg-indigo-50 text-indigo-700 border-l-4 border-indigo-500 font-medium @else text-gray-600 hover:bg-gray-50 hover:text-gray-900 @endif group flex items-center px-3 py-2 text-sm rounded-md transition-colors duration-150">
-                                        <svg class="mr-3 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
-                                        </svg>
-                                        Inventory
-                                    </a>
-                                @endif
-                            </div>
-                        </div>
-                    @endif
+                    <!-- OPERATIONS Section - HIDDEN: Requires subscription features -->
 
                     <!-- SALES & BILLING Section -->
+                    @if(auth()->user()->currentSubscription() && (
+                        auth()->user()->currentSubscription()->isFeatureEnabled('customer_management') ||
+                        auth()->user()->currentSubscription()->isFeatureEnabled('quotation_management') ||
+                        auth()->user()->currentSubscription()->isFeatureEnabled('invoice_management') ||
+                        auth()->user()->currentSubscription()->isFeatureEnabled('commodity_management')
+                    ))
                     <div class="space-y-1">
                         <button @click="toggleSection('sales')" class="w-full flex items-center justify-between px-3 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider hover:text-gray-700">
                             <span>Sales & Billing</span>
@@ -234,7 +188,7 @@
                             </svg>
                         </button>
                         <div x-show="sections.sales" x-transition class="space-y-1 ml-2">
-                            @if(auth()->check() && auth()->user()->hasPermission('add_customer'))
+                            @if(auth()->user()->canAccessFeature('customer_management'))
                                <a href="{{ route('customers.index') }}" class="@if(request()->routeIs('customers.*')) bg-indigo-50 text-indigo-700 border-l-4 border-indigo-500 font-medium @else text-gray-600 hover:bg-gray-50 hover:text-gray-900 @endif group flex items-center px-3 py-2 text-sm rounded-md transition-colors duration-150">
                                    <svg class="mr-3 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
@@ -242,17 +196,17 @@
                                    Customers
                                </a>
                            @endif
-                            
-                            @if(auth()->check() && auth()->user()->hasPermission('view_material'))
+
+                            @if(auth()->user()->canAccessFeature('commodity_management'))
                                 <a href="{{ route('materials.index') }}" class="@if(request()->routeIs('materials.*')) bg-indigo-50 text-indigo-700 border-l-4 border-indigo-500 font-medium @else text-gray-600 hover:bg-gray-50 hover:text-gray-900 @endif group flex items-center px-3 py-2 text-sm rounded-md transition-colors duration-150">
                                     <svg class="mr-3 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
                                     </svg>
-                                    Commodity
+                                    Commodities
                                 </a>
                             @endif
-                            
-                            @if(auth()->check() && auth()->user()->hasAnyQuotationPermission())
+
+                            @if(auth()->user()->canAccessFeature('quotation_management'))
                                 <a href="{{ route('quotations.index') }}" class="@if(request()->routeIs('quotations.*')) bg-indigo-50 text-indigo-700 border-l-4 border-indigo-500 font-medium @else text-gray-600 hover:bg-gray-50 hover:text-gray-900 @endif group flex items-center px-3 py-2 text-sm rounded-md transition-colors duration-150">
                                     <svg class="mr-3 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
@@ -260,8 +214,8 @@
                                     Quotations
                                 </a>
                             @endif
-                            
-                            @if(in_array('invoices', $allowedModules) && auth()->check() && auth()->user()->canViewModule('invoices'))
+
+                            @if(auth()->user()->canAccessFeature('invoice_management'))
                                 <a href="{{ route('invoices.index') }}" class="@if(request()->routeIs('invoices.*')) bg-indigo-50 text-indigo-700 border-l-4 border-indigo-500 font-medium @else text-gray-600 hover:bg-gray-50 hover:text-gray-900 @endif group flex items-center px-3 py-2 text-sm rounded-md transition-colors duration-150">
                                     <svg class="mr-3 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
@@ -271,9 +225,15 @@
                             @endif
                         </div>
                     </div>
+                    @endif
 
                     <!-- ACCOUNTS Section -->
-                    @if(auth()->user()->isAdmin() || auth()->user()->hasPermission('view_expenses') || auth()->user()->hasPermission('add_expense'))
+                    @php
+                        $hasInvoiceManagement = auth()->user()->canAccessFeature('invoice_management');
+                        $hasExpenseManagement = auth()->user()->canAccessFeature('expense_management');
+                    @endphp
+
+                    @if($hasInvoiceManagement || $hasExpenseManagement)
                         <div class="space-y-1">
                             <button @click="toggleSection('accounts')" class="w-full flex items-center justify-between px-3 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider hover:text-gray-700">
                                 <span>Accounts</span>
@@ -283,7 +243,7 @@
                             </button>
                             <div x-show="sections.accounts" x-transition class="space-y-1 ml-2">
 
-                                @if(auth()->check() && (auth()->user()->hasPermission('view_expenses') || auth()->user()->hasPermission('add_expense') || auth()->user()->isAdmin()))
+                                @if($hasExpenseManagement)
                                     <a href="{{ route('expenses.index') }}" class="@if(request()->routeIs('expenses.*')) bg-indigo-50 text-indigo-700 border-l-4 border-indigo-500 font-medium @else text-gray-600 hover:bg-gray-50 hover:text-gray-900 @endif group flex items-center px-3 py-2 text-sm rounded-md transition-colors duration-150">
                                         <svg class="mr-3 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
@@ -292,14 +252,14 @@
                                     </a>
                                 @endif
 
-                                @if(auth()->user()->isAdmin() || auth()->user()->hasPermission('record_payment'))
+                                @if($hasInvoiceManagement)
                                     <a href="{{ route('payments.record') }}" class="@if(request()->routeIs('payments.record')) bg-indigo-50 text-indigo-700 border-l-4 border-indigo-500 font-medium @else text-gray-600 hover:bg-gray-50 hover:text-gray-900 @endif group flex items-center px-3 py-2 text-sm rounded-md transition-colors duration-150">
                                         <i class="fas fa-rupee-sign mr-3 w-5 h-5"></i>
                                         Record Payment
                                     </a>
                                 @endif
 
-                                @if(auth()->user()->isAdmin() || auth()->user()->hasPermission('view_payment_receipts'))
+                                @if($hasInvoiceManagement)
                                     <a href="{{ route('payments.index') }}" class="@if(request()->routeIs('payments.index')) bg-indigo-50 text-indigo-700 border-l-4 border-indigo-500 font-medium @else text-gray-600 hover:bg-gray-50 hover:text-gray-900 @endif group flex items-center px-3 py-2 text-sm rounded-md transition-colors duration-150">
                                         <svg class="mr-3 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
@@ -311,36 +271,7 @@
                         </div>
                     @endif
 
-                    <!-- PROCUREMENT Section -->
-                    @if(array_intersect(['vendors', 'purchase_orders'], $allowedModules) && (auth()->user()->canViewModule('vendors') || auth()->user()->canViewModule('purchase_orders')))
-                        <div class="space-y-1">
-                            <button @click="toggleSection('procurement')" class="w-full flex items-center justify-between px-3 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider hover:text-gray-700">
-                                <span>Procurement</span>
-                                <svg :class="{'rotate-90': sections.procurement}" class="w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                                </svg>
-                            </button>
-                            <div x-show="sections.procurement" x-transition class="space-y-1 ml-2">
-                                @if(in_array('vendors', $allowedModules) && auth()->check() && auth()->user()->canViewModule('vendors'))
-                                    <a href="{{ route('vendors.index') }}" class="@if(request()->routeIs('vendors.*')) bg-indigo-50 text-indigo-700 border-l-4 border-indigo-500 font-medium @else text-gray-600 hover:bg-gray-50 hover:text-gray-900 @endif group flex items-center px-3 py-2 text-sm rounded-md transition-colors duration-150">
-                                        <svg class="mr-3 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M10 3L8 21l5-7 5 7-2-18h-6z"></path>
-                                        </svg>
-                                        Vendors
-                                    </a>
-                                @endif
-                                
-                                @if(in_array('purchase_orders', $allowedModules) && auth()->check() && auth()->user()->canViewModule('purchase_orders'))
-                                    <a href="{{ route('purchase-orders.index') }}" data-tour="purchase-orders" class="@if(request()->routeIs('purchase-orders.*')) bg-indigo-50 text-indigo-700 border-l-4 border-indigo-500 font-medium @else text-gray-600 hover:bg-gray-50 hover:text-gray-900 @endif group flex items-center px-3 py-2 text-sm rounded-md transition-colors duration-150">
-                                        <svg class="mr-3 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17M17 13v4a2 2 0 01-2 2H9a2 2 0 01-2-2v-4m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01"></path>
-                                        </svg>
-                                        Purchase Orders
-                                    </a>
-                                @endif
-                            </div>
-                        </div>
-                    @endif
+                    <!-- PROCUREMENT Section - HIDDEN: Requires subscription features -->
 
                     <!-- MANAGEMENT Section -->
                     @if(auth()->user()->isAdmin() || auth()->user()->hasPermission('manage_team') || auth()->user()->hasPermission('view_reports') || in_array(auth()->user()->role, ['admin', 'manager']))
@@ -379,7 +310,7 @@
                                     </a>
                                 @endif
 
-                                @if(auth()->check() && (auth()->user()->hasPermission('view_reports') || auth()->user()->isAdmin()))
+                                @if(auth()->user()->canAccessFeature('reports_analytics'))
                                     <a href="{{ route('reports.index') }}" class="@if(request()->routeIs('reports.index')) bg-indigo-50 text-indigo-700 border-l-4 border-indigo-500 font-medium @else text-gray-600 hover:bg-gray-50 hover:text-gray-900 @endif group flex items-center px-3 py-2 text-sm rounded-md transition-colors duration-150">
                                        <svg class="mr-3 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
@@ -618,7 +549,14 @@
                 </div>
                 <nav class="px-4 py-4 space-y-2" x-data="mobileNavigation()">
                     <!-- OPERATIONS Section -->
-                    @if(array_intersect(['materials', 'machines', 'work_orders', 'inventory'], $allowedModules))
+                    @if(array_intersect(['materials', 'machines', 'work_orders', 'inventory'], $allowedModules) && auth()->user()->currentSubscription() && (
+                        auth()->user()->currentSubscription()->isFeatureEnabled('commodity_management') ||
+                        auth()->user()->currentSubscription()->isFeatureEnabled('work_order_management') ||
+                        auth()->user()->currentSubscription()->isFeatureEnabled('inventory_management') ||
+                        auth()->user()->currentSubscription()->isFeatureEnabled('quality_analysis') ||
+                        auth()->user()->currentSubscription()->isFeatureEnabled('barcode_management') ||
+                        auth()->user()->currentSubscription()->isFeatureEnabled('warehouse_management')
+                    ))
                         <div class="space-y-1">
                             <button @click="toggleSection('operations')" class="w-full flex items-center justify-between px-3 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider hover:text-gray-700 touch-target">
                                 <span>Operations</span>
@@ -679,6 +617,23 @@
                     @endif
 
                     <!-- SALES & BILLING Section -->
+                    @php
+                        $showSalesSection = false;
+                        if (auth()->user()->isAdmin()) {
+                            $showSalesSection = auth()->user()->currentSubscription() && (
+                                auth()->user()->currentSubscription()->isFeatureEnabled('customer_management') ||
+                                auth()->user()->currentSubscription()->isFeatureEnabled('quotation_management') ||
+                                auth()->user()->currentSubscription()->isFeatureEnabled('invoice_management') ||
+                                auth()->user()->currentSubscription()->isFeatureEnabled('commodity_management')
+                            );
+                        } else {
+                            $showSalesSection = auth()->user()->canAccessFeature('customer_management') ||
+                                               auth()->user()->canAccessFeature('quotation_management') ||
+                                               auth()->user()->canAccessFeature('invoice_management') ||
+                                               auth()->user()->canAccessFeature('commodity_management');
+                        }
+                    @endphp
+                    @if($showSalesSection)
                     <div class="space-y-1">
                         <button @click="toggleSection('sales')" class="w-full flex items-center justify-between px-3 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider hover:text-gray-700 touch-target">
                             <span>Sales & Billing</span>
@@ -719,9 +674,10 @@
                                 </a>
                             @endif
                         </div>
-                    </div>
+                   </div>
+                   @endif
 
-                    <!-- ACCOUNTS Section -->
+                   <!-- ACCOUNTS Section -->
                     @if(auth()->user()->isAdmin() || auth()->user()->hasPermission('view_expenses') || auth()->user()->hasPermission('add_expense'))
                         <div class="space-y-1">
                             <button @click="toggleSection('accounts')" class="w-full flex items-center justify-between px-3 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider hover:text-gray-700 touch-target">

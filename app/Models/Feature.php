@@ -1,0 +1,24 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class Feature extends Model
+{
+    use HasFactory;
+
+    protected $fillable = [
+        'key',
+        'name',
+        'is_quantity_based',
+        'description',
+    ];
+
+    // Relationships
+    public function planFeatures()
+    {
+        return $this->hasMany(PlanFeature::class, 'feature_id');
+    }
+}

@@ -12,6 +12,17 @@ use App\Services\PdfService;
 
 class InvoiceController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth');
+        $this->middleware(function ($request, $next) {
+            if (!auth()->user()->currentSubscription() || !auth()->user()->currentSubscription()->isFeatureEnabled('invoice_management')) {
+                abort(403, 'Invoice management feature is not enabled for your subscription plan.');
+            }
+            return $next($request);
+        });
+    }
+
     public function index()
     {
         try {
@@ -57,6 +68,18 @@ class InvoiceController extends Controller
                 \Log::info('Free user hit invoice limit', ['business_id' => $business->id]);
                 return back()->withInput()
                     ->with('error', 'You\'ve reached your Free Plan limit of 50 invoices per month. Please upgrade to create more invoices.');
+            }
+
+            // Check if invoice feature is enabled
+            if (auth()->user()->currentSubscription() && !auth()->user()->currentSubscription()->isFeatureEnabled('invoice_management')) {
+                return back()->withInput()
+                    ->with('error', 'Invoice management feature is not enabled in your current plan. Please upgrade your plan.');
+            }
+
+            // Check subscription feature limits
+            if (auth()->user()->currentSubscription() && !auth()->user()->currentSubscription()->canUseFeature('invoice_management', 1)) {
+                return back()->withInput()
+                    ->with('error', 'You have reached your invoice limit. Please upgrade your plan to create more invoices.');
             }
 
             $validated = $request->validate([
@@ -122,6 +145,11 @@ class InvoiceController extends Controller
 
             // Clear cache after creating invoice
             \Cache::forget("business_{$business->id}_invoice_count");
+
+            // Increment feature usage
+            if (auth()->user()->currentSubscription()) {
+                auth()->user()->currentSubscription()->incrementFeatureUsage('invoice_management');
+            }
 
             // Log activity
             $this->logActivity('Invoice created', "Invoice {$invoice->invoice_number} created from quotation {$quotation->number}", $invoice);

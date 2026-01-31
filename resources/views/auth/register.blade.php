@@ -143,22 +143,55 @@
                         </div>
 
                         <div>
-                            <label for="subscription_tier" class="block text-sm font-medium text-gray-700 mb-2">Choose Your Plan</label>
-                            <select id="subscription_tier" name="subscription_tier" required
-                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors @error('subscription_tier') border-red-500 @enderror">
+                            <label for="plan_id" class="block text-sm font-medium text-gray-700 mb-2">Choose Your Plan</label>
+                            <select id="plan_id" name="plan_id" required
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors @error('plan_id') border-red-500 @enderror">
                                 <option value="">Select a plan</option>
-                                <option value="billing_sales" {{ old('subscription_tier') === 'billing_sales' ? 'selected' : '' }}>
-                                    Sales & Billing - For service businesses (Free: 50 invoices/month)
-                                </option>
-                                <!-- Full ERP option commented out as per requirements -->
-                                <!-- <option value="full_erp" {{ old('subscription_tier') === 'full_erp' ? 'selected' : '' }}>
-                                    Full ERP - For manufacturers (Paid: Unlimited + Manufacturing)
-                                </option> -->
+                                @foreach($plans as $plan)
+                                    <option value="{{ $plan->id }}" data-price="{{ $plan->price_per_user }}" data-min="{{ $plan->min_users }}" data-max="{{ $plan->max_users }}"
+                                            {{ old('plan_id') == $plan->id ? 'selected' : '' }}>
+                                        {{ $plan->name }} - ₹{{ number_format($plan->price_per_user, 2) }}/user/month
+                                    </option>
+                                @endforeach
                             </select>
                             <p class="text-gray-500 text-xs mt-1">You can upgrade anytime</p>
-                            @error('subscription_tier')
+                            @error('plan_id')
                                 <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                             @enderror
+                        </div>
+
+                        <div id="user-count-section" style="display: none;">
+                            <label for="user_count" class="block text-sm font-medium text-gray-700 mb-2">Number of Users</label>
+                            <input id="user_count" name="user_count" type="number" min="1" required
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors @error('user_count') border-red-500 @enderror"
+                                   value="{{ old('user_count', 1) }}">
+                            <p class="text-gray-500 text-xs mt-1" id="user-count-help">Select between <span id="min-users">1</span> - <span id="max-users">1</span> users</p>
+                            @error('user_count')
+                                <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div id="pricing-section" class="bg-indigo-50 border border-indigo-200 rounded-lg p-4" style="display: none;">
+                            <h4 class="text-sm font-semibold text-indigo-800 mb-2">Pricing Summary</h4>
+                            <div class="space-y-1 text-sm">
+                                <div class="flex justify-between">
+                                    <span>Plan:</span>
+                                    <span id="selected-plan">None</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>Price per user:</span>
+                                    <span>₹<span id="price-per-user">0</span>/month</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>Users:</span>
+                                    <span id="selected-users">0</span>
+                                </div>
+                                <hr class="border-indigo-300">
+                                <div class="flex justify-between font-semibold">
+                                    <span>Total:</span>
+                                    <span>₹<span id="total-price">0</span>/month</span>
+                                </div>
+                            </div>
                         </div>
 
                         <div>
@@ -273,6 +306,59 @@
         document.getElementById('business_phone')?.addEventListener('input', function(e) {
             this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);
         });
+
+        // Plan selection and pricing calculation
+        document.getElementById('plan_id').addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            const userCountSection = document.getElementById('user-count-section');
+            const pricingSection = document.getElementById('pricing-section');
+
+            if (this.value) {
+                const price = parseFloat(selectedOption.getAttribute('data-price')) || 0;
+                const minUsers = parseInt(selectedOption.getAttribute('data-min')) || 1;
+                const maxUsers = parseInt(selectedOption.getAttribute('data-max')) || 1;
+
+                // Show user count section
+                userCountSection.style.display = 'block';
+                pricingSection.style.display = 'block';
+
+                // Update user count constraints
+                const userCountInput = document.getElementById('user_count');
+                userCountInput.min = minUsers;
+                userCountInput.max = maxUsers;
+                userCountInput.value = Math.max(minUsers, Math.min(parseInt(userCountInput.value) || minUsers, maxUsers));
+
+                // Update help text
+                document.getElementById('min-users').textContent = minUsers;
+                document.getElementById('max-users').textContent = maxUsers;
+
+                // Update pricing
+                updatePricing(selectedOption.text.split(' - ')[0], price, userCountInput.value);
+            } else {
+                userCountSection.style.display = 'none';
+                pricingSection.style.display = 'none';
+            }
+        });
+
+        // User count change
+        document.getElementById('user_count').addEventListener('input', function() {
+            const planSelect = document.getElementById('plan_id');
+            const selectedOption = planSelect.options[planSelect.selectedIndex];
+            if (selectedOption && selectedOption.value) {
+                const price = parseFloat(selectedOption.getAttribute('data-price')) || 0;
+                updatePricing(selectedOption.text.split(' - ')[0], price, this.value);
+            }
+        });
+
+        function updatePricing(planName, pricePerUser, userCount) {
+            const users = parseInt(userCount) || 0;
+            const total = pricePerUser * users;
+
+            document.getElementById('selected-plan').textContent = planName;
+            document.getElementById('price-per-user').textContent = pricePerUser.toFixed(2);
+            document.getElementById('selected-users').textContent = users;
+            document.getElementById('total-price').textContent = total.toFixed(2);
+        }
 
         // Sales Representative ID validation
         let repIdTimeout;

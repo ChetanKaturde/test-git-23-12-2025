@@ -15,7 +15,8 @@ class BusinessObserver
      */
     public function created(Business $business): void
     {
-        $this->createSampleData($business);
+        // Removed sample data creation to prevent contamination of feature limits
+        // $this->createSampleData($business);
     }
 
     /**

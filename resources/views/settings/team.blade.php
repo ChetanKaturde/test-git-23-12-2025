@@ -136,19 +136,44 @@
                                             <label class="block text-sm font-medium text-gray-700 mb-2">Permissions</label>
                                             <div class="grid grid-cols-2 gap-2">
                                                 @php
-                                                    $availablePermissions = [
-                                                        'add_customer' => 'Add Customer',
-                                                        'create_quote' => 'Create Quote',
-                                                        'edit_quote' => 'Edit Quote',
-                                                        'convert_quote_to_invoice' => 'Convert Quote to Invoice',
-                                                        'add_expense' => 'Add Expense',
-                                                        'view_expenses' => 'View Expenses',
-                                                        'view_payment_receipts' => 'View Payment Receipts',
-                                                        'view_reports' => 'View Reports',
-                                                        'manage_commodity' => 'Manage Commodity',
-                                                        'manage_invoices' => 'Manage Invoices',
-                                                        'manage_team' => 'Manage Team'
+                                                    $allPermissions = [
+                                                        'customer_management' => [
+                                                            'add_customer' => 'Add Customer',
+                                                        ],
+                                                        'quotation_management' => [
+                                                            'create_quote' => 'Create Quote',
+                                                            'edit_quote' => 'Edit Quote',
+                                                            'convert_quote_to_invoice' => 'Convert Quote to Invoice',
+                                                        ],
+                                                        'expense_management' => [
+                                                            'add_expense' => 'Add Expense',
+                                                            'view_expenses' => 'View Expenses',
+                                                            'view_payment_receipts' => 'View Payment Receipts',
+                                                        ],
+                                                        'reports_analytics' => [
+                                                            'view_reports' => 'View Reports',
+                                                        ],
+                                                        'commodity_management' => [
+                                                            'manage_commodity' => 'Manage Commodity',
+                                                        ],
+                                                        'invoice_management' => [
+                                                            'manage_invoices' => 'Manage Invoices',
+                                                        ],
+                                                        'team_management' => [
+                                                            'manage_team' => 'Manage Team',
+                                                        ],
                                                     ];
+
+                                                    $availablePermissions = [];
+                                                    $subscription = auth()->user()->currentSubscription();
+                                                    if ($subscription) {
+                                                        foreach ($allPermissions as $feature => $permissions) {
+                                                            if ($subscription->isFeatureEnabled($feature)) {
+                                                                $availablePermissions = array_merge($availablePermissions, $permissions);
+                                                            }
+                                                        }
+                                                    }
+
                                                     $userPermissions = $member->permissions ?? [];
                                                 @endphp
                                                 @foreach($availablePermissions as $key => $label)
@@ -397,27 +422,51 @@
                             <div class="border border-gray-300 rounded-md p-3 max-h-40 overflow-y-auto">
                                 <div class="grid grid-cols-1 gap-2">
                                     @php
-                                        $availablePermissions = [
-                                            'add_customer' => 'Add Customer',
-                                            'create_quote' => 'Create Quote',
-                                            'edit_quote' => 'Edit Quote',
-                                            'convert_quote_to_invoice' => 'Convert Quote to Invoice',
-                                            'add_expense' => 'Add Expense',
-                                            'view_expenses' => 'View Expenses',
-                                            'view_payment_receipts' => 'View Payment Receipts',
-                                            'view_reports' => 'View Reports',
-                                            'manage_commodity' => 'Manage Commodity',
-                                            'manage_invoices' => 'Manage Invoices',
-                                            'manage_team' => 'Manage Team'
+                                        $allPermissions = [
+                                            'customer_management' => [
+                                                'add_customer' => 'Add Customer',
+                                            ],
+                                            'quotation_management' => [
+                                                'create_quote' => 'Create Quote',
+                                                'edit_quote' => 'Edit Quote',
+                                                'convert_quote_to_invoice' => 'Convert Quote to Invoice',
+                                            ],
+                                            'expense_management' => [
+                                                'add_expense' => 'Add Expense',
+                                                'view_expenses' => 'View Expenses',
+                                                'view_payment_receipts' => 'View Payment Receipts',
+                                            ],
+                                            'reports_analytics' => [
+                                                'view_reports' => 'View Reports',
+                                            ],
+                                            'commodity_management' => [
+                                                'manage_commodity' => 'Manage Commodity',
+                                            ],
+                                            'invoice_management' => [
+                                                'manage_invoices' => 'Manage Invoices',
+                                            ],
+                                            'team_management' => [
+                                                'manage_team' => 'Manage Team',
+                                            ],
                                         ];
+
+                                        $availablePermissions = [];
+                                        $subscription = auth()->user()->currentSubscription();
+                                        if ($subscription) {
+                                            foreach ($allPermissions as $feature => $permissions) {
+                                                if ($subscription->isFeatureEnabled($feature)) {
+                                                    $availablePermissions = array_merge($availablePermissions, $permissions);
+                                                }
+                                            }
+                                        }
                                     @endphp
                                     @foreach($availablePermissions as $key => $label)
                                         <div class="flex items-center">
                                             <input type="checkbox"
-                                                   name="permissions[]"
-                                                   value="{{ $key }}"
-                                                   x-model="form.permissions"
-                                                   class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                                               name="permissions[]"
+                                               value="{{ $key }}"
+                                               x-model="form.permissions"
+                                               class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
                                             <label class="ml-2 text-sm text-gray-700">{{ $label }}</label>
                                         </div>
                                     @endforeach
