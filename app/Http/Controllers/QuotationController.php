@@ -169,6 +169,7 @@ class QuotationController extends Controller
                 'discount_amount' => $quotation->discount_amount ?? 0,
                 'tax_amount' => $quotation->tax_amount,
                 'total_amount' => $quotation->total,
+                'status' => $quotation->status ?? 'draft',
             ];
             
             $pdf = (new PdfService())->generateDocumentPdf(

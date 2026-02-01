@@ -147,9 +147,6 @@
                         <tr>
                             <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Invoice</th>
                             <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Customer</th>
-                            @if(auth()->user()->business->subscription_tier !== 'billing_sales')
-                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Work Order</th>
-                            @endif
                             <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Date</th>
                             <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Due Date</th>
                             <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Amount</th>
@@ -190,23 +187,6 @@
                                     </div>
                                 </div>
                             </td>
-                            @if(auth()->user()->business->subscription_tier !== 'billing_sales')
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                @if($invoice->workOrder)
-                                    <div class="flex items-center">
-                                        <div class="w-2 h-2 bg-green-400 rounded-full mr-2"></div>
-                                        <a href="{{ route('work-orders.show', $invoice->workOrder) }}" 
-                                           class="text-sm text-blue-600 hover:text-blue-800 font-medium">
-                                            {{ $invoice->workOrder->work_order_number ?? 'WO-' . $invoice->workOrder->id }}
-                                        </a>
-                                    </div>
-                                @else
-                                    <span class="text-sm text-gray-400 flex items-center">
-                                        <i class="fas fa-minus mr-2"></i>No work order
-                                    </span>
-                                @endif
-                            </td>
-                            @endif
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="text-sm text-gray-900">
                                     {{ $invoice->issue_date ? $invoice->issue_date->format('M d, Y') : 'Not set' }}

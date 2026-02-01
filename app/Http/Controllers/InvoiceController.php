@@ -230,6 +230,7 @@ class InvoiceController extends Controller
                 'subtotal' => $invoice->subtotal,
                 'tax_amount' => $invoice->tax_amount,
                 'total_amount' => $invoice->total_amount,
+                'status' => $invoice->status ?? 'draft',
             ];
             
             $pdf = (new PdfService())->generateDocumentPdf(

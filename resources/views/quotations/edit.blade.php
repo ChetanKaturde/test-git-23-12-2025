@@ -74,52 +74,56 @@
                     @enderror
                 </div>
 
-                        <div class="card">
-                            <div class="card-header d-flex justify-content-between align-items-center">
-                                <h5 class="mb-0">Quotation Items</h5>
-                                <button type="button" class="btn btn-primary btn-sm" onclick="addItem()">
-                                    <i class="fas fa-plus"></i> Add Item
-                                </button>
-                            </div>
-                            
-                            <div class="card-body">
-                                <div class="table-responsive">
-                                    <table class="table table-bordered" id="itemsTable">
-                                        <thead class="table-light">
-                                            <tr>
-                                                <th>Material</th>
-                                                <th>Description</th>
-                                                <th>Qty</th>
-                                                <th>Unit Price</th>
-                                                <th>Tax %</th>
-                                                <th>Total</th>
-                                                <th>Action</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="itemsBody">
-                                            <!-- Items will be added here -->
-                                        </tbody>
-                                        <tfoot>
-                                            <tr class="table-info">
-                                                <td colspan="5" class="text-end"><strong>Subtotal:</strong></td>
-                                                <td><strong id="subtotalDisplay">₹0.00</strong></td>
-                                                <td></td>
-                                            </tr>
-                                            <tr class="table-info">
-                                                <td colspan="5" class="text-end"><strong>Tax:</strong></td>
-                                                <td><strong id="taxDisplay">₹0.00</strong></td>
-                                                <td></td>
-                                            </tr>
-                                            <tr class="table-success">
-                                                <td colspan="5" class="text-end"><strong>Total:</strong></td>
-                                                <td><strong id="totalDisplay">₹0.00</strong></td>
-                                                <td></td>
-                                            </tr>
-                                        </tfoot>
-                                    </table>
-                                </div>
-                            </div>
+                <!-- Items Section -->
+                <div class="border border-gray-200 rounded-lg">
+                    <div class="flex justify-between items-center px-6 py-4 bg-gray-50 border-b border-gray-200 rounded-t-lg">
+                        <h3 class="text-lg font-semibold text-gray-900">Quotation Items</h3>
+                        <button type="button" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors inline-flex items-center" onclick="addItem()">
+                            <i class="fas fa-plus mr-2"></i>
+                            Add Item
+                        </button>
+                    </div>
+                    
+                    <div class="p-6">
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full" id="itemsTable">
+                                <thead>
+                                    <tr class="border-b border-gray-200">
+                                        <th class="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Commodity</th>
+                                        <th class="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                                        <th class="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Qty</th>
+                                        <th class="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Unit</th>
+                                        <th class="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Unit Price</th>
+                                        <th class="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Discount %</th>
+                                        <th class="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Tax %</th>
+                                        <th class="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                                        <th class="text-center py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="itemsBody" class="divide-y divide-gray-200">
+                                    <!-- Items will be added here -->
+                                </tbody>
+                                <tfoot class="border-t-2 border-gray-300">
+                                    <tr class="bg-gray-50">
+                                        <td colspan="7" class="py-3 px-4 text-right font-semibold text-gray-900">Subtotal:</td>
+                                        <td class="py-3 px-4 font-semibold text-gray-900" id="subtotalDisplay">₹0.00</td>
+                                        <td></td>
+                                    </tr>
+                                    <tr class="bg-gray-50">
+                                        <td colspan="7" class="py-3 px-4 text-right font-semibold text-gray-900">Tax:</td>
+                                        <td class="py-3 px-4 font-semibold text-gray-900" id="taxDisplay">₹0.00</td>
+                                        <td></td>
+                                    </tr>
+                                    <tr class="bg-blue-50">
+                                        <td colspan="7" class="py-3 px-4 text-right font-bold text-gray-900">Total:</td>
+                                        <td class="py-3 px-4 font-bold text-blue-600 text-lg" id="totalDisplay">₹0.00</td>
+                                        <td></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
                         </div>
+                    </div>
+                </div>
 
                 <!-- Action Buttons -->
                 <div class="flex justify-end space-x-3 pt-6 border-t border-gray-200">
@@ -143,30 +147,45 @@ const materials = @json($materials);
 function addItem() {
     const tbody = document.getElementById('itemsBody');
     const row = document.createElement('tr');
+    row.className = 'hover:bg-gray-50';
     row.innerHTML = `
-        <td>
-            <select name="items[${itemIndex}][material_id]" class="form-select" required onchange="updateDescription(${itemIndex})">
-                <option value="">Select Material</option>
+        <td class="py-3 px-4">
+            <select name="items[${itemIndex}][material_id]" class="w-full h-10 border border-gray-300 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm" required onchange="updateDescription(${itemIndex})">
+                <option value="">Choose a commodity</option>
                 ${materials.map(m => `<option value="${m.id}" data-price="${m.unit_price}" data-name="${m.name}">${m.name} (${m.code})</option>`).join('')}
             </select>
         </td>
-        <td>
-            <input type="text" name="items[${itemIndex}][description]" class="form-control" required>
+        <td class="py-3 px-4">
+            <input type="text" name="items[${itemIndex}][description]" class="w-full h-10 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm" required>
         </td>
-        <td>
-            <input type="number" name="items[${itemIndex}][quantity]" class="form-control" step="0.01" min="0.01" required onchange="calculateRowTotal(${itemIndex})">
+        <td class="py-3 px-4">
+            <input type="number" name="items[${itemIndex}][quantity]" class="w-full h-10 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm" step="0.01" min="0.01" required onchange="calculateRowTotal(${itemIndex})">
         </td>
-        <td>
-            <input type="number" name="items[${itemIndex}][unit_price]" class="form-control" step="0.01" min="0" required onchange="calculateRowTotal(${itemIndex})">
+        <td class="py-3 px-4">
+            <select name="items[${itemIndex}][unit]" class="w-full h-10 border border-gray-300 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm" required>
+                <option value="piece">Piece</option>
+                <option value="kg">Kg</option>
+                <option value="hour">Hour</option>
+                <option value="meter">Meter</option>
+                <option value="liter">Liter</option>
+                <option value="box">Box</option>
+                <option value="pack">Pack</option>
+            </select>
         </td>
-        <td>
-            <input type="number" name="items[${itemIndex}][tax_rate]" class="form-control" step="0.01" min="0" max="100" value="18" required onchange="calculateRowTotal(${itemIndex})">
+        <td class="py-3 px-4">
+            <input type="number" name="items[${itemIndex}][unit_price]" class="w-full h-10 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm" step="0.01" min="0" required onchange="calculateRowTotal(${itemIndex})">
         </td>
-        <td>
-            <span class="row-total">₹0.00</span>
+        <td class="py-3 px-4">
+            <input type="number" name="items[${itemIndex}][discount_percentage]" class="w-full h-10 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm" step="0.01" min="0" max="100" value="0" onchange="calculateRowTotal(${itemIndex})">
         </td>
-        <td>
-            <button type="button" class="btn btn-danger btn-sm" onclick="removeItem(this)">
+        <td class="py-3 px-4">
+            <input type="number" name="items[${itemIndex}][tax_rate]" class="w-full h-10 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm" step="0.01" min="0" max="100" value="18" required onchange="calculateRowTotal(${itemIndex})">
+        </td>
+        <td class="py-3 px-4">
+            <span class="row-total font-medium text-gray-900">₹0.00</span>
+        </td>
+        <td class="py-3 px-4 text-center">
+            <button type="button" class="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors" onclick="removeItem(this)">
                 <i class="fas fa-trash"></i>
             </button>
         </td>
@@ -191,11 +210,14 @@ function updateDescription(index) {
 function calculateRowTotal(index) {
     const qty = parseFloat(document.querySelector(`input[name="items[${index}][quantity]"]`).value) || 0;
     const price = parseFloat(document.querySelector(`input[name="items[${index}][unit_price]"]`).value) || 0;
+    const discountPercent = parseFloat(document.querySelector(`input[name="items[${index}][discount_percentage]"]`).value) || 0;
     const taxRate = parseFloat(document.querySelector(`input[name="items[${index}][tax_rate]"]`).value) || 0;
     
     const subtotal = qty * price;
-    const tax = (subtotal * taxRate) / 100;
-    const total = subtotal + tax;
+    const discountAmount = (subtotal * discountPercent) / 100;
+    const taxableAmount = subtotal - discountAmount;
+    const tax = (taxableAmount * taxRate) / 100;
+    const total = taxableAmount + tax;
     
     document.querySelector(`tr:nth-child(${index + 1}) .row-total`).textContent = `₹${total.toFixed(2)}`;
     updateTotals();
@@ -208,23 +230,28 @@ function removeItem(button) {
 
 function updateTotals() {
     let subtotal = 0;
+    let totalDiscount = 0;
     let totalTax = 0;
     
     document.querySelectorAll('#itemsBody tr').forEach((row, index) => {
         const qty = parseFloat(row.querySelector('input[name*="[quantity]"]').value) || 0;
         const price = parseFloat(row.querySelector('input[name*="[unit_price]"]').value) || 0;
+        const discountPercent = parseFloat(row.querySelector('input[name*="[discount_percentage]"]').value) || 0;
         const taxRate = parseFloat(row.querySelector('input[name*="[tax_rate]"]').value) || 0;
         
         const itemSubtotal = qty * price;
-        const itemTax = (itemSubtotal * taxRate) / 100;
+        const itemDiscount = (itemSubtotal * discountPercent) / 100;
+        const taxableAmount = itemSubtotal - itemDiscount;
+        const itemTax = (taxableAmount * taxRate) / 100;
         
         subtotal += itemSubtotal;
+        totalDiscount += itemDiscount;
         totalTax += itemTax;
     });
     
     document.getElementById('subtotalDisplay').textContent = `₹${subtotal.toFixed(2)}`;
     document.getElementById('taxDisplay').textContent = `₹${totalTax.toFixed(2)}`;
-    document.getElementById('totalDisplay').textContent = `₹${(subtotal + totalTax).toFixed(2)}`;
+    document.getElementById('totalDisplay').textContent = `₹${(subtotal - totalDiscount + totalTax).toFixed(2)}`;
 }
 
 // Add existing items or first item on page load
@@ -238,13 +265,17 @@ document.addEventListener('DOMContentLoaded', function() {
                     const materialSelect = row.querySelector('select[name*="[material_id]"]');
                     const descInput = row.querySelector('input[name*="[description]"]');
                     const qtyInput = row.querySelector('input[name*="[quantity]"]');
+                    const unitSelect = row.querySelector('select[name*="[unit]"]');
                     const priceInput = row.querySelector('input[name*="[unit_price]"]');
+                    const discountInput = row.querySelector('input[name*="[discount_percentage]"]');
                     const taxInput = row.querySelector('input[name*="[tax_rate]"]');
                     
                     if (materialSelect) materialSelect.value = '{{ $item->material_id }}';
                     if (descInput) descInput.value = '{{ addslashes($item->description) }}';
                     if (qtyInput) qtyInput.value = '{{ $item->quantity }}';
+                    if (unitSelect) unitSelect.value = '{{ $item->unit }}';
                     if (priceInput) priceInput.value = '{{ $item->unit_price }}';
+                    if (discountInput) discountInput.value = '{{ $item->discount_percentage ?? 0 }}';
                     if (taxInput) taxInput.value = '{{ $item->tax_rate }}';
                     
                     calculateRowTotal({{ $index }});

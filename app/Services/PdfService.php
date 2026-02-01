@@ -48,6 +48,7 @@ class PdfService
                     'discount_amount' => $documentData['discount_amount'] ?? 0,
                     'tax_amount' => $documentData['tax_amount'],
                     'total' => $documentData['total_amount'],
+                    'status' => $documentData['status'] ?? 'draft',
                 ];
                 return PDF::loadView('pdfs.quotation', $data);
             } elseif ($documentType === 'invoice') {
@@ -58,6 +59,7 @@ class PdfService
                     'subtotal' => $documentData['subtotal'],
                     'tax_amount' => $documentData['tax_amount'],
                     'total_amount' => $documentData['total_amount'],
+                    'status' => $documentData['status'] ?? 'draft',
                 ];
                 return PDF::loadView('pdfs.invoice', $data);
             } else {

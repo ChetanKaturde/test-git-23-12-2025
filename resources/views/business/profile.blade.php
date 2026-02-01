@@ -18,15 +18,7 @@
                     @endif
                 </div>
                 <div class="flex items-center space-x-3">
-                    @php $customerCount = \App\Models\Customer::where('business_id', auth()->user()->business_id)->count(); @endphp
-                    @if($customerCount < 2)
-                        <form action="{{ route('business.load-sample-data') }}" method="POST" class="inline">
-                            @csrf
-                            <button type="submit" class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors text-sm font-medium">
-                                <i class="fas fa-magic mr-2"></i>Load Sample Data
-                            </button>
-                        </form>
-                    @endif
+                {{-- Load Sample Data button removed as per requirements --}}
                     {{-- Temporarily disabled PDF download button --}}
                     {{-- <form action="{{ route('business.profile.preview') }}" method="POST" class="inline">
                         @csrf
@@ -189,15 +181,14 @@
                 </h3>
                 <div class="bg-gray-50 rounded-lg p-4 space-y-4">
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Currency</label>
-                            <select name="currency" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                <option value="INR" {{ old('currency', $business->currency) == 'INR' ? 'selected' : '' }}>INR (₹)</option>
-                                {{-- <option value="USD" {{ old('currency', $business->currency) == 'USD' ? 'selected' : '' }}>USD ($)</option> --}}
-                                {{-- <option value="EUR" {{ old('currency', $business->currency) == 'EUR' ? 'selected' : '' }}>EUR (€)</option> --}}
-                            </select>
-                            @error('currency')<p class="text-red-500 text-sm mt-1">{{ $message }}</p>@enderror
-                        </div>
+                    {{-- Currency field hidden as per requirements --}}
+                    {{-- <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Currency</label>
+                        <select name="currency" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="INR" {{ old('currency', $business->currency) == 'INR' ? 'selected' : '' }}>INR (₹)</option>
+                        </select>
+                        @error('currency')<p class="text-red-500 text-sm mt-1">{{ $message }}</p>@enderror
+                    </div> --}}
                         
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2" title="Invoices reset numbering on this date (e.g., Apr 1 → INV-2526-0001)">Financial Year Start</label>
