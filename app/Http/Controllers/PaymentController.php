@@ -22,7 +22,8 @@ class PaymentController extends Controller
 
     public function index()
     {
-        if (!auth()->user()->hasPermission('view_payment_receipts')) {
+        // Admin bypass - admins always have access without requiring explicit permission
+        if (!auth()->user()->isAdmin() && !auth()->user()->hasPermission('view_payment_receipts')) {
             abort(403);
         }
 

@@ -112,6 +112,7 @@ class RegisteredUserController extends Controller
                 'email' => $request->email,
                 'is_active' => true,
                 'sales_representative_id' => $request->sales_representative_id,
+                'allowed_users' => $request->user_count, // Store the user-selected limit
             ]);
 
             // Create owner user

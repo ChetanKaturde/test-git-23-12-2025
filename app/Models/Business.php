@@ -34,6 +34,7 @@ class Business extends Model
         'terms_and_conditions',
         'timezone',
         'sales_representative_id',
+        'allowed_users',
     ];
 
     protected $casts = [
@@ -134,15 +135,61 @@ class Business extends Model
         }) < 50;
     }
 
+    /**
+     * ✅ TEAM MEMBER LIMIT ENFORCEMENT
+     * Check if a new team member can be invited based on allowed_users limit
+     * 
+     * Rules:
+     * - If allowed_users is null, allow unlimited users (fallback)
+     * - If current_users < allowed_users, allow invitation
+     * - If current_users >= allowed_users, block invitation
+     */
     public function canInviteUser()
     {
-        if ($this->subscription_plan !== 'free') {
+        // If no allowed_users limit set, allow unlimited (fallback for existing businesses)
+        if (empty($this->allowed_users)) {
             return true;
         }
+        
+        $currentUserCount = $this->users()->count();
+        
+        // Allow if current count is less than allowed users
+        return $currentUserCount < $this->allowed_users;
+    }
 
-        return \Cache::remember("business_{$this->id}_user_count", 3600, function () {
-            return $this->users()->where('is_active', true)->count();
-        }) < 2;
+    /**
+     * Get the allowed users limit for this business
+     * Returns the value entered during registration
+     */
+    public function getAllowedUsers()
+    {
+        return $this->allowed_users;
+    }
+
+    /**
+     * Check if the business has reached their user limit
+     */
+    public function hasReachedUserLimit()
+    {
+        // If no limit set, haven't reached limit
+        if (empty($this->allowed_users)) {
+            return false;
+        }
+        
+        return $this->users()->count() >= $this->allowed_users;
+    }
+
+    /**
+     * Get remaining users that can be added
+     */
+    public function getRemainingUserSlots()
+    {
+        if (empty($this->allowed_users)) {
+            return PHP_INT_MAX; // Unlimited
+        }
+        
+        $remaining = $this->allowed_users - $this->users()->count();
+        return max(0, $remaining);
     }
 
     public function getInvoiceCount()

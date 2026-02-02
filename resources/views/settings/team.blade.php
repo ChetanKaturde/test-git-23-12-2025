@@ -8,23 +8,31 @@
     @php
         $business = auth()->user()->business;
         $canInviteUser = $business->canInviteUser();
-        $userCount = $business->getActiveUserCount();
+        $userCount = $business->users()->count();
+        $allowedUsers = $business->getAllowedUsers();
+        $hasReachedLimit = $business->hasReachedUserLimit();
     @endphp
     
-    <!-- Free Plan Limit Banner -->
-    @if($business->subscription_plan === 'free' && !$canInviteUser)
-    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+    <!-- Team Member Limit Reached Banner -->
+    @if($hasReachedLimit && $allowedUsers)
+    <div class="bg-amber-50 border border-amber-200 rounded-lg p-4">
         <div class="flex items-center justify-between">
             <div class="flex items-center">
-                <i class="fas fa-info-circle text-blue-600 mr-3"></i>
+                <i class="fas fa-exclamation-triangle text-amber-600 mr-3"></i>
                 <div>
-                    <p class="text-blue-800 font-medium">Free Plan allows 2 team members.</p>
-                    <p class="text-blue-700 text-sm">Current usage: {{ $userCount }}/2 team members</p>
+                    <p class="text-amber-800 font-medium">You have reached your team member limit.</p>
+                    <p class="text-amber-700 text-sm">Current usage: {{ $userCount }}/{{ $allowedUsers }} users (includes business owner)</p>
                 </div>
             </div>
-            <a href="/pricing" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium">
-                Upgrade to add more
+            <a href="/pricing" style="background-color: #d97706; color: white;" class="px-4 py-2 rounded-lg hover:bg-amber-700 transition-colors text-sm font-medium">
+                <i class="fas fa-arrow-up mr-2"></i>
+                Update Plan
             </a>
+            
+            {{-- <a href="/pricing" class="bg-amber-600 text-white px-4 py-2 rounded-lg hover:bg-amber-700 transition-colors text-sm font-medium">
+                <i class="fas fa-arrow-up mr-2"></i>
+                Update Plan
+            </a> --}}
         </div>
     </div>
     @endif
@@ -77,10 +85,17 @@
                     Add Team Member
                 </x-button>
             @else
+                @if($allowedUsers)
+                <button disabled class="inline-flex items-center px-4 py-2 bg-gray-300 text-gray-500 rounded-lg cursor-not-allowed" title="You have reached your limit of {{ $allowedUsers }} users. Please upgrade your plan to add more team members.">
+                    <i class="fas fa-plus mr-2"></i>
+                    Add Team Member
+                </button>
+                @else
                 <button disabled class="inline-flex items-center px-4 py-2 bg-gray-300 text-gray-500 rounded-lg cursor-not-allowed" title="Upgrade to add more team members">
                     <i class="fas fa-plus mr-2"></i>
                     Add Team Member
                 </button>
+                @endif
             @endif
         </div>
     </div>

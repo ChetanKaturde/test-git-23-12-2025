@@ -110,12 +110,16 @@
                                     <p class="text-muted small mb-2">{{ $feature->description }}</p>
 
                                     <div class="feature-limits" style="display: {{ $isEnabled ? 'block' : 'none' }};">
-                                        <label class="form-label small">Quantity Limit (optional)</label>
-                                        <input type="number" class="form-control form-control-sm"
-                                               name="features[{{ $feature->id }}][quantity_limit]"
-                                               value="{{ $limit }}"
-                                               placeholder="Unlimited" min="0">
-                                        <small class="text-muted">Leave empty for unlimited usage</small>
+                                        @if($feature->key === 'team_management')
+                                            <small class="text-muted">Allowed range: {{ $plan->min_users }} – {{ $plan->max_users }} users</small>
+                                        @elseif($feature->is_quantity_based)
+                                            <label class="form-label small">Quantity Limit (optional)</label>
+                                            <input type="number" class="form-control form-control-sm"
+                                                   name="features[{{ $feature->id }}][quantity_limit]"
+                                                   value="{{ $limit }}"
+                                                   placeholder="No limit" min="0">
+                                            <small class="text-muted">Leave empty for unlimited usage</small>
+                                        @endif
                                     </div>
                                 </div>
                             </div>
@@ -139,10 +143,12 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.feature-checkbox').forEach(function(checkbox) {
         checkbox.addEventListener('change', function() {
             const limitsDiv = this.closest('.card-body').querySelector('.feature-limits');
-            if (this.checked) {
-                limitsDiv.style.display = 'block';
-            } else {
-                limitsDiv.style.display = 'none';
+            if (limitsDiv) {
+                if (this.checked) {
+                    limitsDiv.style.display = 'block';
+                } else {
+                    limitsDiv.style.display = 'none';
+                }
             }
         });
     });

@@ -97,7 +97,11 @@
                                             @endif
                                         </div>
                                         <p class="text-muted small mb-2">{{ $planFeature->feature->description }}</p>
-                                        @if($planFeature->enabled && $planFeature->quantity_limit)
+                                        @if($planFeature->feature->key === 'team_management' && $planFeature->enabled)
+                                            <div class="alert alert-info py-1 px-2 small">
+                                                <strong>Allowed range:</strong> {{ $plan->min_users }} – {{ $plan->max_users }} users
+                                            </div>
+                                        @elseif($planFeature->enabled && $planFeature->quantity_limit)
                                             <div class="alert alert-info py-1 px-2 small">
                                                 <strong>Limit:</strong> {{ $planFeature->quantity_limit }} per month
                                             </div>

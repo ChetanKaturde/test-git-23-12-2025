@@ -56,10 +56,29 @@ class TeamController extends Controller
         
         $business = Auth::user()->business;
         
-        // Check Free Plan limits
-        if (!$business->canInviteUser()) {
-            Log::info('Free user hit team member limit', ['business_id' => $business->id]);
-            return response()->json(['message' => 'Free Plan allows only 2 team members. Please upgrade to invite more users.'], 400);
+        // 🔍 DEBUGGING: Log values for debugging
+        $currentUserCount = $business->users()->count();
+        $allowedUsers = $business->allowed_users;
+        
+        Log::info('[Team Member Limit] Checking user limit', [
+            'business_id' => $business->id,
+            'business_name' => $business->name,
+            'allowed_users' => $allowedUsers,
+            'current_user_count' => $currentUserCount,
+            'includes_owner' => true,
+        ]);
+        
+        // ✅ RULE 3 – HARD BACKEND BLOCK (MANDATORY)
+        // This check MUST execute BEFORE user creation and BEFORE validation passes
+        if ($allowedUsers && $currentUserCount >= $allowedUsers) {
+            Log::warning('[Team Member Limit] BLOCKED - limit reached', [
+                'business_id' => $business->id,
+                'business_name' => $business->name,
+                'allowed_users' => $allowedUsers,
+                'current_user_count' => $currentUserCount,
+            ]);
+            
+            abort(403, 'You have reached your team member limit.');
         }
 
         // Define allowed roles based on subscription tier
