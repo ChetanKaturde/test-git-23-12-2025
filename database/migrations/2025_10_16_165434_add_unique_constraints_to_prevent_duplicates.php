@@ -51,20 +51,28 @@ return new class extends Migration
     public function down()
     {
         Schema::table('vendors', function (Blueprint $table) {
-            $table->dropUnique('vendors_phone_business_unique');
-            $table->dropUnique('vendors_account_business_unique');
+            try {
+                $table->dropUnique('vendors_phone_business_unique');
+            } catch (\Exception $e) {}
+            try {
+                $table->dropUnique('vendors_account_business_unique');
+            } catch (\Exception $e) {}
         });
 
         Schema::table('materials', function (Blueprint $table) {
-            $table->dropUnique('materials_name_business_unique');
-            $table->dropUnique('materials_code_business_unique');
-            $table->dropUnique('materials_sku_business_unique');
-            $table->dropUnique('materials_barcode_business_unique');
+            try {
+                $table->dropUnique('materials_name_business_unique');
+            } catch (\Exception $e) {}
+            try {
+                $table->dropUnique('materials_code_business_unique');
+            } catch (\Exception $e) {}
         });
 
         Schema::table('warehouses', function (Blueprint $table) {
             if (Schema::hasColumn('warehouses', 'business_id')) {
-                $table->dropUnique('warehouses_name_business_unique');
+                try {
+                    $table->dropUnique('warehouses_name_business_unique');
+                } catch (\Exception $e) {}
             }
         });
     }

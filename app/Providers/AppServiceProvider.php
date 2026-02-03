@@ -13,6 +13,8 @@ use App\Models\PurchaseOrder;
 use App\Models\Business;
 use App\Observers\PurchaseOrderObserver;
 use App\Observers\BusinessObserver;
+use Illuminate\Pagination\Paginator;
+
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -23,6 +25,8 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        Paginator::useBootstrapFive();
+
         // Force URL generation without port
         URL::forceRootUrl(config('app.url'));
         if (request()->isSecure()) {
@@ -90,42 +94,42 @@ class AppServiceProvider extends ServiceProvider
         });
 
         // 5. Share permission checking function globally
-      \Illuminate\Support\Facades\Blade::if('canAccess', function ($action, $module) {
-    $user = auth()->user();
+        \Illuminate\Support\Facades\Blade::if('canAccess', function ($action, $module) {
+            $user = auth()->user();
 
-    if (!$user) return false;
+            if (!$user) return false;
 
-    if (in_array($user->role, ['admin', 'super_admin'])) {
-        return true;
-    }
+            if (in_array($user->role, ['admin', 'super_admin'])) {
+                return true;
+            }
 
-    $moduleIds = [
-        'materials' => 4,
-        'vendors' => 5,
-        'warehouses' => 2,
-        'users' => 1,
-        'blocks' => 3,
-        'quality-analysis' => 6,
-        'purchase-orders' => 7,
-        'inventory' => 8,
-        'barcode' => 9,
-        'reports' => 10,
-    ];
+            $moduleIds = [
+                'materials' => 4,
+                'vendors' => 5,
+                'warehouses' => 2,
+                'users' => 1,
+                'blocks' => 3,
+                'quality-analysis' => 6,
+                'purchase-orders' => 7,
+                'inventory' => 8,
+                'barcode' => 9,
+                'reports' => 10,
+            ];
 
-    $validActions = ['view', 'edit', 'create', 'delete', 'assign'];
-    if (!in_array($action, $validActions)) return false;
+            $validActions = ['view', 'edit', 'create', 'delete', 'assign'];
+            if (!in_array($action, $validActions)) return false;
 
-    $moduleId = $moduleIds[$module] ?? null;
-    if (!$moduleId) return false;
+            $moduleId = $moduleIds[$module] ?? null;
+            if (!$moduleId) return false;
 
-    $permissionColumn = 'can_' . $action;
+            $permissionColumn = 'can_' . $action;
 
-    return \DB::table('permissions')
-        ->where('user_id', $user->id)
-        ->where('module_id', $moduleId)
-        ->where($permissionColumn, 1)
-        ->exists();
-});
+            return \DB::table('permissions')
+                ->where('user_id', $user->id)
+                ->where('module_id', $moduleId)
+                ->where($permissionColumn, 1)
+                ->exists();
+        });
 
     }
 

@@ -159,7 +159,14 @@ public function getDimensionsAttribute($value)
      */
     public static function findByBarcode($barcode)
     {
-        return static::where('barcode', $barcode)->first();
+        $businessId = auth()->check() ? auth()->user()->business_id : null;
+        $query = static::where('barcode', $barcode);
+        
+        if ($businessId) {
+            $query->where('business_id', $businessId);
+        }
+        
+        return $query->first();
     }
 
     /**
@@ -167,7 +174,14 @@ public function getDimensionsAttribute($value)
      */
     public static function findBySku($sku)
     {
-        return static::where('sku', $sku)->first();
+        $businessId = auth()->check() ? auth()->user()->business_id : null;
+        $query = static::where('sku', $sku);
+        
+        if ($businessId) {
+            $query->where('business_id', $businessId);
+        }
+        
+        return $query->first();
     }
 
     /**
@@ -203,17 +217,16 @@ public function getDimensionsAttribute($value)
             $nameCode = str_pad($nameCode, 3, 'X');
         }
 
-        // Include business_id in SKU for global uniqueness
         $businessId = $material->business_id ?? (auth()->check() ? auth()->user()->business_id : 1);
-        $baseSKU = $categoryCode . $nameCode . '-' . $businessId;
+        $baseSKU = $categoryCode . $nameCode;
 
-        // Generate unique number suffix with timestamp/random for extra uniqueness
+        // Generate unique number suffix within the business
         $counter = 1;
         $timestamp = now()->format('His'); // HHMMSS
 
         do {
             $sku = $baseSKU . '-' . $timestamp . str_pad($counter, 2, '0', STR_PAD_LEFT);
-            $exists = static::where('sku', $sku)->exists(); // Global uniqueness
+            $exists = static::where('sku', $sku)->where('business_id', $businessId)->exists(); // Business-scoped uniqueness
             $counter++;
         } while ($exists && $counter <= 99);
 
@@ -225,6 +238,8 @@ public function getDimensionsAttribute($value)
      */
     public static function generateBarcode(): string
     {
+        $businessId = auth()->check() ? auth()->user()->business_id : 1;
+        
         do {
             // Generate 12 digit number (EAN-13 without check digit)
             $barcode = '2' . str_pad(mt_rand(0, 99999999999), 11, '0', STR_PAD_LEFT);
@@ -233,7 +248,7 @@ public function getDimensionsAttribute($value)
             $checkDigit = static::calculateEAN13CheckDigit($barcode);
             $fullBarcode = $barcode . $checkDigit;
             
-            $exists = static::where('barcode', $fullBarcode)->exists();
+            $exists = static::where('barcode', $fullBarcode)->where('business_id', $businessId)->exists();
         } while ($exists);
         
         return $fullBarcode;
