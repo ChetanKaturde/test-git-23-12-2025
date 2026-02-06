@@ -23,7 +23,7 @@
                     <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
                     <span>{{ $expenses->count() }} Total</span>
                 </div>
-                @if(auth()->user()->hasPermission('add_expense'))
+                @if(auth()->user()->isAdmin() || auth()->user()->hasPermission('add_expense'))
                     <a href="{{ route('expenses.create') }}" class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
                         <i class="fas fa-plus w-4 h-4 mr-2"></i>
                         Add Expense
@@ -222,7 +222,7 @@
                                         <i class="fas fa-eye mr-1"></i>
                                         View
                                     </a>
-                                    @if(auth()->user()->hasPermission('add_expense') && (auth()->user()->hasPermission('view_expenses') || $expense->created_by === auth()->id()))
+                                    @if(auth()->user()->isAdmin() || (auth()->user()->hasPermission('add_expense') && (auth()->user()->hasPermission('view_expenses') || $expense->created_by === auth()->id())))
                                         <a href="{{ route('expenses.edit', $expense) }}"
                                             class="inline-flex items-center px-3 py-1.5 bg-yellow-100 text-yellow-700 rounded-lg hover:bg-yellow-200 transition-colors text-xs font-medium">
                                             <i class="fas fa-edit mr-1"></i>
@@ -261,7 +261,7 @@
                 <p class="text-gray-600 mb-6 max-w-md mx-auto">
                     Start tracking your business expenses by adding your first expense entry.
                 </p>
-                @if(auth()->user()->hasPermission('add_expense'))
+                @if(auth()->user()->isAdmin() || auth()->user()->hasPermission('add_expense'))
                     <a href="{{ route('expenses.create') }}"
                         class="inline-flex items-center px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
                         <i class="fas fa-plus mr-2"></i>

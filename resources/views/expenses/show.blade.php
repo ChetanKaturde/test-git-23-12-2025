@@ -20,11 +20,13 @@
                 </nav>
             </div>
             <div class="flex items-center space-x-3">
+                @if(auth()->user()->isAdmin() || (auth()->user()->hasPermission('add_expense') && (auth()->user()->hasPermission('view_expenses') || $expense->created_by === auth()->id())))
                 <a href="{{ route('expenses.edit', $expense) }}"
                    class="inline-flex items-center px-4 py-2 bg-yellow-100 text-yellow-700 rounded-lg hover:bg-yellow-200 transition-colors">
                     <i class="fas fa-edit mr-2"></i>
                     Edit
                 </a>
+                @endif
                 <a href="{{ route('expenses.index') }}"
                    class="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
                     <i class="fas fa-arrow-left mr-2"></i>
@@ -149,6 +151,7 @@
                     <h3 class="text-lg font-semibold text-gray-900">Actions</h3>
                 </div>
                 <div class="p-6 space-y-3">
+                    @if(auth()->user()->isAdmin() || (auth()->user()->hasPermission('add_expense') && (auth()->user()->hasPermission('view_expenses') || $expense->created_by === auth()->id())))
                     <a href="{{ route('expenses.edit', $expense) }}"
                        class="w-full inline-flex items-center justify-center px-4 py-2 bg-yellow-100 text-yellow-700 rounded-lg hover:bg-yellow-200 transition-colors">
                         <i class="fas fa-edit mr-2"></i>
@@ -164,6 +167,7 @@
                             Delete Expense
                         </button>
                     </form>
+                    @endif
                 </div>
             </div>
         </div>

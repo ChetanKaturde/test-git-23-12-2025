@@ -71,22 +71,22 @@ class CheckModulePermission
     {
         $mappings = [
             'quotations' => [
-                'view' => 'view_quotation',
-                'create' => 'create_quotation',
-                'edit' => 'edit_quotation',
-                'delete' => 'delete_quotation'
+                'view' => 'create_quote', // Any quotation permission allows view
+                'create' => 'create_quote',
+                'edit' => 'edit_quote',
+                'delete' => 'delete_quote'
             ],
             'customers' => [
-                'view' => 'view_customer',
-                'create' => 'create_customer',
-                'edit' => 'edit_customer',
-                'delete' => 'delete_customer'
+                'view' => 'add_customer',
+                'create' => 'add_customer',
+                'edit' => 'add_customer',
+                'delete' => 'add_customer'
             ],
             'materials' => [
-                'view' => 'view_material',
-                'create' => 'create_material',
-                'edit' => 'edit_material',
-                'delete' => 'delete_material'
+                'view' => 'manage_commodity',
+                'create' => 'manage_commodity',
+                'edit' => 'manage_commodity',
+                'delete' => 'manage_commodity'
             ],
             'vendors' => [
                 'view' => 'view_vendor',
@@ -119,7 +119,7 @@ class CheckModulePermission
                 'delete' => 'delete_inventory'
             ],
             'reports' => [
-                'view' => 'view_report'
+                'view' => 'view_reports'
             ]
         ];
 

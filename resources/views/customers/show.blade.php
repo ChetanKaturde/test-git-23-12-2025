@@ -326,7 +326,7 @@
                 @endif
                 
                 <!-- Contact Persons -->
-                @if($customer->contacts->count() > 0)
+                {{-- @if($customer->contacts->count() > 0)
                     <div class="mt-8 pt-6 border-t border-gray-200">
                         <div class="flex items-center justify-between mb-4">
                             <h4 class="text-sm font-semibold text-gray-900 flex items-center">
@@ -389,7 +389,9 @@
                             <p class="text-sm">No contact persons added yet</p>
                         </div>
                     </div>
-                @endif
+                @endif --}}
+
+
             </div>
         </div>
         
@@ -412,13 +414,13 @@
                         <i class="fas fa-file-invoice mr-2"></i>
                         Create Invoice
                     </a> --}}
-                    @if(auth()->user()->business->subscription_tier === 'full_erp')
+                    {{-- @if(auth()->user()->business->subscription_tier === 'full_erp')
                     <a href="{{ route('work-orders.create') }}?customer_id={{ $customer->id }}" 
                        class="w-full inline-flex items-center justify-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">
                         <i class="fas fa-clipboard-list mr-2"></i>
                         New Work Order
                     </a>
-                    @endif
+                    @endif --}}
                 </div>
             </div>
             

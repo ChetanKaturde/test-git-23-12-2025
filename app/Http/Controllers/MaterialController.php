@@ -15,6 +15,16 @@ class MaterialController extends Controller
   
     public function index()
     {
+        // Check permission - admin bypass or manage_commodity permission
+        if (!auth()->user()->isAdmin() && !auth()->user()->hasPermission('manage_commodity')) {
+            \Log::warning('Materials index access denied', [
+                'user_id' => auth()->id(),
+                'user_email' => auth()->user()->email,
+                'permissions' => auth()->user()->getPermissions(),
+            ]);
+            abort(403, 'You do not have permission to view commodities.');
+        }
+
         $materials = Material::where('business_id', auth()->user()->business_id)
             ->with('inventoryBatches')
             ->orderByDesc('created_at')->paginate(10);
@@ -115,11 +125,16 @@ class MaterialController extends Controller
      */
     public function create()
     {
-        // Ensure user is authenticated
-        if (!auth()->check()) {
-            return redirect()->route('login');
+        // Check permission
+        if (!auth()->user()->isAdmin() && !auth()->user()->hasPermission('manage_commodity')) {
+            \Log::warning('Materials create access denied', [
+                'user_id' => auth()->id(),
+                'user_email' => auth()->user()->email,
+                'permissions' => auth()->user()->getPermissions(),
+            ]);
+            abort(403, 'You do not have permission to create commodities.');
         }
-        
+
         return view('materials.create');
     }
 
@@ -128,6 +143,11 @@ class MaterialController extends Controller
      */
     public function store(Request $request)
     {
+        // Check permission
+        if (!auth()->user()->isAdmin() && !auth()->user()->hasPermission('manage_commodity')) {
+            abort(403, 'You do not have permission to create commodities.');
+        }
+
         try {
             $validatedData = $this->validateMaterial($request);
 
@@ -180,11 +200,31 @@ class MaterialController extends Controller
      */
     public function edit(Material $material)
     {
+        // Check permission
+        if (!auth()->user()->isAdmin() && !auth()->user()->hasPermission('manage_commodity')) {
+            \Log::warning('Materials edit access denied', [
+                'user_id' => auth()->id(),
+                'user_email' => auth()->user()->email,
+                'permissions' => auth()->user()->getPermissions(),
+            ]);
+            abort(403, 'You do not have permission to edit commodities.');
+        }
+
         return view('materials.edit', compact('material'));
     }
 
 public function update(Request $request, Material $material)
 {
+    // Check permission
+    if (!auth()->user()->isAdmin() && !auth()->user()->hasPermission('manage_commodity')) {
+        \Log::warning('Materials update access denied', [
+            'user_id' => auth()->id(),
+            'user_email' => auth()->user()->email,
+            'permissions' => auth()->user()->getPermissions(),
+        ]);
+        abort(403, 'You do not have permission to edit commodities.');
+    }
+
     $validatedData = $this->validateMaterial($request, $material->id);
 
     // Conditionally regenerate SKU and barcode
@@ -211,6 +251,16 @@ public function update(Request $request, Material $material)
      */
     public function destroy(Material $material)
     {
+        // Check permission
+        if (!auth()->user()->isAdmin() && !auth()->user()->hasPermission('manage_commodity')) {
+            \Log::warning('Materials destroy access denied', [
+                'user_id' => auth()->id(),
+                'user_email' => auth()->user()->email,
+                'permissions' => auth()->user()->getPermissions(),
+            ]);
+            abort(403, 'You do not have permission to delete commodities.');
+        }
+
         try {
             DB::beginTransaction();
             

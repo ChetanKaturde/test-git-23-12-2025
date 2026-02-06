@@ -106,18 +106,31 @@ class Business extends Model
     }
 
     /**
-     * ✅ NEW: Check if business has a specific feature enabled
+     * ✅ FIXED: Check if business has a specific feature enabled
      * This method is required by User::businessHasFeature()
      */
     public function hasFeature($featureName)
     {
+        // First check if there's an active subscription
         $subscription = $this->subscriptions()->active()->first();
         
-        if (!$subscription) {
-            return false;
+        if ($subscription) {
+            return $subscription->isFeatureEnabled($featureName);
         }
-
-        return $subscription->isFeatureEnabled($featureName);
+        
+        // Fallback: Check subscription_tier for basic feature access
+        if ($this->subscription_tier) {
+            $tierFeatures = match ($this->subscription_tier) {
+                'billing_sales' => ['quotation_management', 'invoice_management', 'customer_management'],
+                'full_erp' => ['quotation_management', 'invoice_management', 'customer_management', 'inventory_management', 'purchase_order_management', 'vendor_management', 'machine_management', 'work_order_management'],
+                default => ['quotation_management', 'invoice_management', 'customer_management', 'inventory_management', 'purchase_order_management', 'vendor_management', 'machine_management', 'work_order_management'],
+            };
+            
+            return in_array($featureName, $tierFeatures);
+        }
+        
+        // Default: no features available
+        return false;
     }
 
     // Free Plan Limits

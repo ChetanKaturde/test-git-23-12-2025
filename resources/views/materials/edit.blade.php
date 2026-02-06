@@ -10,7 +10,7 @@
     @include('materials.partials.form', ['material' => $material])
 </form>
 
-@if(auth()->user()->business->subscription_tier !== 'billing_sales')
+{{-- @if(auth()->user()->business->subscription_tier !== 'billing_sales')
 <!-- Vendor Linkage Section -->
 <div class="card mt-4">
     <div class="card-header">
@@ -27,7 +27,7 @@
         </div>
     </div>
 </div>
-@endif
+@endif --}}
 
         </div>
     </div>

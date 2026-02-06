@@ -12,6 +12,11 @@ class CustomerController extends Controller
 {
     public function index()
     {
+        // Check permission
+        if (!auth()->user()->isAdmin() && !auth()->user()->hasPermission('add_customer')) {
+            abort(403, 'You do not have permission to view customers.');
+        }
+
         $customers = Customer::where('business_id', auth()->user()->business_id)
             ->latest()
             ->paginate(15);
@@ -21,6 +26,11 @@ class CustomerController extends Controller
 
     public function create()
     {
+        // Check permission
+        if (!auth()->user()->isAdmin() && !auth()->user()->hasPermission('add_customer')) {
+            abort(403, 'You do not have permission to create customers.');
+        }
+
         // Check if customer feature is enabled
         if (auth()->user()->currentSubscription() && !auth()->user()->currentSubscription()->isFeatureEnabled('customer_management')) {
             return redirect()->route('customers.index')->with('error', 'Customer management feature is not enabled in your current plan. Please upgrade your plan.');
@@ -36,6 +46,11 @@ class CustomerController extends Controller
 
     public function store(Request $request)
     {
+        // Check permission
+        if (!auth()->user()->isAdmin() && !auth()->user()->hasPermission('add_customer')) {
+            abort(403, 'You do not have permission to create customers.');
+        }
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'nullable|email|max:255|unique:customers,email,NULL,id,business_id,' . auth()->user()->business_id,

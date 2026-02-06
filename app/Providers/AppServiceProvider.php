@@ -42,39 +42,16 @@ class AppServiceProvider extends ServiceProvider
             $view->with('allWarehouses', Warehouse::all());
         });
 
-        // 3. Share navigation items dynamically based on permissions
+        // 3. Share sidebar permissions dynamically based on specific permissions
         View::composer('*', function ($view) {
             $user = Auth::user();
-            $navigationItems = [];
+            $sidebarPermissions = [];
 
             if ($user) {
-                try {
-                    $modules = Module::where('is_active', 1)->get();
-                    foreach ($modules as $module) {
-                        $permission = $this->getPermissionFromRoute($module->route);
-                        if ($this->userHasPermission($user, $permission)) {
-                            $navigationItems[$permission] = [
-                                'title' => $module->name,
-                                'route' => $module->route,
-                                'icon' => $module->icon,
-                                'section' => $this->getSectionName($module->route),
-                            ];
-                        }
-                    }
-                } catch (\Exception $e) {
-                    // Modules table doesn't exist, use default navigation
-                }
-
-                // Always show dashboard
-                $navigationItems['dashboard'] = [
-                    'title' => 'Dashboard',
-                    'route' => 'dashboard',
-                    'icon' => 'fas fa-tachometer-alt',
-                    'section' => 'Home',
-                ];
+                $sidebarPermissions = $this->getSidebarPermissions($user);
             }
 
-            $view->with('navigationItems', $navigationItems);
+            $view->with('sidebarPermissions', $sidebarPermissions);
         });
 
         // 4. Share allowed modules based on subscription tier
@@ -133,37 +110,83 @@ class AppServiceProvider extends ServiceProvider
 
     }
 
-    private function userHasPermission($user, $permission): bool
+    /**
+     * Get sidebar permissions for a user based on specific permission requirements
+     */
+    private function getSidebarPermissions($user): array
     {
-        if (in_array($user->role, ['admin', 'super_admin'])) {
-            return true;
+        // Initialize all permission keys to false to prevent undefined array key errors
+        $permissions = [
+            'dashboard' => true, // Dashboard is always visible
+            'customers' => false,
+            'commodities' => false,
+            'quotations' => false,
+            'invoices' => false,
+            'expenses' => false,
+            'record_payment' => false,
+            'payment_receipts' => false,
+            'reports' => false,
+            'team' => false,
+        ];
+
+        // Admin bypasses all permission checks
+        if ($user->isAdmin()) {
+            $permissions = [
+                'dashboard' => true,
+                'customers' => true,
+                'commodities' => true,
+                'quotations' => true,
+                'invoices' => true,
+                'expenses' => true,
+                'record_payment' => true,
+                'payment_receipts' => true,
+                'reports' => true,
+                'team' => true,
+            ];
+        } else {
+            // Map specific permissions to sidebar options
+            $permissionMap = [
+                'customers' => 'add_customer',
+                'commodities' => 'manage_commodity',
+                'quotations' => ['create_quote', 'edit_quote', 'convert_quote_to_invoice'],
+                'invoices' => 'manage_invoices',
+                'expenses' => ['add_expense', 'view_expenses'],
+                'record_payment' => 'manage_invoices', // Payment recording requires invoice management
+                'payment_receipts' => 'view_payment_receipts',
+                'reports' => 'view_reports',
+                'team' => 'manage_team',
+            ];
+
+            foreach ($permissionMap as $sidebarOption => $requiredPermissions) {
+                $requiredPermissions = (array) $requiredPermissions;
+                
+                // Check if user has ANY of the required permissions
+                foreach ($requiredPermissions as $permission) {
+                    if ($user->hasPermission($permission)) {
+                        $permissions[$sidebarOption] = true;
+                        break;
+                    }
+                }
+            }
         }
 
-        $hasAnyPermissions = DB::table('permissions')
-            ->where('user_id', $user->id)
-            ->exists();
+        // Compute dropdown visibility using OR logic across ALL child permissions
+        $permissions['sales_billing_dropdown'] = 
+            $permissions['customers'] || 
+            $permissions['commodities'] || 
+            $permissions['quotations'] || 
+            $permissions['invoices'];
+            
+        $permissions['accounts_dropdown'] = 
+            $permissions['expenses'] || 
+            $permissions['record_payment'] || 
+            $permissions['payment_receipts'];
+            
+        $permissions['management_dropdown'] = 
+            $permissions['team'] || 
+            $permissions['reports'];
 
-        if (!$hasAnyPermissions) {
-            return false;
-        }
-
-        $module = Module::where('route', 'dashboard.' . $permission)
-            ->orWhere('route', $permission)
-            ->first();
-
-        if (!$module) {
-            return false;
-        }
-
-        return $user->hasModulePermission($module->id, 'view');
-    }
-
-    private function getPermissionFromRoute(?string $route): string
-    {
-        if ($route === null) {
-            return '';
-        }
-        return str_replace(['dashboard.', '.index'], '', $route);
+        return $permissions;
     }
 
     private function getSectionName(?string $route): string

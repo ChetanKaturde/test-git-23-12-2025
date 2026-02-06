@@ -71,24 +71,15 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/api/dashboard/realtime', [DashboardController::class, 'getRealtimeData'])->name('dashboard.realtime');
     
-    // Materials - temporarily without middleware for testing
+    // Materials - with flexible permission checks
     Route::get('materials', [MaterialController::class, 'index'])->name('materials.index');
-    Route::get('materials/create', function() {
-        if (!auth()->check()) {
-            return redirect()->route('login');
-        }
-        return view('materials.create');
-    })->name('materials.create');
+    Route::get('materials/create', [MaterialController::class, 'create'])->name('materials.create');
     Route::post('materials', [MaterialController::class, 'store'])->name('materials.store');
     Route::get('materials/{material}', [MaterialController::class, 'show'])->name('materials.show');
-    Route::middleware('module.permission:materials,edit')->group(function () {
-        Route::get('materials/{material}/edit', [MaterialController::class, 'edit'])->name('materials.edit');
-        Route::put('materials/{material}', [MaterialController::class, 'update'])->name('materials.update');
-        Route::patch('materials/{material}', [MaterialController::class, 'update']);
-    });
-    Route::middleware('module.permission:materials,delete')->group(function () {
-        Route::delete('materials/{material}', [MaterialController::class, 'destroy'])->name('materials.destroy');
-    });
+    Route::get('materials/{material}/edit', [MaterialController::class, 'edit'])->name('materials.edit');
+    Route::put('materials/{material}', [MaterialController::class, 'update'])->name('materials.update');
+    Route::patch('materials/{material}', [MaterialController::class, 'update']);
+    Route::delete('materials/{material}', [MaterialController::class, 'destroy'])->name('materials.destroy');
     
     // Vendors - with module permission
     Route::middleware('module.permission:vendors,view')->group(function () {
@@ -228,10 +219,24 @@ Route::middleware('auth')->group(function () {
     Route::get('/reports/expenses', [\App\Http\Controllers\ReportsController::class, 'expenses'])->name('reports.expenses');
     Route::get('/reports/profit-loss', [\App\Http\Controllers\ReportsController::class, 'profitLoss'])->name('reports.profit-loss');
     
-    // Quotations - permissions handled in controller
+    // Quotations - with flexible permission checks
     Route::middleware('auth')->group(function () {
-        Route::resource('quotations', \App\Http\Controllers\QuotationController::class)->only(['index', 'create', 'store', 'show', 'edit', 'update']);
+        // Index route - accessible if user has ANY quotation permission
+        Route::get('quotations', [\App\Http\Controllers\QuotationController::class, 'index'])->name('quotations.index');
+        
+        // Create routes - require create permission
+        Route::get('quotations/create', [\App\Http\Controllers\QuotationController::class, 'create'])->name('quotations.create');
+        Route::post('quotations', [\App\Http\Controllers\QuotationController::class, 'store'])->name('quotations.store');
+        
+        // Show and PDF - accessible if user has ANY quotation permission
+        Route::get('quotations/{quotation}', [\App\Http\Controllers\QuotationController::class, 'show'])->name('quotations.show');
         Route::get('quotations/{quotation}/pdf', [\App\Http\Controllers\QuotationController::class, 'pdf'])->name('quotations.pdf');
+        
+        // Edit routes - require edit permission
+        Route::get('quotations/{quotation}/edit', [\App\Http\Controllers\QuotationController::class, 'edit'])->name('quotations.edit');
+        Route::put('quotations/{quotation}', [\App\Http\Controllers\QuotationController::class, 'update'])->name('quotations.update');
+        
+        // Convert and mark as sent - require convert permission
         Route::post('quotations/{quotation}/convert-to-invoice', [\App\Http\Controllers\QuotationController::class, 'convertToInvoice'])->name('quotations.convert');
         Route::post('quotations/{quotation}/mark-as-sent', [\App\Http\Controllers\QuotationController::class, 'markAsSent'])->name('quotations.mark-sent');
     });

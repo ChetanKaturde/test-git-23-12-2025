@@ -23,7 +23,7 @@
                     <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
                     <span>{{ $quotations->count() }} Total</span>
                 </div>
-                @if(auth()->user()->isAdmin() || auth()->user()->hasPermission('create_quotation'))
+                @if(auth()->user()->isAdmin() || auth()->user()->hasPermission('create_quote'))
                     <a href="{{ route('quotations.create') }}" class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
                         <i class="fas fa-plus w-5 h-5 mr-2"></i>
                         New Quotation
@@ -206,14 +206,14 @@
                                             <i class="fas fa-eye w-4 h-4 mr-1"></i>
                                             View
                                         </a>
-                                        @if($quotation->status !== 'converted' && (auth()->user()->isAdmin() || auth()->user()->hasPermission('edit_quotation')))
+                                        @if($quotation->status !== 'converted' && (auth()->user()->isAdmin() || auth()->user()->hasPermission('edit_quote')))
                                             <a href="{{ route('quotations.edit', $quotation) }}"
                                                class="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 focus:ring-2 focus:ring-offset-2 focus:ring-blue-300 transition-colors">
                                                 <i class="fas fa-edit w-4 h-4 mr-1"></i>
                                                 Edit
                                             </a>
                                         @endif
-                                        @if($quotation->status !== 'converted')
+                                        @if($quotation->status !== 'converted' && (auth()->user()->isAdmin() || auth()->user()->hasPermission('convert_quote_to_invoice')))
                                             <form action="{{ route('quotations.convert', $quotation) }}" method="POST" class="inline">
                                                 @csrf
                                                 <button type="submit"
@@ -244,7 +244,7 @@
                     Start creating professional quotations for your customers. Track proposals and convert them to invoices seamlessly.
                 </p>
                 <div class="flex flex-col sm:flex-row gap-3 justify-center">
-                    @if(auth()->user()->isAdmin() || auth()->user()->hasPermission('create_quotation'))
+                    @if(auth()->user()->isAdmin() || auth()->user()->hasPermission('create_quote'))
                         <a href="{{ route('quotations.create') }}"
                            class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
                             <i class="fas fa-plus w-5 h-5 mr-2"></i>

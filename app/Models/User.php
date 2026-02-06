@@ -517,7 +517,7 @@ public function canEditModule($moduleName)
             return true;
         }
 
-        $quotationPermissions = ['view_quotation', 'create_quotation', 'edit_quotation', 'delete_quotation', 'create_quote', 'edit_quote'];
+        $quotationPermissions = ['create_quote', 'edit_quote', 'convert_quote_to_invoice'];
         $permissions = $this->permissions ?? [];
         return !empty(array_intersect($quotationPermissions, $permissions));
     }

@@ -43,6 +43,11 @@ class PaymentController extends Controller
 
     public function record()
     {
+        // Check permission for recording payments
+        if (!auth()->user()->isAdmin() && !auth()->user()->hasPermission('manage_invoices')) {
+            abort(403, 'You do not have permission to record payments.');
+        }
+
         $businessId = auth()->user()->business_id;
         $invoices = Invoice::where('business_id', $businessId)
             ->where('status', '!=', 'paid')
@@ -55,6 +60,11 @@ class PaymentController extends Controller
 
     public function store(Request $request)
     {
+        // Check permission for recording payments
+        if (!auth()->user()->isAdmin() && !auth()->user()->hasPermission('manage_invoices')) {
+            abort(403, 'You do not have permission to record payments.');
+        }
+
         $request->validate([
             'invoice_id' => 'required|exists:invoices,id',
             'amount' => 'required|numeric|min:0.01',

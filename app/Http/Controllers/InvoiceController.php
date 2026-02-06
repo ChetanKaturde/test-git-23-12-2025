@@ -16,6 +16,18 @@ class InvoiceController extends Controller
     {
         $this->middleware('auth');
         $this->middleware(function ($request, $next) {
+            // Admin bypass
+            if (auth()->user()->isAdmin()) {
+                return $next($request);
+            }
+            
+            // Allow if user has invoice management OR conversion permission
+            if (auth()->user()->hasPermission('manage_invoices') || 
+                auth()->user()->hasPermission('convert_quote_to_invoice')) {
+                return $next($request);
+            }
+            
+            // Check subscription for other cases
             if (!auth()->user()->currentSubscription() || !auth()->user()->currentSubscription()->isFeatureEnabled('invoice_management')) {
                 abort(403, 'Invoice management feature is not enabled for your subscription plan.');
             }
@@ -25,6 +37,13 @@ class InvoiceController extends Controller
 
     public function index()
     {
+        // Check permission - allow if user has manage_invoices OR convert_quote_to_invoice
+        if (!auth()->user()->isAdmin() && 
+            !auth()->user()->hasPermission('manage_invoices') && 
+            !auth()->user()->hasPermission('convert_quote_to_invoice')) {
+            abort(403, 'You do not have permission to view invoices.');
+        }
+
         try {
             $businessId = auth()->user()->business_id;
             $invoices = Invoice::where('business_id', $businessId)->latest()->get();
@@ -38,6 +57,11 @@ class InvoiceController extends Controller
 
     public function create()
     {
+        // Check permission
+        if (!auth()->user()->isAdmin() && !auth()->user()->hasPermission('manage_invoices')) {
+            abort(403, 'You do not have permission to create invoices.');
+        }
+
         $business = auth()->user()->business;
 
         // Check Free Plan limits
@@ -60,6 +84,11 @@ class InvoiceController extends Controller
 
     public function store(Request $request)
     {
+        // Check permission
+        if (!auth()->user()->isAdmin() && !auth()->user()->hasPermission('manage_invoices')) {
+            abort(403, 'You do not have permission to create invoices.');
+        }
+
         try {
             $business = auth()->user()->business;
 

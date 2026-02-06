@@ -63,7 +63,7 @@
                 </nav>
             </div>
             <div>
-                @if(auth()->user()->canCreateInModule('materials'))
+                @if(auth()->user()->isAdmin() || auth()->user()->hasPermission('manage_commodity'))
                     <a href="{{ route('materials.create') }}" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition inline-flex items-center">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
@@ -149,12 +149,12 @@
                                 <a href="{{ route('materials.show', $material) }}" class="text-blue-600 hover:text-blue-900">
                                     <i class="fas fa-eye"></i>
                                 </a>
-                                @if(auth()->user()->canEditInModule('materials'))
+                                @if(auth()->user()->isAdmin() || auth()->user()->hasPermission('manage_commodity'))
                                     <a href="{{ route('materials.edit', $material) }}" class="text-yellow-600 hover:text-yellow-900">
                                         <i class="fas fa-edit"></i>
                                     </a>
                                 @endif
-                                @if(auth()->user()->canDeleteInModule('materials'))
+                                @if(auth()->user()->isAdmin() || auth()->user()->hasPermission('manage_commodity'))
                                     <form action="{{ route('materials.destroy', $material) }}" method="POST" class="inline">
                                         @csrf
                                         @method('DELETE')
@@ -180,7 +180,7 @@
                 </div>
                 <h3 class="text-lg font-medium text-gray-900 mb-2">No commodities yet</h3>
                 <p class="text-gray-500 mb-6">Get started by adding your first commodity to the inventory.</p>
-                @if(auth()->user()->canCreateInModule('materials'))
+                @if(auth()->user()->isAdmin() || auth()->user()->hasPermission('manage_commodity'))
                     <a href="{{ route('materials.create') }}" 
                        class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg inline-flex items-center space-x-2">
                         <i class="fas fa-plus"></i>
