@@ -45,6 +45,13 @@ class QuotationController extends Controller
             abort(403, 'You do not have permission to create quotations.');
         }
 
+        // Check if business has state configured
+        $business = auth()->user()->business;
+        if (!$business->business_state) {
+            return redirect()->route('business.profile')
+                ->with('error', 'Please complete your business state details to apply GST correctly.');
+        }
+
         // Check feature limits
         if (auth()->user()->currentSubscription() && !auth()->user()->currentSubscription()->canUseFeature('quotation_management', 1)) {
             return redirect()->route('quotations.index')->with('error', 'You have reached your quotation limit. Please upgrade your plan to create more quotations.');
@@ -248,18 +255,24 @@ class QuotationController extends Controller
             'items.*.material_id' => 'required|exists:materials,id',
             'items.*.description' => 'required|string',
             'items.*.quantity' => 'required|numeric|min:0.01',
+            'items.*.unit' => 'required|string',
             'items.*.unit_price' => 'required|numeric|min:0',
+            'items.*.discount_percentage' => 'nullable|numeric|min:0|max:100',
             'items.*.tax_rate' => 'required|numeric|min:0|max:100',
         ]);
 
         DB::transaction(function () use ($validated, $quotation) {
             $subtotal = 0;
+            $totalDiscount = 0;
             $totalTax = 0;
 
             foreach ($validated['items'] as $item) {
                 $itemSubtotal = $item['quantity'] * $item['unit_price'];
-                $itemTax = ($itemSubtotal * $item['tax_rate']) / 100;
+                $itemDiscount = ($itemSubtotal * ($item['discount_percentage'] ?? 0)) / 100;
+                $taxableAmount = $itemSubtotal - $itemDiscount;
+                $itemTax = ($taxableAmount * $item['tax_rate']) / 100;
                 $subtotal += $itemSubtotal;
+                $totalDiscount += $itemDiscount;
                 $totalTax += $itemTax;
             }
 
@@ -268,8 +281,9 @@ class QuotationController extends Controller
                 'valid_until' => $validated['valid_until'],
                 'notes' => $validated['notes'],
                 'subtotal' => $subtotal,
+                'discount_amount' => $totalDiscount,
                 'tax_amount' => $totalTax,
-                'total' => $subtotal + $totalTax,
+                'total' => $subtotal - $totalDiscount + $totalTax,
             ];
 
             if ($quotation->isSent()) {
@@ -283,16 +297,21 @@ class QuotationController extends Controller
 
             foreach ($validated['items'] as $item) {
                 $itemSubtotal = $item['quantity'] * $item['unit_price'];
-                $itemTax = ($itemSubtotal * $item['tax_rate']) / 100;
+                $itemDiscount = ($itemSubtotal * ($item['discount_percentage'] ?? 0)) / 100;
+                $taxableAmount = $itemSubtotal - $itemDiscount;
+                $itemTax = ($taxableAmount * $item['tax_rate']) / 100;
                 
                 $quotation->items()->create([
                     'material_id' => $item['material_id'],
                     'description' => $item['description'],
                     'quantity' => $item['quantity'],
+                    'unit' => $item['unit'],
                     'unit_price' => $item['unit_price'],
+                    'discount_percentage' => $item['discount_percentage'] ?? 0,
+                    'discount_amount' => $itemDiscount,
                     'tax_rate' => $item['tax_rate'],
                     'tax_amount' => $itemTax,
-                    'total' => $itemSubtotal + $itemTax,
+                    'total' => $taxableAmount + $itemTax,
                 ]);
             }
         });
@@ -337,6 +356,8 @@ class QuotationController extends Controller
                     'customer_email' => $quotation->customer->email ?? '',
                     'customer_phone' => $quotation->customer->phone ?? '',
                     'customer_address' => $quotation->customer->address ?? '',
+                    'customer_city' => $quotation->customer->city ?? '',
+                    'customer_state' => $quotation->customer->state ?? '',
                     'customer_gstin' => $quotation->customer->gstin ?? '',
                     'subtotal' => $quotation->subtotal,
                     'tax_amount' => $quotation->tax_amount,
@@ -350,6 +371,7 @@ class QuotationController extends Controller
                 foreach ($quotation->items as $item) {
                     InvoiceItem::create([
                         'invoice_id' => $invoice->id,
+                        'material_id' => $item->material_id,
                         'description' => $item->description,
                         'quantity' => $item->quantity,
                         'unit' => $item->unit ?? 'pcs',

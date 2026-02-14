@@ -319,7 +319,7 @@
                             <strong>Legal Name:</strong> {{ $business->legal_name }}<br>
                         @endif
                         {{ $business->address ?? 'Business Address' }}<br>
-                        {{ $business->city ?? 'City' }}, {{ $business->state ?? 'State' }} {{-- $business->pin_code ?? '000000' --}}<br>
+                        {{ $business->business_city ?? 'City' }}, {{ $business->business_state ?? 'State' }} {{-- $business->pin_code ?? '000000' --}}<br>
                         @if($business->phone)
                             Phone: {{ $business->phone }}<br>
                         @endif
@@ -369,6 +369,9 @@
                     @if($customer->address)
                         <p>{{ $customer->address }}</p>
                     @endif
+                    @if($customer->city || $customer->state)
+                        <p>{{ $customer->city }}{{ $customer->city && $customer->state ? ', ' : '' }}{{ $customer->state }}</p>
+                    @endif
                     @if($customer->phone)
                         <p><strong>Phone:</strong> {{ $customer->phone }}</p>
                     @endif
@@ -392,17 +395,36 @@
                         <th style="width: 40%;">Description</th>
                         <th style="width: 10%;" class="text-center">Qty</th>
                         <th style="width: 15%;" class="text-right">Rate</th>
-                        <th style="width: 10%;" class="text-center">Tax</th>
+                        @if(isset($gst_breakdown) && $gst_breakdown['type'] === 'intra_state')
+                        <th style="width: 8%;" class="text-center">CGST %</th>
+                        <th style="width: 8%;" class="text-center">SGST %</th>
+                        @elseif(isset($gst_breakdown) && $gst_breakdown['type'] === 'inter_state')
+                        <th style="width: 10%;" class="text-center">IGST %</th>
+                        @else
+                        <th style="width: 10%;" class="text-center">Tax %</th>
+                        @endif
                         <th style="width: 15%;" class="text-right">Amount</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach($items as $item)
                     <tr>
-                        <td><strong>{{ $item->description ?? 'Item' }}</strong></td>
+                        <td>
+                            <strong>{{ $item->material->name ?? 'Item' }}</strong>
+                            @if($item->description && $item->description !== ($item->material->name ?? ''))
+                            <br><small style="color: #6b7280;">{{ $item->description }}</small>
+                            @endif
+                        </td>
                         <td class="text-center">{{ $item->quantity ?? 1 }}</td>
                         <td class="text-right">{{ number_format($item->unit_price ?? 0, 2) }} Rs.</td>
+                        @if(isset($gst_breakdown) && $gst_breakdown['type'] === 'intra_state')
+                        <td class="text-center">{{ ($item->tax_rate ?? 0) / 2 }}%</td>
+                        <td class="text-center">{{ ($item->tax_rate ?? 0) / 2 }}%</td>
+                        @elseif(isset($gst_breakdown) && $gst_breakdown['type'] === 'inter_state')
                         <td class="text-center">{{ $item->tax_rate ?? 0 }}%</td>
+                        @else
+                        <td class="text-center">{{ $item->tax_rate ?? 0 }}%</td>
+                        @endif
                         <td class="text-right currency">{{ number_format($item->total_price ?? 0, 2) }} Rs.</td>
                     </tr>
                     @endforeach
@@ -418,7 +440,21 @@
                     <td class="summary-label">Subtotal:</td>
                     <td class="summary-value currency">{{ number_format($invoice->subtotal ?? $invoice->total_amount, 2) }} Rs.</td>
                 </tr>
-                @if($invoice->tax_amount > 0)
+                @if(isset($gst_breakdown) && $gst_breakdown['type'] === 'intra_state')
+                <tr>
+                    <td class="summary-label">CGST:</td>
+                    <td class="summary-value currency">{{ number_format($gst_breakdown['cgst'], 2) }} Rs.</td>
+                </tr>
+                <tr>
+                    <td class="summary-label">SGST:</td>
+                    <td class="summary-value currency">{{ number_format($gst_breakdown['sgst'], 2) }} Rs.</td>
+                </tr>
+                @elseif(isset($gst_breakdown) && $gst_breakdown['type'] === 'inter_state')
+                <tr>
+                    <td class="summary-label">IGST:</td>
+                    <td class="summary-value currency">{{ number_format($gst_breakdown['igst'], 2) }} Rs.</td>
+                </tr>
+                @elseif($invoice->tax_amount > 0)
                 <tr>
                     <td class="summary-label">Tax:</td>
                     <td class="summary-value currency">{{ number_format($invoice->tax_amount, 2) }} Rs.</td>

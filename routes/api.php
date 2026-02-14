@@ -41,3 +41,13 @@ Route::middleware('auth:sanctum')->group(function () {
     // Quotation API
     Route::middleware('web')->get('/quotations/{quotation}/items', [\App\Http\Controllers\QuotationController::class, 'getItems']);
 });
+
+// Public routes for registration
+Route::get('/cities/{stateName}', [\App\Http\Controllers\CustomerController::class, 'getCitiesByState']);
+Route::get('/validate-representative-id/{repId}', function($repId) {
+    $rep = \App\Models\SalesRepresentative::where('representative_id', $repId)->first();
+    if ($rep) {
+        return response()->json(['valid' => true, 'name' => $rep->name]);
+    }
+    return response()->json(['valid' => false, 'message' => 'Invalid representative ID']);
+});

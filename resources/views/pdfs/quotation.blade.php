@@ -358,7 +358,7 @@
                             <strong>Legal Name:</strong> {{ $business->legal_name }}<br>
                         @endif
                         {{ $business->address ?? 'Business Address' }}<br>
-                        {{ $business->city ?? 'City' }}, {{ $business->state ?? 'State' }} {{-- $business->pin_code ?? '000000' --}}<br>
+                        {{ $business->business_city ?? 'City' }}, {{ $business->business_state ?? 'State' }} {{-- $business->pin_code ?? '000000' --}}<br>
                         @if($business->phone)
                             Phone: {{ $business->phone }}<br>
                         @endif
@@ -411,7 +411,12 @@
                         <div class="customer-title">Quote For:</div>
                         <div class="customer-info">
                             <p><strong>{{ $customer->name ?? 'Sample Customer Pvt Ltd' }}</strong></p>
-                            <p>{{ $customer->address ?? 'Customer Address, City, State - PIN' }}</p>
+                            @if(isset($customer->address) && $customer->address)
+                                <p>{{ $customer->address }}</p>
+                            @endif
+                            @if((isset($customer->city) && $customer->city) || (isset($customer->state) && $customer->state))
+                                <p>{{ $customer->city ?? '' }}{{ (isset($customer->city) && $customer->city && isset($customer->state) && $customer->state) ? ', ' : '' }}{{ $customer->state ?? '' }}</p>
+                            @endif
                             @if(isset($customer->phone) && $customer->phone)
                                 <p><strong>Phone:</strong> {{ $customer->phone }}</p>
                             @endif
@@ -438,7 +443,14 @@
                         <th style="width: 8%;" class="text-center">Unit</th>
                         <th style="width: 12%;" class="text-right">Rate</th>
                         <th style="width: 8%;" class="text-center">Disc %</th>
-                        <th style="width: 12%;" class="text-right">Tax</th>
+                        @if(isset($gst_breakdown) && $gst_breakdown['type'] === 'intra_state')
+                        <th style="width: 8%;" class="text-center">CGST %</th>
+                        <th style="width: 8%;" class="text-center">SGST %</th>
+                        @elseif(isset($gst_breakdown) && $gst_breakdown['type'] === 'inter_state')
+                        <th style="width: 8%;" class="text-center">IGST %</th>
+                        @else
+                        <th style="width: 12%;" class="text-center">Tax %</th>
+                        @endif
                         <th style="width: 15%;" class="text-right">Amount</th>
                     </tr>
                 </thead>
@@ -446,12 +458,24 @@
                     @if(isset($items) && count($items) > 0)
                         @foreach($items as $item)
                         <tr>
-                            <td><strong>{{ $item->description ?? 'Sample Product/Service' }}</strong></td>
+                            <td>
+                                <strong>{{ $item->material->name ?? 'Item' }}</strong>
+                                @if($item->description && $item->description !== ($item->material->name ?? ''))
+                                <br><small style="color: #6b7280;">{{ $item->description }}</small>
+                                @endif
+                            </td>
                             <td class="text-center">{{ $item->quantity ?? 1 }}</td>
                             <td class="text-center">{{ ucfirst($item->unit ?? 'piece') }}</td>
                             <td class="text-right">{{ number_format($item->unit_price ?? 1000, 2) }} Rs.</td>
                             <td class="text-center">{{ $item->discount_percentage ?? 0 }}%</td>
-                            <td class="text-right">{{ $item->tax_rate ?? 18 }}%</td>
+                            @if(isset($gst_breakdown) && $gst_breakdown['type'] === 'intra_state')
+                            <td class="text-center">{{ ($item->tax_rate ?? 18) / 2 }}%</td>
+                            <td class="text-center">{{ ($item->tax_rate ?? 18) / 2 }}%</td>
+                            @elseif(isset($gst_breakdown) && $gst_breakdown['type'] === 'inter_state')
+                            <td class="text-center">{{ $item->tax_rate ?? 18 }}%</td>
+                            @else
+                            <td class="text-center">{{ $item->tax_rate ?? 18 }}%</td>
+                            @endif
                             <td class="text-right currency">{{ number_format($item->total ?? 1180, 2) }} Rs.</td>
                         </tr>
                         @endforeach
@@ -462,7 +486,7 @@
                             <td class="text-center">Piece</td>
                             <td class="text-right">5,000.00 Rs.</td>
                             <td class="text-center">0%</td>
-                            <td class="text-right">18%</td>
+                            <td class="text-center">18%</td>
                             <td class="text-right currency">10,000.00 Rs.</td>
                         </tr>
                     @endif
@@ -483,10 +507,26 @@
                     <td class="summary-value currency">-{{ number_format($quotation->discount_amount ?? 0, 2) }} Rs.</td>
                 </tr>
                 @endif
+                @if(isset($gst_breakdown) && $gst_breakdown['type'] === 'intra_state')
+                <tr>
+                    <td class="summary-label">CGST:</td>
+                    <td class="summary-value currency">{{ number_format($gst_breakdown['cgst'], 2) }} Rs.</td>
+                </tr>
+                <tr>
+                    <td class="summary-label">SGST:</td>
+                    <td class="summary-value currency">{{ number_format($gst_breakdown['sgst'], 2) }} Rs.</td>
+                </tr>
+                @elseif(isset($gst_breakdown) && $gst_breakdown['type'] === 'inter_state')
+                <tr>
+                    <td class="summary-label">IGST:</td>
+                    <td class="summary-value currency">{{ number_format($gst_breakdown['igst'], 2) }} Rs.</td>
+                </tr>
+                @else
                 <tr>
                     <td class="summary-label">Tax:</td>
                     <td class="summary-value currency">{{ number_format($quotation->tax_amount ?? 1800, 2) }} Rs.</td>
                 </tr>
+                @endif
             </table>
         </div><br><br><br><br><br>
 

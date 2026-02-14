@@ -24,8 +24,9 @@ class BusinessController extends Controller
         
         $isProfileComplete = $this->isProfileComplete($business);
         $canLoadSampleData = $this->canLoadSampleData();
+        $states = \App\Models\State::orderBy('name')->get();
         
-        return view('business.profile', compact('business', 'isProfileComplete', 'canLoadSampleData'));
+        return view('business.profile', compact('business', 'isProfileComplete', 'canLoadSampleData', 'states'));
     }
 
     public function updateProfile(Request $request)
@@ -65,6 +66,14 @@ class BusinessController extends Controller
             'gstin', 'pan', 'hsn_prefix', 'terms_and_conditions', 'currency', 
             'financial_year_start', 'payment_terms'
         ]);
+
+        // Store city and state in both old and new columns for compatibility
+        if (isset($updateData['city'])) {
+            $updateData['business_city'] = $updateData['city'];
+        }
+        if (isset($updateData['state'])) {
+            $updateData['business_state'] = $updateData['state'];
+        }
 
         // Handle logo upload
         if ($request->hasFile('logo')) {

@@ -64,6 +64,12 @@ class InvoiceController extends Controller
 
         $business = auth()->user()->business;
 
+        // Check if business has state configured
+        if (!$business->business_state) {
+            return redirect()->route('business.profile')
+                ->with('error', 'Please complete your business state details to apply GST correctly.');
+        }
+
         // Check Free Plan limits
         if (!$business->canCreateInvoice()) {
             \Log::info('Free user hit invoice limit', ['business_id' => $business->id]);
@@ -143,6 +149,8 @@ class InvoiceController extends Controller
                 'customer_email' => $quotation->customer->email,
                 'customer_phone' => $quotation->customer->phone,
                 'customer_address' => $quotation->customer->address,
+                'customer_city' => $quotation->customer->city,
+                'customer_state' => $quotation->customer->state,
                 'customer_gstin' => $quotation->customer->gstin,
                 'status' => 'draft',
                 'issue_date' => now(),
@@ -249,6 +257,8 @@ class InvoiceController extends Controller
                 'email' => $invoice->customer_email,
                 'phone' => $invoice->customer_phone ?? '',
                 'address' => $invoice->customer_address ?? '',
+                'city' => $invoice->customer_city ?? '',
+                'state' => $invoice->customer_state ?? '',
                 'gstin' => $invoice->customer_gstin ?? '',
             ];
             

@@ -152,9 +152,12 @@
                                                 <i class="fas fa-box text-blue-600 text-xs"></i>
                                             </div>
                                             <div>
-                                                <div class="text-sm font-medium text-gray-900">{{ $item->description }}</div>
+                                                <div class="text-sm font-medium text-gray-900">{{ $item->material->name ?? 'Item' }}</div>
+                                                @if($item->description && $item->description !== ($item->material->name ?? ''))
+                                                    <div class="text-xs text-gray-500">{{ $item->description }}</div>
+                                                @endif
                                                 @if($item->material)
-                                                    <div class="text-xs text-gray-500">SKU: {{ $item->material->sku ?? 'N/A' }}</div>
+                                                    <div class="text-xs text-gray-400">SKU: {{ $item->material->sku ?? 'N/A' }}</div>
                                                 @endif
                                             </div>
                                         </div>

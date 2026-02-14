@@ -13,6 +13,7 @@ class InvoiceItem extends Model
         'invoice_id',
         'description',
         'quantity',
+        'unit',
         'unit_price',
         'tax_rate',
         'tax_amount',
@@ -31,6 +32,11 @@ class InvoiceItem extends Model
     public function invoice()
     {
         return $this->belongsTo(Invoice::class);
+    }
+
+    public function material()
+    {
+        return $this->belongsTo(Material::class);
     }
 
     // Calculate subtotal

@@ -136,10 +136,39 @@
                             <label for="business_address" class="block text-sm font-medium text-gray-700 mb-2">Address</label>
                             <textarea id="business_address" name="business_address" rows="2" required
                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors @error('business_address') border-red-500 @enderror"
-                                      placeholder="Industrial Area, Phase 2, Mumbai">{{ old('business_address') }}</textarea>
+                                      placeholder="Industrial Area, Phase 2">{{ old('business_address') }}</textarea>
                             @error('business_address')
                                 <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                             @enderror
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label for="business_state" class="block text-sm font-medium text-gray-700 mb-2">State *</label>
+                                <select id="business_state" name="business_state" required
+                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors @error('business_state') border-red-500 @enderror">
+                                    <option value="">Select State</option>
+                                    @foreach($states as $state)
+                                        <option value="{{ $state->name }}" {{ old('business_state') == $state->name ? 'selected' : '' }}>
+                                            {{ $state->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('business_state')
+                                    <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <div>
+                                <label for="business_city" class="block text-sm font-medium text-gray-700 mb-2">City *</label>
+                                <select id="business_city" name="business_city" required disabled
+                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors @error('business_city') border-red-500 @enderror">
+                                    <option value="">Select City</option>
+                                </select>
+                                @error('business_city')
+                                    <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                                @enderror
+                            </div>
                         </div>
 
                         <div>
@@ -396,6 +425,34 @@
                     });
             }, 500);
         });
+
+        // State-City dropdown for business registration
+        const businessStateSelect = document.getElementById('business_state');
+        const businessCitySelect = document.getElementById('business_city');
+
+        if (businessStateSelect && businessCitySelect) {
+            businessStateSelect.addEventListener('change', function() {
+                const stateName = this.value;
+                businessCitySelect.innerHTML = '<option value="">Select City</option>';
+                businessCitySelect.disabled = true;
+
+                if (stateName) {
+                    fetch(`/api/cities/${encodeURIComponent(stateName)}`)
+                        .then(res => res.json())
+                        .then(cities => {
+                            cities.forEach(cityName => {
+                                const option = new Option(cityName, cityName);
+                                businessCitySelect.appendChild(option);
+                            });
+                            businessCitySelect.disabled = false;
+                        })
+                        .catch(error => {
+                            console.error('Error fetching cities:', error);
+                            businessCitySelect.innerHTML = '<option value="">Error loading cities</option>';
+                        });
+                }
+            });
+        }
     </script>
 </body>
 </html>

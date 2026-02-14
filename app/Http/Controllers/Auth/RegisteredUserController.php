@@ -33,8 +33,9 @@ class RegisteredUserController extends Controller
         }
 
         $plans = SubscriptionPlan::active()->get();
+        $states = \App\Models\State::orderBy('name')->get();
 
-        return view('auth.register', compact('invitation', 'plans'));
+        return view('auth.register', compact('invitation', 'plans', 'states'));
     }
 
     public function store(Request $request): RedirectResponse
@@ -89,6 +90,8 @@ class RegisteredUserController extends Controller
                 'business_name' => ['required', 'string', 'max:255'],
                 'business_phone' => ['required', 'string', 'regex:/^[6-9][0-9]{9}$/', 'size:10'],
                 'business_address' => ['required', 'string', 'max:500'],
+                'business_state' => ['required', 'string', 'max:255'],
+                'business_city' => ['required', 'string', 'max:255'],
                 'plan_id' => ['required', 'exists:subscription_plans,id'],
                 'user_count' => ['required', 'integer', 'min:1'],
                 'sales_representative_id' => ['nullable', 'exists:sales_representatives,representative_id'],
@@ -109,6 +112,8 @@ class RegisteredUserController extends Controller
                 'slug' => Str::slug($request->business_name) . '-' . Str::random(6),
                 'phone' => $request->business_phone,
                 'address' => $request->business_address,
+                'business_state' => $request->business_state,
+                'business_city' => $request->business_city,
                 'email' => $request->email,
                 'is_active' => true,
                 'sales_representative_id' => $request->sales_representative_id,

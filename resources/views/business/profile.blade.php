@@ -114,17 +114,26 @@
                     
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">City *</label>
-                            <input type="text" name="city" value="{{ old('city', $business->city) }}" 
+                            <label class="block text-sm font-medium text-gray-700 mb-2">State *</label>
+                            <select name="state" id="business_state" required
                                    class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                            @error('city')<p class="text-red-500 text-sm mt-1">{{ $message }}</p>@enderror
+                                <option value="">Select State</option>
+                                @foreach($states as $state)
+                                    <option value="{{ $state->name }}" {{ old('state', $business->business_state ?? $business->state) == $state->name ? 'selected' : '' }}>
+                                        {{ $state->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('state')<p class="text-red-500 text-sm mt-1">{{ $message }}</p>@enderror
                         </div>
                         
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">State *</label>
-                            <input type="text" name="state" value="{{ old('state', $business->state) }}" 
+                            <label class="block text-sm font-medium text-gray-700 mb-2">City *</label>
+                            <select name="city" id="business_city" required
                                    class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                            @error('state')<p class="text-red-500 text-sm mt-1">{{ $message }}</p>@enderror
+                                <option value="">Select City</option>
+                            </select>
+                            @error('city')<p class="text-red-500 text-sm mt-1">{{ $message }}</p>@enderror
                         </div>
                         
                         <div>
@@ -351,5 +360,42 @@ document.getElementById('businessName').addEventListener('input', function(e) {
         `;
     }
 });
+
+// State-City dropdown logic
+const businessStateSelect = document.getElementById('business_state');
+const businessCitySelect = document.getElementById('business_city');
+const savedCity = '{{ old('city', $business->business_city ?? $business->city) }}';
+
+if (businessStateSelect && businessCitySelect) {
+    // Load cities on page load if state is selected
+    if (businessStateSelect.value) {
+        loadCities(businessStateSelect.value, savedCity);
+    }
+
+    businessStateSelect.addEventListener('change', function() {
+        loadCities(this.value);
+    });
+}
+
+function loadCities(stateName, selectedCity = '') {
+    businessCitySelect.innerHTML = '<option value="">Select City</option>';
+    businessCitySelect.disabled = true;
+
+    if (stateName) {
+        fetch(`/api/cities/${encodeURIComponent(stateName)}`)
+            .then(res => res.json())
+            .then(cities => {
+                cities.forEach(cityName => {
+                    const option = new Option(cityName, cityName, false, cityName === selectedCity);
+                    businessCitySelect.appendChild(option);
+                });
+                businessCitySelect.disabled = false;
+            })
+            .catch(error => {
+                console.error('Error fetching cities:', error);
+                businessCitySelect.innerHTML = '<option value="">Error loading cities</option>';
+            });
+    }
+}
 </script>
 @endsection

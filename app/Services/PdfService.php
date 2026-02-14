@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use Barryvdh\DomPDF\Facade\Pdf as PDF;
+use App\Services\GstCalculationService;
 
 class PdfService
 {
@@ -15,6 +16,10 @@ class PdfService
             'is_preview' => $isPreview,
             'document_type' => $documentType,
         ];
+
+        // Calculate GST breakdown
+        $gstBreakdown = $this->calculateGstBreakdown($items, $business, $customer);
+        $data['gst_breakdown'] = $gstBreakdown;
 
         if ($isPreview) {
             $data = array_merge($data, [
@@ -66,6 +71,37 @@ class PdfService
                 return PDF::loadView('pdfs.document', $data);
             }
         }
+    }
+
+    private function calculateGstBreakdown($items, $business, $customer)
+    {
+        $totalCgst = 0;
+        $totalSgst = 0;
+        $totalIgst = 0;
+        $gstType = 'unknown';
+
+        $businessState = $business->business_state ?? $business->state;
+        $customerState = $customer->state ?? null;
+
+        foreach ($items as $item) {
+            $taxableAmount = ($item->quantity * $item->unit_price) - ($item->discount_amount ?? 0);
+            $gstRate = $item->tax_rate ?? 0;
+            
+            $gst = GstCalculationService::calculateGst($taxableAmount, $gstRate, $businessState, $customerState);
+            
+            $totalCgst += $gst['cgst_amount'];
+            $totalSgst += $gst['sgst_amount'];
+            $totalIgst += $gst['igst_amount'];
+            $gstType = $gst['type'];
+        }
+
+        return [
+            'type' => $gstType,
+            'cgst' => $totalCgst,
+            'sgst' => $totalSgst,
+            'igst' => $totalIgst,
+            'total' => $totalCgst + $totalSgst + $totalIgst
+        ];
     }
 
     public function generateReceiptPdf($payment, $invoice, $business, $customer)

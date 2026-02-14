@@ -56,6 +56,12 @@
         <div class="col customer-details">
             <h3>Bill To</h3>
             <p><strong>{{ $invoice->customer_name }}</strong></p>
+            @if($invoice->customer_address)
+                <p>{{ $invoice->customer_address }}</p>
+            @endif
+            @if($invoice->customer_city || $invoice->customer_state)
+                <p>{{ $invoice->customer_city }}{{ $invoice->customer_city && $invoice->customer_state ? ', ' : '' }}{{ $invoice->customer_state }}</p>
+            @endif
             @if($invoice->customer_email)
                 <p>{{ $invoice->customer_email }}</p>
             @endif
@@ -65,7 +71,6 @@
             @if($invoice->customer_gstin)
                 <p>GSTIN: {{ $invoice->customer_gstin }}</p>
             @endif
-            <p>{{ $invoice->customer_address }}</p>
         </div>
     </div>
 

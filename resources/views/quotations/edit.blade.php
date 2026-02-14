@@ -142,7 +142,17 @@
 
 <script>
 let itemIndex = 0;
-const materials = @json($materials);
+const materials = {!! json_encode($materials->map(function($m) {
+    return [
+        'id' => $m->id,
+        'name' => $m->name,
+        'code' => $m->code,
+        'unit_price' => $m->unit_price,
+        'gst_rate' => $m->gst_rate,
+        'unit' => $m->unit,
+        'description' => $m->description ?? $m->name
+    ];
+})) !!};
 
 function addItem() {
     const tbody = document.getElementById('itemsBody');
@@ -152,7 +162,7 @@ function addItem() {
         <td class="py-3 px-4">
             <select name="items[${itemIndex}][material_id]" class="w-full h-10 border border-gray-300 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm" required onchange="updateDescription(${itemIndex})">
                 <option value="">Choose a commodity</option>
-                ${materials.map(m => `<option value="${m.id}" data-price="${m.unit_price}" data-name="${m.name}">${m.name} (${m.code})</option>`).join('')}
+                ${materials.map(m => `<option value="${m.id}" data-price="${m.unit_price}" data-gst="${m.gst_rate}" data-unit="${m.unit}" data-description="${m.description}" data-name="${m.name}">${m.name} (${m.code})</option>`).join('')}
             </select>
         </td>
         <td class="py-3 px-4">
@@ -198,11 +208,17 @@ function updateDescription(index) {
     const select = document.querySelector(`select[name="items[${index}][material_id]"]`);
     const descInput = document.querySelector(`input[name="items[${index}][description]"]`);
     const priceInput = document.querySelector(`input[name="items[${index}][unit_price]"]`);
+    const taxInput = document.querySelector(`input[name="items[${index}][tax_rate]"]`);
+    const unitSelect = document.querySelector(`select[name="items[${index}][unit]"]`);
     
     if (select.value) {
         const option = select.selectedOptions[0];
-        descInput.value = option.dataset.name;
+        descInput.value = option.dataset.description || option.dataset.name;
         priceInput.value = option.dataset.price;
+        taxInput.value = option.dataset.gst || 18;
+        if (option.dataset.unit && unitSelect) {
+            unitSelect.value = option.dataset.unit;
+        }
         calculateRowTotal(index);
     }
 }
@@ -273,10 +289,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (materialSelect) materialSelect.value = '{{ $item->material_id }}';
                     if (descInput) descInput.value = '{{ addslashes($item->description) }}';
                     if (qtyInput) qtyInput.value = '{{ $item->quantity }}';
-                    if (unitSelect) unitSelect.value = '{{ $item->unit }}';
+                    if (unitSelect) unitSelect.value = '{{ $item->unit ?? "piece" }}';
                     if (priceInput) priceInput.value = '{{ $item->unit_price }}';
                     if (discountInput) discountInput.value = '{{ $item->discount_percentage ?? 0 }}';
-                    if (taxInput) taxInput.value = '{{ $item->tax_rate }}';
+                    if (taxInput) taxInput.value = '{{ $item->tax_rate ?? 18 }}';
                     
                     calculateRowTotal({{ $index }});
                 }

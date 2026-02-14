@@ -23,6 +23,8 @@ class Business extends Model
         'logo_path',
         'city',
         'state',
+        'business_state',
+        'business_city',
         'pin_code',
         'country',
         'gstin',

@@ -62,7 +62,10 @@
             <p>{{ $quotation->customer->address }}</p>
         @endif
         @if($quotation->customer->city || $quotation->customer->state)
-            <p>{{ $quotation->customer->city }}{{ $quotation->customer->city && $quotation->customer->state ? ', ' : '' }}{{ $quotation->customer->state }} {{ $quotation->customer->pincode }}</p>
+            <p>{{ $quotation->customer->city }}{{ $quotation->customer->city && $quotation->customer->state ? ', ' : '' }}{{ $quotation->customer->state }}</p>
+        @endif
+        @if($quotation->customer->pincode)
+            <p>PIN: {{ $quotation->customer->pincode }}</p>
         @endif
         @if($quotation->customer->phone)
             <p>Phone: {{ $quotation->customer->phone }}</p>

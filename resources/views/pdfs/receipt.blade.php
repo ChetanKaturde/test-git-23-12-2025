@@ -76,10 +76,20 @@
     <div class="customer-info">
         <h3>Customer Details</h3>
         <p><strong>Name:</strong> {{ $customer->name }}</p>
-        <p><strong>Email:</strong> {{ $customer->email }}</p>
-        <p><strong>Phone:</strong> {{ $customer->phone }}</p>
         @if($customer->address)
             <p><strong>Address:</strong> {{ $customer->address }}</p>
+        @endif
+        @if(isset($invoice) && ($invoice->customer_city || $invoice->customer_state))
+            <p><strong>City, State:</strong> {{ $invoice->customer_city }}{{ $invoice->customer_city && $invoice->customer_state ? ', ' : '' }}{{ $invoice->customer_state }}</p>
+        @endif
+        @if($customer->phone)
+            <p><strong>Phone:</strong> {{ $customer->phone }}</p>
+        @endif
+        @if($customer->email)
+            <p><strong>Email:</strong> {{ $customer->email }}</p>
+        @endif
+        @if($customer->gstin)
+            <p><strong>GSTIN:</strong> {{ $customer->gstin }}</p>
         @endif
     </div>
 
