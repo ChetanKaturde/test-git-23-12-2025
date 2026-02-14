@@ -109,7 +109,7 @@
                     <div class="flex items-center space-x-4">
                         <div class="flex items-center space-x-2">
                             <label class="text-sm text-gray-600">Filter:</label>
-                            <select id="statusFilter" class="text-sm border border-gray-300 rounded-md px-3 py-1 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                            <select id="statusFilter" class="text-sm border border-gray-300 rounded-md px-5 py-1 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                                 <option value="">All Status</option>
                                 <option value="draft">Draft</option>
                                 <option value="sent">Sent</option>
