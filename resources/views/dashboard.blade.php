@@ -158,7 +158,7 @@
                 <h3 class="text-lg font-bold text-gray-900">Sales Summary</h3>
                 <p class="text-sm text-gray-500 mt-1">Financial performance overview</p>
             </div>
-            @if($reportsEnabled)
+            @if($reportsEnabled && auth()->user()->canViewModule('reports'))
             <a href="{{ route('reports.index') }}" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
                 View Reports <i class="fas fa-arrow-right ml-1"></i>
             </a>
@@ -249,6 +249,7 @@
         </div>
     </div>
 
+    @if(auth()->user()->isAdmin())
     <!-- Quick Actions -->
     <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
         <div class="flex items-center justify-between mb-6">
@@ -303,7 +304,9 @@
             @endif
         </div>
     </div>
+    @endif
 
+    @if(auth()->user()->isAdmin())
     <!-- Setup Progress & Business Info -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <!-- Setup Progress -->
@@ -427,11 +430,46 @@
                         <span class="text-sm font-medium text-gray-600">Users Allowed</span>
                         <span class="text-sm font-bold text-gray-900">{{ $userCount }}</span>
                     </div>
-                    <div class="flex items-center justify-between">
+                    <div class="flex items-center justify-between mb-2">
                         <span class="text-sm font-medium text-gray-600">Owner</span>
                         <span class="text-sm font-bold text-gray-900">{{ auth()->user()->name }}</span>
                     </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm font-medium text-gray-600">Plan Expiry</span>
+                        <span class="text-sm font-bold text-gray-900">
+                            @if($activeSubscription && $activeSubscription->end_date)
+                                {{ $activeSubscription->end_date->format('d M Y') }}
+                            @else
+                                No Expiry
+                            @endif
+                        </span>
+                    </div>
                 </div>
+                
+                @if($salesRep)
+                <div class="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                    <h4 class="text-sm font-semibold text-blue-900 mb-3">Your Sales Representative</h4>
+                    <p class="text-xs text-blue-700 mb-3">For assistance regarding your subscription or account, please contact:</p>
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-medium text-blue-600">Representative ID</span>
+                            <span class="text-xs font-bold text-blue-900">{{ $salesRep->representative_id }}</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-medium text-blue-600">Name</span>
+                            <span class="text-xs font-bold text-blue-900">{{ $salesRep->full_name }}</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-medium text-blue-600">Email</span>
+                            <a href="mailto:{{ $salesRep->email }}" class="text-xs font-bold text-blue-900 hover:underline">{{ $salesRep->email }}</a>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-medium text-blue-600">Phone</span>
+                            <a href="tel:{{ $salesRep->phone }}" class="text-xs font-bold text-blue-900 hover:underline">{{ $salesRep->phone }}</a>
+                        </div>
+                    </div>
+                </div>
+                @endif
                 @if(($subscriptionPlan ?? 'free') === 'free')
                 <div class="bg-blue-50 rounded-lg p-4 border border-blue-200">
                     <div class="flex items-center justify-between">
@@ -453,6 +491,7 @@
             </div>
         </div>
     </div>
+    @endif
     
     <!-- Manufacturing Focus Message -->
     <div class="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 border border-blue-200 rounded-xl p-6">

@@ -280,21 +280,20 @@ Route::middleware('auth')->group(function () {
     Route::get('/team/performance', [\App\Http\Controllers\TeamController::class, 'performance'])->name('team.performance');
     Route::post('/team/performance', [\App\Http\Controllers\TeamController::class, 'performance'])->name('team.performance.post');
     
+    // Pricing page (accessible to business owners only)
+    Route::middleware('business.owner')->group(function () {
+        Route::get('/pricing', [\App\Http\Controllers\PricingController::class, 'index'])->name('pricing');
+        Route::post('/pricing/process', [\App\Http\Controllers\PricingController::class, 'processPayment'])->name('pricing.process');
+    });
+    
     // Logout
     Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
 });
 
-// Pricing page (accessible to all authenticated users)
-Route::middleware('auth')->get('/pricing', function () {
-    $plans = \App\Models\SubscriptionPlan::active()->get();
-    $currentSubscription = auth()->user()->business?->subscriptions()->active()->first();
-    return view('pricing', compact('plans', 'currentSubscription'));
-})->name('pricing');
-
 // Subscription payment routes
 Route::middleware('auth')->group(function () {
-    Route::get('/subscription/{subscription}/payment', [PaymentController::class, 'subscriptionPayment'])->name('subscription.payment');
-    Route::post('/subscription/{subscription}/payment', [PaymentController::class, 'processSubscriptionPayment'])->name('subscription.payment.process');
+    Route::get('/subscription/payment', [PaymentController::class, 'subscriptionPayment'])->name('subscription.payment');
+    Route::post('/subscription/payment', [PaymentController::class, 'processSubscriptionPayment'])->name('subscription.payment.process');
 });
 
 // API routes for states and cities

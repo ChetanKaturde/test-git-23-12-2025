@@ -103,29 +103,36 @@ class PaymentController extends Controller
         return back()->with('success', 'Payment recorded successfully.');
     }
 
-    public function subscriptionPayment(Subscription $subscription)
+    public function subscriptionPayment(Request $request)
     {
-        // Ensure user owns the subscription
-        if ($subscription->business_id !== auth()->user()->business_id) {
-            abort(403);
-        }
+        $planId = $request->get('plan');
+        $action = $request->get('action');
+        
+        $plan = \App\Models\SubscriptionPlan::findOrFail($planId);
+        $business = auth()->user()->business;
+        $amount = $plan->price_per_user * $business->users()->count();
 
-        return view('payments.subscription', compact('subscription'));
+        return view('payments.subscription', compact('plan', 'action', 'amount'));
     }
 
-    public function processSubscriptionPayment(Request $request, Subscription $subscription)
+    public function processSubscriptionPayment(Request $request)
     {
-        // Ensure user owns the subscription
-        if ($subscription->business_id !== auth()->user()->business_id) {
-            abort(403);
+        $request->validate([
+            'plan_id' => 'required|exists:subscription_plans,id',
+            'action' => 'required|in:continue,upgrade,advance',
+            'razorpay_payment_id' => 'nullable|string'
+        ]);
+
+        $business = auth()->user()->business;
+        $plan = \App\Models\SubscriptionPlan::findOrFail($request->plan_id);
+        
+        $planUpdateService = app(\App\Services\PlanUpdateService::class);
+        $result = $planUpdateService->updatePlan($business, $plan, $request->action);
+
+        if ($result['success']) {
+            return redirect()->route('dashboard')->with('success', $result['message']);
         }
-
-        // For now, mark as paid (since Razorpay integration is complex)
-        // In real implementation, integrate with Razorpay
-
-        // Mark subscription as paid and activate
-        $subscription->update(['status' => 'active']);
-
-        return redirect()->route('dashboard')->with('success', 'Subscription activated successfully!');
+        
+        return back()->with('error', $result['message']);
     }
 }

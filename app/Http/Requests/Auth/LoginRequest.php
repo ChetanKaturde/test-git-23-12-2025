@@ -55,6 +55,21 @@ class LoginRequest extends FormRequest
             ]);
         }
 
+        // Check subscription status for non-admin users
+        if ($user->business_id && $user->role !== 'admin') {
+            $activeSubscription = \App\Models\Subscription::where('business_id', $user->business_id)
+                ->where('status', 'active')
+                ->where('end_date', '>=', now())
+                ->first();
+
+            if (!$activeSubscription) {
+                RateLimiter::hit($this->throttleKey());
+                throw ValidationException::withMessages([
+                    'email' => 'Your business subscription has expired. Please contact your business owner to renew the plan.',
+                ]);
+            }
+        }
+
         if (! Auth::attempt($credentials, $this->boolean('remember'))) {
             RateLimiter::hit($this->throttleKey());
 

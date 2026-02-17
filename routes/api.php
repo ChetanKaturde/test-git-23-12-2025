@@ -47,7 +47,7 @@ Route::get('/cities/{stateName}', [\App\Http\Controllers\CustomerController::cla
 Route::get('/validate-representative-id/{repId}', function($repId) {
     $rep = \App\Models\SalesRepresentative::where('representative_id', $repId)->first();
     if ($rep) {
-        return response()->json(['valid' => true, 'name' => $rep->name]);
+        return response()->json(['valid' => true, 'name' => $rep->full_name]);
     }
     return response()->json(['valid' => false, 'message' => 'Invalid representative ID']);
 });

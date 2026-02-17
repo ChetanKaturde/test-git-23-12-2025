@@ -106,7 +106,7 @@ class TeamController extends Controller
                 'name' => $request->name,
                 'email' => $request->email,
                 'password' => Hash::make($request->password),
-                'plain_password' => $request->password,
+                'plain_password' => \Crypt::encryptString($request->password),
                 'team_id' => $request->team_id,
                 'permissions' => $filteredPermissions,
                 'is_active' => true,
@@ -308,7 +308,11 @@ class TeamController extends Controller
             abort(403, 'You can only view passwords of your business members.');
         }
 
-        $password = $user->plain_password ?? 'Password not available';
+        try {
+            $password = $user->plain_password ? \Crypt::decryptString($user->plain_password) : 'Password not available';
+        } catch (\Exception $e) {
+            $password = 'Password not available';
+        }
 
         return response()->json(['password' => $password]);
     }
@@ -530,18 +534,20 @@ class TeamController extends Controller
 
             // Commodity Performance - based on invoice items
             $commodityData = \App\Models\InvoiceItem::join('invoices', 'invoice_items.invoice_id', '=', 'invoices.id')
+                ->leftJoin('materials', 'invoice_items.material_id', '=', 'materials.id')
                 ->where('invoices.business_id', $businessId)
                 ->whereBetween('invoices.issue_date', [$startDate, $endDate])
-                ->selectRaw('invoice_items.description as commodity, SUM(invoice_items.quantity) as total_quantity, SUM(invoice_items.total_price) as total_revenue')
-                ->groupBy('invoice_items.description')
+                ->selectRaw('COALESCE(materials.name, invoice_items.description) as commodity, SUM(invoice_items.quantity) as total_quantity, SUM(invoice_items.total_price) as total_revenue')
+                ->groupBy('commodity')
                 ->having('total_quantity', '>', 0)
                 ->orderBy('total_quantity', 'desc')
                 ->get();
 
             // Get all commodities that exist (have been invoiced at some point)
             $allCommodities = \App\Models\InvoiceItem::join('invoices', 'invoice_items.invoice_id', '=', 'invoices.id')
+                ->leftJoin('materials', 'invoice_items.material_id', '=', 'materials.id')
                 ->where('invoices.business_id', $businessId)
-                ->selectRaw('DISTINCT invoice_items.description as commodity')
+                ->selectRaw('DISTINCT COALESCE(materials.name, invoice_items.description) as commodity')
                 ->pluck('commodity');
 
             // Get commodities with sales in the period

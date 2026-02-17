@@ -166,6 +166,7 @@ class InvoiceController extends Controller
             // Create invoice items from quotation items
             foreach ($quotation->items as $quotationItem) {
                 $invoice->items()->create([
+                    'material_id' => $quotationItem->material_id,
                     'description' => $quotationItem->description,
                     'quantity' => $quotationItem->quantity,
                     'unit_price' => $quotationItem->unit_price,

@@ -250,6 +250,7 @@
     .empty-body { font-size: .9rem; color: var(--clr-text-muted); max-width: 28rem; margin: 0 auto 1.75rem; line-height: 1.6; }
     .empty-actions { display: flex; flex-wrap: wrap; gap: .75rem; justify-content: center; }
 
+    /* .btn-secondary — unused (sample data button commented out)
     .btn-secondary {
         display: inline-flex; align-items: center; gap: .5rem;
         background: linear-gradient(135deg, #059669, #10b981); color: #fff;
@@ -258,6 +259,7 @@
         transition: filter .15s, transform .1s; box-shadow: 0 2px 8px rgba(5,150,105,.25);
     }
     .btn-secondary:hover { filter: brightness(1.08); transform: translateY(-1px); }
+    */
 </style>
 
 <div class="cust-page">
@@ -453,7 +455,7 @@
                 Start building your customer base. Add your first customer to begin sending quotes and invoices.
             </p>
             <div class="empty-actions">
-                @php $customerCount = \App\Models\Customer::where('business_id', auth()->user()->business_id)->count(); @endphp
+                {{-- @php $customerCount = \App\Models\Customer::where('business_id', auth()->user()->business_id)->count(); @endphp
                 @if($customerCount < 2)
                     <form action="{{ route('business.load-sample-data') }}" method="POST">
                         @csrf
@@ -461,7 +463,7 @@
                             <i class="fas fa-magic"></i> Add Sample Data
                         </button>
                     </form>
-                @endif
+                @endif --}}
                 <a href="{{ route('customers.create') }}" class="btn-primary">
                     <i class="fas fa-plus"></i> Add Your First Customer
                 </a>

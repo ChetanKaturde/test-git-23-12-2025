@@ -378,7 +378,7 @@ public function canViewModule($moduleName)
 
     return $this->permissions()
         ->whereHas('module', function ($query) use ($moduleName) {
-            $query->where('name', $moduleName);
+            $query->where('name', $moduleName)->where('is_active', 1);
         })
         ->where('can_view', true)
         ->exists();

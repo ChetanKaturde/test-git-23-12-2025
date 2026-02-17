@@ -72,5 +72,6 @@ class Kernel extends HttpKernel
        'permission' => \App\Http\Middleware\CheckPermission::class,
        'superadmin.auth' => \App\Http\Middleware\SuperAdminAuth::class,
        'subscription.active' => \App\Http\Middleware\CheckSubscription::class,
+       'business.owner' => \App\Http\Middleware\EnsureBusinessOwner::class,
     ];
 }

@@ -9,6 +9,20 @@ use Carbon\Carbon;
 
 class ReportsController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware(function ($request, $next) {
+            $user = auth()->user();
+            
+            // Business Owner (admin) always has access
+            if (!$user->isAdmin() && !$user->hasPermission('view_reports')) {
+                abort(403, 'Access Denied');
+            }
+            
+            return $next($request);
+        });
+    }
+
     public function index()
     {
         return view('reports.index');

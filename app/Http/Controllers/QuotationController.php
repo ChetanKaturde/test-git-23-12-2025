@@ -386,8 +386,14 @@ class QuotationController extends Controller
                 $quotation->update(['status' => 'converted', 'converted_at' => now()]);
             });
 
-            return redirect()->route('invoices.index')
-                ->with('success', 'Quotation converted to invoice successfully!');
+            // Redirect based on user permissions
+            if (auth()->user()->isAdmin() || auth()->user()->hasPermission('manage_invoices')) {
+                return redirect()->route('invoices.index')
+                    ->with('success', 'Quotation converted to invoice successfully!');
+            } else {
+                return redirect()->route('quotations.index')
+                    ->with('success', 'Quotation converted to invoice successfully!');
+            }
 
         } catch (\Throwable $e) {
             \Log::error('Quotation conversion error', [

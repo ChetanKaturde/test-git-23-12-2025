@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
+use App\Models\Business;
 use App\Models\Vendor;
 use App\Models\InventoryBatch;
 use App\Models\PurchaseOrder;
@@ -38,14 +39,23 @@ class DashboardController extends Controller
         try {
             $user = Auth::user();
             $businessId = $user->business_id;
-            $subscriptionTier = $user->business->subscription_tier ?? 'full_erp';
-            $subscriptionPlan = $user->business->subscription_plan ?? 'free';
+            
+            // ✅ FIX: Fetch fresh business data with sales representative
+            $business = Business::with('salesRepresentative')
+                ->find($businessId);
+            
+            $subscriptionTier = $business->subscription_tier ?? 'full_erp';
+            $subscriptionPlan = $business->subscription_plan ?? 'free';
 
-            // Get active subscription and related data
-            $activeSubscription = $user->business->subscriptions()->where('status', 'active')->first();
+            // ✅ FIX: Get LATEST active subscription by end_date (not first/oldest)
+            $activeSubscription = $business->subscriptions()
+                ->where('status', 'active')
+                ->orderBy('end_date', 'desc')
+                ->first();
             $userCount = $activeSubscription ? $activeSubscription->user_count : 0;
             $planName = $activeSubscription ? $activeSubscription->plan->name : 'Free';
             $reportsEnabled = $activeSubscription ? $activeSubscription->canUseFeature('reports_analytics') : false;
+            $salesRep = $business->salesRepresentative;
             
             // Get unified stats for all users
             $stats = [
@@ -74,7 +84,7 @@ class DashboardController extends Controller
             }
             
             // Use the main dashboard view for all users
-            return view('dashboard', compact('stats', 'subscriptionTier', 'subscriptionPlan', 'salesMetrics', 'userCount', 'planName', 'reportsEnabled'));
+            return view('dashboard', compact('stats', 'subscriptionTier', 'subscriptionPlan', 'salesMetrics', 'userCount', 'planName', 'reportsEnabled', 'activeSubscription', 'salesRep'));
             
         } catch (\Exception $e) {
             Log::error('Dashboard error: ' . $e->getMessage());
@@ -93,7 +103,9 @@ class DashboardController extends Controller
             $userCount = 0;
             $planName = 'Free';
             $reportsEnabled = false;
-            return view('dashboard', compact('stats', 'subscriptionTier', 'subscriptionPlan', 'salesMetrics', 'userCount', 'planName', 'reportsEnabled'));
+            $activeSubscription = null;
+            $salesRep = null;
+            return view('dashboard', compact('stats', 'subscriptionTier', 'subscriptionPlan', 'salesMetrics', 'userCount', 'planName', 'reportsEnabled', 'activeSubscription', 'salesRep'));
         }
     }
 
