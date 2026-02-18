@@ -63,6 +63,12 @@
                     <label class="block text-sm font-medium text-gray-700">GST Rate</label>
                     <p class="text-gray-900">{{ $material->gst_rate }}%</p>
                 </div>
+                @if($material->hsn_code)
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">{{ $material->item_type === 'service' ? 'SAC Code' : 'HSN Code' }}</label>
+                    <p class="text-gray-900">{{ $material->hsn_code }}</p>
+                </div>
+                @endif
                 @if($material->sku && $material->item_type !== 'service')
                 <div>
                     <label class="block text-sm font-medium text-gray-700">SKU</label>

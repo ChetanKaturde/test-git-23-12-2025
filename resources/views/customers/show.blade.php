@@ -327,14 +327,14 @@
     {{-- ── Overview Stats ── --}}
     <div class="stats-grid">
         @if(auth()->user()->business->subscription_tier === 'full_erp')
-        <div class="stat-card blue">
+        {{-- <div class="stat-card blue">
             <div class="stat-info">
                 <p class="stat-label">Work Orders</p>
                 <p class="stat-value">{{ $workOrders->count() }}</p>
                 <div class="stat-meta blue"><i class="fas fa-clipboard-list"></i> Total projects</div>
             </div>
             <div class="stat-icon blue"><i class="fas fa-clipboard-list"></i></div>
-        </div>
+        </div> --}}
         @endif
         <div class="stat-card green">
             <div class="stat-info">
@@ -392,7 +392,7 @@
                 </div>
                 <div class="fin-block p">
                     <div class="fin-val">{{ $invoices->where('issue_date', '>=', now()->subDays(30))->count() }}</div>
-                    <div class="fin-lbl">Recent (30d)</div>
+                    <div class="fin-lbl">Recent Invoices (30d)</div>
                 </div>
             </div>
 

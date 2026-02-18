@@ -532,35 +532,39 @@ class TeamController extends Controller
                     break;
             }
 
-            // Commodity Performance - based on invoice items
+            // Commodity Performance - based on invoice items joined with materials
             $commodityData = \App\Models\InvoiceItem::join('invoices', 'invoice_items.invoice_id', '=', 'invoices.id')
-                ->leftJoin('materials', 'invoice_items.material_id', '=', 'materials.id')
+                ->join('materials', 'invoice_items.material_id', '=', 'materials.id')
                 ->where('invoices.business_id', $businessId)
                 ->whereBetween('invoices.issue_date', [$startDate, $endDate])
-                ->selectRaw('COALESCE(materials.name, invoice_items.description) as commodity, SUM(invoice_items.quantity) as total_quantity, SUM(invoice_items.total_price) as total_revenue')
-                ->groupBy('commodity')
+                ->selectRaw('materials.name as commodity, SUM(invoice_items.quantity) as total_quantity, SUM(invoice_items.total_price) as total_revenue')
+                ->groupBy('materials.id', 'materials.name')
                 ->having('total_quantity', '>', 0)
                 ->orderBy('total_quantity', 'desc')
                 ->get();
 
-            // Get all commodities that exist (have been invoiced at some point)
-            $allCommodities = \App\Models\InvoiceItem::join('invoices', 'invoice_items.invoice_id', '=', 'invoices.id')
-                ->leftJoin('materials', 'invoice_items.material_id', '=', 'materials.id')
-                ->where('invoices.business_id', $businessId)
-                ->selectRaw('DISTINCT COALESCE(materials.name, invoice_items.description) as commodity')
-                ->pluck('commodity');
+            // Get all active materials from materials table
+            $allCommodities = \App\Models\Material::where('business_id', $businessId)
+                ->where('is_active', true)
+                ->pluck('name', 'id');
 
-            // Get commodities with sales in the period
-            $sellingCommodities = $commodityData->pluck('commodity');
+            // Get material IDs with sales in the period
+            $soldMaterialIds = \App\Models\InvoiceItem::join('invoices', 'invoice_items.invoice_id', '=', 'invoices.id')
+                ->where('invoices.business_id', $businessId)
+                ->whereBetween('invoices.issue_date', [$startDate, $endDate])
+                ->pluck('invoice_items.material_id')
+                ->unique();
 
             // Not selling commodities: exist but no sales in period
-            $notSellingCommodities = $allCommodities->diff($sellingCommodities)->map(function($commodity) {
+            $notSellingCommodities = $allCommodities->reject(function($name, $id) use ($soldMaterialIds) {
+                return $soldMaterialIds->contains($id);
+            })->map(function($name) {
                 return (object) [
-                    'commodity' => $commodity,
+                    'commodity' => $name,
                     'total_quantity' => 0,
                     'total_revenue' => 0.00
                 ];
-            });
+            })->values();
 
             if ($commodityData->isNotEmpty() || $notSellingCommodities->isNotEmpty()) {
                 $commodityStats = [
